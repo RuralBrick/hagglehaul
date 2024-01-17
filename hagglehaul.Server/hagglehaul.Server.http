@@ -1,0 +1,6 @@
+@hagglehaul.Server_HostAddress = http://localhost:5250
+
+GET {{hagglehaul.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
