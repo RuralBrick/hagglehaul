@@ -1,0 +1,14 @@
+@startuml
+
+|User|
+start
+
+|Subject|
+:Hello, World!;
+
+|User|
+:goodbye;
+
+stop
+
+@enduml

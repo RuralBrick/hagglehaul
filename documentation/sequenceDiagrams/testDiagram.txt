@@ -1,3 +1,6 @@
 @startuml
+
+-> Alice: start
 Alice -> Bob: test
+
 @enduml
