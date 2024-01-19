@@ -4,6 +4,7 @@ about: Describe a feature, or an enhancement
 title: ''
 labels: 'story'
 assignees: ''
+projects: ['RuralBrick/4']
 
 ---
 
