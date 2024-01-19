@@ -1,0 +1,10 @@
+@startuml
+
+abstract User
+class Rider
+class Driver
+
+User <|-- Rider
+User <|-- Driver
+
+@enduml
