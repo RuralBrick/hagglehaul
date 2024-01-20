@@ -1,6 +1,9 @@
-name: .NET Core CI
+name: ASP.NET Core CI (Deploy)
 
-on: [push]
+on:
+  push:
+    branches:
+      - 'main'
 
 env:
   AZURE_WEBAPP_NAME: hagglehaul    # set this to your application's name
