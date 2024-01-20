@@ -4,3 +4,8 @@ GET {{hagglehaul.Server_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+GET {{hagglehaul.Server_HostAddress}}/mongotest/
+Accept: application/json
+
+###

@@ -49,7 +49,11 @@ export default defineConfig({
             '^/weatherforecast': {
                 target: 'https://localhost:7279/',
                 secure: false
-            }
+            },
+            '^/mongotest': {
+                target: 'https://localhost:7279/',
+                secure: false
+            },
         },
         port: 5173,
         https: {
