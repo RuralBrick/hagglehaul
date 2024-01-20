@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'jaczhi/appservice-cicd'
 
 env:
   AZURE_WEBAPP_NAME: hagglehaul    # set this to your application's name
@@ -32,6 +33,14 @@ jobs:
           dotnet build --configuration Release
           dotnet publish -c Release --property:PublishDir='${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp' 
           pwd
+      
+      # Substitute variables in appsettings.json
+      - name: appsettings Variable Substitution
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/${{ env.CUR_PROJ_NAME }}/myapp/appsettings.json'
+        env:
+          HagglehaulDatabase.ConnectionString: ${{ secrets.HH_DB_CONNECTION_STRING }}
       
       # Deploy to Azure Web apps
       - name: 'Run Azure webapp deploy action using publish profile credentials'
