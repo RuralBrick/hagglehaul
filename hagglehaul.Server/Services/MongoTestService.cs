@@ -1,5 +1,4 @@
 using hagglehaul.Server.Models;
-using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services;
