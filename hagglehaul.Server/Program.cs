@@ -1,6 +1,13 @@
+using hagglehaul.Server.Models;
+using hagglehaul.Server.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<HagglehaulDatabaseSettings>(
+    builder.Configuration.GetSection("HagglehaulDatabase"));
+
+builder.Services.AddSingleton<MongoTestService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
