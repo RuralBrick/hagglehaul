@@ -5,11 +5,9 @@ namespace hagglehaul.Server.Services;
 public class MongoTestService
 {
     private readonly IMongoCollection<MongoTest> _mongoTestCollection;
-    private readonly IMongoDatabase _database;
     
     public MongoTestService(IMongoDatabase database)
     {
-        _database = database;
         _mongoTestCollection = database.GetCollection<MongoTest>("MongoTest");
     }
     
