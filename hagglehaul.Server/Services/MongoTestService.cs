@@ -6,11 +6,11 @@ namespace hagglehaul.Server.Services;
 public class MongoTestService
 {
     private readonly IMongoCollection<MongoTest> _mongoTestCollection;
+    private readonly IMongoDatabase _database;
     
-    public MongoTestService(IOptions<HagglehaulDatabaseSettings> hagglehaulDatabaseSettings)
+    public MongoTestService(IMongoDatabase database)
     {
-        var client = new MongoClient(hagglehaulDatabaseSettings.Value.ConnectionString);
-        var database = client.GetDatabase(hagglehaulDatabaseSettings.Value.DatabaseName);
+        _database = database;
         _mongoTestCollection = database.GetCollection<MongoTest>("MongoTest");
     }
     
