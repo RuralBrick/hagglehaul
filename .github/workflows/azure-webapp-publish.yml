@@ -6,6 +6,7 @@ env:
   AZURE_WEBAPP_NAME: hagglehaul    # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '8.0.x'           # set this to the dot net version to use
+  CUR_PROJ_NAME: 'hagglehaul.Server'
 
 jobs:
   build:
@@ -35,4 +36,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE  }} # Define secret variable in repository settings as per action documentation
-          package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
+          package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/{{ env.CUR_PROJ_NAME }}/myapp'
