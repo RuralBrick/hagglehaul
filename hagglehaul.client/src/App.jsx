@@ -6,6 +6,7 @@ function App() {
 
     useEffect(() => {
         populateWeatherData();
+        checkMongo();
     }, []);
 
     const contents = forecasts === undefined
@@ -43,6 +44,12 @@ function App() {
         const response = await fetch('weatherforecast');
         const data = await response.json();
         setForecasts(data);
+    }
+    
+    async function checkMongo() {
+        const response = await fetch('mongotest');
+        const data = await response.json();
+        console.log(data);
     }
 }
 
