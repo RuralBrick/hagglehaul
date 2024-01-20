@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - 'main'
-      - 'jaczhi/appservice-cicd'
 
 env:
   AZURE_WEBAPP_NAME: hagglehaul    # set this to your application's name
