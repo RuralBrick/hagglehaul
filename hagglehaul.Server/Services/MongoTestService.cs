@@ -1,5 +1,4 @@
 using hagglehaul.Server.Models;
-using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services;
@@ -7,10 +6,8 @@ public class MongoTestService
 {
     private readonly IMongoCollection<MongoTest> _mongoTestCollection;
     
-    public MongoTestService(IOptions<HagglehaulDatabaseSettings> hagglehaulDatabaseSettings)
+    public MongoTestService(IMongoDatabase database)
     {
-        var client = new MongoClient(hagglehaulDatabaseSettings.Value.ConnectionString);
-        var database = client.GetDatabase(hagglehaulDatabaseSettings.Value.DatabaseName);
         _mongoTestCollection = database.GetCollection<MongoTest>("MongoTest");
     }
     
