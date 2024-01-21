@@ -1,11 +1,21 @@
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<HagglehaulDatabaseSettings>(
     builder.Configuration.GetSection("HagglehaulDatabase"));
+
+// Create singleton IMongoDatabase from HagglehaulDatabaseSettings
+builder.Services.AddSingleton<IMongoDatabase>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<HagglehaulDatabaseSettings>>();
+    var client = new MongoClient(settings.Value.ConnectionString);
+    return client.GetDatabase(settings.Value.DatabaseName);
+});
 
 builder.Services.AddSingleton<MongoTestService>();
 
