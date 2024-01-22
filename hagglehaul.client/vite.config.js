@@ -46,18 +46,10 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '^/weatherforecast': {
+            '^/api': {
                 target: 'https://localhost:7279/',
                 secure: false
-            },
-            '^/mongotest': {
-                target: 'https://localhost:7279/',
-                secure: false
-            },
-            '^/authentication': {
-                target: 'https://localhost:7279/',
-                secure: false
-            },
+            }
         },
         port: 5173,
         https: {

@@ -41,13 +41,13 @@ function App() {
     );
     
     async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
+        const response = await fetch('api/weatherforecast');
         const data = await response.json();
         setForecasts(data);
     }
     
     async function checkMongo() {
-        const response = await fetch('mongotest/insecure');
+        const response = await fetch('api/mongotest/insecure');
         const data = await response.json();
         console.log(data);
     }

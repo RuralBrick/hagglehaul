@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 namespace hagglehaul.Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AuthenticationController : ControllerBase
     {
         private readonly IOptions<JwtSettings> _settings;
