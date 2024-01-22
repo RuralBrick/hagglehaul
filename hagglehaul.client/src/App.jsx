@@ -47,7 +47,7 @@ function App() {
     }
     
     async function checkMongo() {
-        const response = await fetch('mongotest');
+        const response = await fetch('mongotest/insecure');
         const data = await response.json();
         console.log(data);
     }

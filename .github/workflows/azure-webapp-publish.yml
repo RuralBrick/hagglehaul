@@ -40,6 +40,7 @@ jobs:
           files: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/${{ env.CUR_PROJ_NAME }}/myapp/appsettings.json'
         env:
           HagglehaulDatabase.ConnectionString: ${{ secrets.HH_DB_CONNECTION_STRING }}
+          JWT.Secret: ${{ secrets.HH_JWT_SECRET }}
       
       # Deploy to Azure Web apps
       - name: 'Run Azure webapp deploy action using publish profile credentials'

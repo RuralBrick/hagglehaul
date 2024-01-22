@@ -5,7 +5,17 @@ Accept: application/json
 
 ###
 
-GET {{hagglehaul.Server_HostAddress}}/mongotest/
+POST {{hagglehaul.Server_HostAddress}}/authentication/login/
+Accept: application/json
+
+###
+
+GET {{hagglehaul.Server_HostAddress}}/mongotest/insecure/
+Accept: application/json
+
+###
+
+GET {{hagglehaul.Server_HostAddress}}/mongotest/secure/
 Accept: application/json
 
 ###
