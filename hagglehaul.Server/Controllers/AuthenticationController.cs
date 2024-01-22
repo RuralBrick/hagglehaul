@@ -41,7 +41,9 @@ namespace hagglehaul.Server.Controllers
         {
             var userCore = await _userCoreService.GetAsync(model.Email);
 
-            if (ComparePasswordToHash(model.Password, userCore.PasswordHash, userCore.Salt))
+            if (userCore is not null &&
+                ComparePasswordToHash(model.Password, userCore.PasswordHash, userCore.Salt)
+                )
             {
                 var authClaims = new List<Claim>
                 {

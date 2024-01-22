@@ -39,7 +39,7 @@ namespace hagglehaul.Server.Controllers
             var results = await _mongoTestService.GetAsync();
             foreach (var result in results)
             {
-                result.Test = result.Test + username + role;
+                result.Test = $"{result.Test} Username: {username} Role: {role}";
             }
 
             return results;
