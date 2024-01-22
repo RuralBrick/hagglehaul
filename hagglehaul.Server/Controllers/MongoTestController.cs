@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace hagglehaul.Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class MongoTestController : ControllerBase
     {
         private readonly ILogger<MongoTestController> _logger;
