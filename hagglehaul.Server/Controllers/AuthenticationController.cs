@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using hagglehaul.Server.Services;
@@ -24,6 +25,18 @@ namespace hagglehaul.Server.Controllers
             _userCoreService = userCoreService;
         }
 
+        protected void CreatePasswordHash(string password, out string hash, out string salt)
+        {
+            byte[] saltBytes = RandomNumberGenerator.GetBytes(128 / 8);
+            salt = Convert.ToBase64String(saltBytes);
+            hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password!,
+                salt: saltBytes,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 256 / 8));
+        }
+        
         protected bool ComparePasswordToHash(string password, string hash, string salt)
         {
             string newHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
@@ -36,9 +49,40 @@ namespace hagglehaul.Server.Controllers
         }
 
         [HttpPost]
+        [Route("register")]
+        public async Task<IActionResult> Register([FromBody] Register model)
+        {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Password) ||
+                string.IsNullOrEmpty(model.Role))
+                return BadRequest("One or more fields are empty");
+            
+            var existingUser = await _userCoreService.GetAsync(model.Email);
+            if (existingUser is not null)
+                return BadRequest("User already exists");
+            
+            CreatePasswordHash(model.Password, out var hash, out var salt);
+            var userCore = new UserCore
+            {
+                Email = model.Email,
+                PasswordHash = hash,
+                Salt = salt,
+                Role = model.Role
+            };
+
+            await _userCoreService.CreateAsync(userCore);
+
+            return await Login(new Login { Email = model.Email, Password = model.Password });
+        }
+
+        [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] Login model)
         {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Password))
+                return BadRequest("One or more fields are empty");
+            
             var userCore = await _userCoreService.GetAsync(model.Email);
 
             if (userCore is not null &&
