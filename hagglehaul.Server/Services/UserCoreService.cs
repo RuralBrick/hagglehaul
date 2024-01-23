@@ -18,6 +18,12 @@ namespace hagglehaul.Server.Services
         public async Task<UserCore> GetAsync(string email) =>
             await _userCoreCollection.Find(userCore => userCore.Email == email).FirstOrDefaultAsync();
 
+        public async Task<UserCore> CreateAsync(UserCore userCore)
+        {
+            await _userCoreCollection.InsertOneAsync(userCore);
+            return userCore;
+        }
+        
         public async Task UpdateAsync(string email, UserCore userCoreIn) =>
             await _userCoreCollection.ReplaceOneAsync(userCore => userCore.Email == email, userCoreIn);
 

@@ -11,6 +11,11 @@ Accept: application/json
 
 ###
 
+POST {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/authentication/register/
+Accept: application/json
+
+###
+
 GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/mongotest/insecure/
 Accept: application/json
 
