@@ -52,6 +52,11 @@ namespace hagglehaul.Server.Controllers
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] Register model)
         {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Password) ||
+                string.IsNullOrEmpty(model.Role))
+                return BadRequest("One or more fields are empty");
+            
             var existingUser = await _userCoreService.GetAsync(model.Email);
             if (existingUser is not null)
                 return BadRequest("User already exists");
@@ -74,6 +79,10 @@ namespace hagglehaul.Server.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] Login model)
         {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Password))
+                return BadRequest("One or more fields are empty");
+            
             var userCore = await _userCoreService.GetAsync(model.Email);
 
             if (userCore is not null &&
