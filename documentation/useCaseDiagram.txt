@@ -3,11 +3,43 @@
 left to right direction
 
 actor "User" as u
+actor "Rider" as r
+actor "Driver" as d
 
-rectangle "Subject" {
+u <|- (d)
+u <|- (r)
+
+
+rectangle "Auction Trips" {
+
+    usecase "Assign Trip Details" as A
+    usecase "Post Trip" as P
+    P .> A : extend
+
+    usecase "View My Trips" as V
+    usecase "Manage My Trips" as MA
+    MA .> V : extend
+
     usecase "Register" as R
+
+    usecase "View Available Trips" as VA
+    usecase "Make Bid" as M
+    M .> VA : extend
+
 }
 
-u --> (R)
+
+
+r ---> V
+r ---> A
+
+d ---> VA
+
+r ---> R
+d ---> R
+
+rectangle "Mapbox"
+
+A ---> (Mapbox)
 
 @enduml
