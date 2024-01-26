@@ -23,8 +23,8 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     return client.GetDatabase(settings.Value.DatabaseName);
 });
 
-builder.Services.AddSingleton<MongoTestService>();
-builder.Services.AddSingleton<UserCoreService>();
+builder.Services.AddSingleton<IMongoTestService, MongoTestService>();
+builder.Services.AddSingleton<IUserCoreService, UserCoreService>();
 
 builder.Services.AddAuthentication(options =>
 {

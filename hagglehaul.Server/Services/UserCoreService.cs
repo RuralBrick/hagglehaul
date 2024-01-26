@@ -3,7 +3,16 @@ using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services
 {
-    public class UserCoreService
+    public interface IUserCoreService
+    {
+        Task<List<UserCore>> GetAsync();
+        Task<UserCore> GetAsync(string email);
+        Task<UserCore> CreateAsync(UserCore userCore);
+        Task UpdateAsync(string email, UserCore userCoreIn);
+        Task RemoveAsync(string email);
+    }
+    
+    public class UserCoreService : IUserCoreService
     {
         private readonly IMongoCollection<UserCore> _userCoreCollection;
 

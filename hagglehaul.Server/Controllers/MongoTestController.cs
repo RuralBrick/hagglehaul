@@ -11,12 +11,10 @@ namespace hagglehaul.Server.Controllers
     [Route("api/[controller]")]
     public class MongoTestController : ControllerBase
     {
-        private readonly ILogger<MongoTestController> _logger;
-        private readonly MongoTestService _mongoTestService;
+        private readonly IMongoTestService _mongoTestService;
 
-        public MongoTestController(ILogger<MongoTestController> logger, MongoTestService mongoTestService)
+        public MongoTestController(IMongoTestService mongoTestService)
         {
-            _logger = logger;
             _mongoTestService = mongoTestService;
         }
 
