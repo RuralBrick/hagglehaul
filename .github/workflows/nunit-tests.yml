@@ -20,4 +20,10 @@ jobs:
     - name: Build
       run: dotnet build
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --logger trx --results-directory "Hagglehaul-TestResults"
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v4
+      with:
+       name: dotnet-results-hagglehaul
+       path: Hagglehaul-TestResults
+      if: ${{ always() }}
