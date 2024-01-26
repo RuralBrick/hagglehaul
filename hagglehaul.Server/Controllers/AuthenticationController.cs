@@ -17,9 +17,9 @@ namespace hagglehaul.Server.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IOptions<JwtSettings> _settings;
-        private readonly UserCoreService _userCoreService;
+        private readonly IUserCoreService _userCoreService;
 
-        public AuthenticationController(IOptions<JwtSettings> settings, UserCoreService userCoreService)
+        public AuthenticationController(IOptions<JwtSettings> settings, IUserCoreService userCoreService)
         {
             _settings = settings;
             _userCoreService = userCoreService;
