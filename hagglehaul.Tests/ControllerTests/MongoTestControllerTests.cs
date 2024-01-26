@@ -20,37 +20,20 @@ public class MongoTestControllerTests
         _mockMongoTestService = new Mock<IMongoTestService>();
         _controller = new MongoTestController(_mockMongoTestService.Object);
     }
-
-    protected List<MongoTest> GetMongoTestData()
-    {
-        return new List<MongoTest>
-        {
-            new MongoTest
-            {
-                Id = "1",
-                Test = "Test 1"
-            },
-            new MongoTest
-            {
-                Id = "2",
-                Test = "Test 2"
-            }
-        };
-    }
     
     [Test]
     public async Task GetTest()
     {
-        _mockMongoTestService.Setup(x => x.GetAsync()).ReturnsAsync(GetMongoTestData());
+        _mockMongoTestService.Setup(x => x.GetAsync()).ReturnsAsync(HhTestUtilities.GetMongoTestData());
         
         var actual = await _controller.Get();
-        Assert.IsTrue(HhTestUtilities.CompareJson(actual, GetMongoTestData()));
+        Assert.IsTrue(HhTestUtilities.CompareJson(actual, HhTestUtilities.GetMongoTestData()));
     }
     
     [Test]
     public async Task GetSecureTest()
     {
-        _mockMongoTestService.Setup(x => x.GetAsync()).ReturnsAsync(GetMongoTestData());
+        _mockMongoTestService.Setup(x => x.GetAsync()).ReturnsAsync(HhTestUtilities.GetMongoTestData());
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
         {
             new Claim(ClaimTypes.Name, "mock@example.com"),
@@ -58,7 +41,7 @@ public class MongoTestControllerTests
         }, "mock"));
 
         string userAddenum = " Username: mock@example.com Role: rider";
-        var expected = GetMongoTestData();
+        var expected = HhTestUtilities.GetMongoTestData();
         expected.ForEach(x => x.Test += userAddenum);
         
         _controller.ControllerContext = new ControllerContext

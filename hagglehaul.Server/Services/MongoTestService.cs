@@ -26,6 +26,9 @@ public class MongoTestService : IMongoTestService
     public async Task<MongoTest> GetAsync(string id) =>
         await _mongoTestCollection.Find(mongoTest => mongoTest.Id == id).FirstOrDefaultAsync();
     
+    public async Task CreateAsync(MongoTest mongoTest) =>
+        await _mongoTestCollection.InsertOneAsync(mongoTest);
+    
     public async Task UpdateAsync(string id, MongoTest mongoTestIn) =>
         await _mongoTestCollection.ReplaceOneAsync(mongoTest => mongoTest.Id == id, mongoTestIn);
     
