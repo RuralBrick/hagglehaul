@@ -2,20 +2,13 @@
 
 |Rider|
 start
-   :Prompt to login;
-
-
-|Hagglehaul|
    :Login;
    -> credentials;
-
-|Data Server|
-   :Authenticate;
 
 |Hagglehaul| 
    if (authenticated?) is (yes) then
       |Rider|
-      :Open landing page;
+      :Open home page;
       :Create trip;
       -> trip details;
       |Mapbox|
@@ -23,9 +16,7 @@ start
       |Rider|
       :Post trip;
       |Hagglehaul|
-      :Create trip object;
-      |Data Server|
-      :Add trip to trip list;
+      :Create trip object, add to list;
       |Rider|
       :Monitor trip status;
       stop
