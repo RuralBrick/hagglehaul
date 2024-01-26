@@ -2,7 +2,16 @@ using hagglehaul.Server.Models;
 using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services;
-public class MongoTestService
+
+public interface IMongoTestService
+{
+    Task<List<MongoTest>> GetAsync();
+    Task<MongoTest> GetAsync(string id);
+    Task UpdateAsync(string id, MongoTest mongoTestIn);
+    Task RemoveAsync(string id);
+}
+
+public class MongoTestService : IMongoTestService
 {
     private readonly IMongoCollection<MongoTest> _mongoTestCollection;
     

@@ -1,0 +1,29 @@
+name: Hagglehaul Tests
+
+on: [push]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build
+    - name: Test
+      run: dotnet test --no-build --logger trx --results-directory "Hagglehaul-TestResults"
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v4
+      with:
+       name: dotnet-results-hagglehaul
+       path: Hagglehaul-TestResults
+      if: ${{ always() }}
