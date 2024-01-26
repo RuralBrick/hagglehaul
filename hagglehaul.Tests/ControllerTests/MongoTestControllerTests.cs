@@ -69,10 +69,4 @@ public class MongoTestControllerTests
         var actual = await _controller.GetSecure();
         Assert.IsTrue(HhTestUtilities.CompareJson(actual, expected));
     }
-
-    [Test]
-    public async Task FailTest()
-    {
-        Assert.Fail("test failure");
-    }
 }
