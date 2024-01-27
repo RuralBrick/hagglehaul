@@ -1,0 +1,34 @@
+@startuml
+
+|Driver|
+start
+   :Login;
+   -> credentials;
+
+|Hagglehaul| 
+   if (authenticated?) is (yes) then
+      |Driver|
+      :Open home page;
+      |Hagglehaul|
+      :Fetch trip list;
+      -> map data;
+      |Mapbox|
+      :Produce maps;
+      |Hagglehaul|
+      :Display available trips;
+      |Driver|
+      repeat
+         :Make bid;
+         -> Bid amount;
+         |Hagglehaul|
+         :Save bid;
+      repeat while (trip open?) is (yes)
+      -> no;
+      stop
+      
+   else (no)
+      |Driver|
+      :Receive error;
+      stop
+
+@enduml
