@@ -1,56 +1,39 @@
-import { useEffect, useState } from 'react';
+// src/App.jsx
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import TripsPage from './pages/TripsPage/TripsPage'; // Corrected import path
+import ProfilePage from './pages/ProfilePage/ProfilePage'; // Corrected import path
 import './App.css';
 
 function App() {
-    const [forecasts, setForecasts] = useState();
-
-    useEffect(() => {
-        populateWeatherData();
-        checkMongo();
-    }, []);
-
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tabelLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
-
     return (
-        <div>
-            <h1 id="tabelLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
-        </div>
+        <Router>
+            <div>
+                <nav className="navbar navbar-expand-lg navbar-light bg-light">
+                    <Link className="navbar-brand" to="/">HaggleHaul</Link>
+                    <div>
+                        <ul className="navbar-nav">
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/trips">My Trips</Link>
+                            </li>
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/profile">Profile</Link>
+                            </li>
+                            {/* ... other navigation links */}
+                        </ul>
+                    </div>
+                </nav>
+
+                <Routes>
+                    <Route path="/" element={<TripsPage />} />
+                    <Route path="/trips" element={<TripsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    {/* ... other routes */}
+                </Routes>
+            </div>
+        </Router>
     );
-    
-    async function populateWeatherData() {
-        const response = await fetch('api/weatherforecast');
-        const data = await response.json();
-        setForecasts(data);
-    }
-    
-    async function checkMongo() {
-        const response = await fetch('api/mongotest/insecure');
-        const data = await response.json();
-        console.log(data);
-    }
 }
 
 export default App;
