@@ -10,7 +10,7 @@ u <|- (d)
 u <|- (r)
 
 
-rectangle "Auction Trips" {
+rectangle "Bid for Trips" {
 
     usecase "Assign Trip Details" as A
     usecase "Post Trip" as P

@@ -13,11 +13,16 @@ Bid <- Driver : Make_bid
 
 Trip <- Bid : Add_trip
 
+activate Trip
+
 Rider -> Trip : Select_bid
 
-Trip <- Bid : Delete_trip
+Trip -> Bid : Delete_trip
 
-Trip -> Trip : Assign_driver
+
+deactivate Trip
+
+Trip -> Driver : Assign_driver
 
 Trip -> Trip : Start_trip
 

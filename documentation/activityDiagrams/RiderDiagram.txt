@@ -9,10 +9,19 @@ start
    if (authenticated?) is (yes) then
       |Rider|
       :Open home page;
-      :Create trip;
+      :Open trip page;
+      |Hagglehaul|
+      :Show trip-making UI;
+      |Rider|
+      :Input trip info;
       -> trip details;
+      |Hagglehaul|
+      :Process trip info;
       |Mapbox|
       :Produce map data;
+      -> map data;
+      |Hagglehaul|
+      :Display trip map;
       |Rider|
       :Post trip;
       |Hagglehaul|

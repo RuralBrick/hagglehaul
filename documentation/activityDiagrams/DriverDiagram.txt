@@ -9,6 +9,7 @@ start
    if (authenticated?) is (yes) then
       |Driver|
       :Open home page;
+      :Open trip page;
       |Hagglehaul|
       :Fetch trip list;
       -> map data;
