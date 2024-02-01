@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace hagglehaul.Server.Controllers
@@ -114,6 +115,15 @@ namespace hagglehaul.Server.Controllers
                 });
             }
             return Unauthorized();
+        }
+        
+        [HttpGet]
+        [Route("role")]
+        [Authorize]
+        public async Task<String> Role()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            return currentUser.FindFirstValue(ClaimTypes.Role);
         }
     }
 }
