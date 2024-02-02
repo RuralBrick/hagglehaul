@@ -10,27 +10,30 @@ function App() {
     return (
         <Router>
             <div>
-                <nav className="navbar navbar-expand-lg navbar-light bg-light">
-                    <Link className="navbar-brand" to="/">HaggleHaul</Link>
-                    <div>
-                        <ul className="navbar-nav">
-                            <li className="nav-item">
+                <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+                    <div className="container-fluid">
+                        <Link className="navbar-brand" to="/" style={{ fontFamily: 'Inika' }}>HaggleHaul</Link>
+                        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                            <span className="navbar-toggler-icon"></span>
+                        </button>
+                        <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
+                            <div className="navbar-nav ms-auto">
                                 <Link className="nav-link" to="/trips">My Trips</Link>
-                            </li>
-                            <li className="nav-item">
                                 <Link className="nav-link" to="/profile">Profile</Link>
-                            </li>
-                            {/* ... other navigation links */}
-                        </ul>
+                                {/* ... other navigation links */}
+                            </div>
+                        </div>
                     </div>
                 </nav>
 
-                <Routes>
-                    <Route path="/" element={<TripsPage />} />
-                    <Route path="/trips" element={<TripsPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    {/* ... other routes */}
-                </Routes>
+                <main className="pt-5">
+                    <Routes>
+                        <Route path="/" element={<TripsPage />} />
+                        <Route path="/trips" element={<TripsPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        {/* ... other routes */}
+                    </Routes>
+                </main>
             </div>
         </Router>
     );
