@@ -2,8 +2,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import TripsPage from './pages/TripsPage/TripsPage'; // Corrected import path
-import ProfilePage from './pages/ProfilePage/ProfilePage'; // Corrected import path
+import TripsPage from './pages/TripsPage/TripsPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
+import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
+import MessagesPage from './pages/ProfilePage/MessagesPage/MessagesPage';
+import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
 import './App.css';
 
 function App() {
@@ -31,6 +35,10 @@ function App() {
                         <Route path="/" element={<TripsPage />} />
                         <Route path="/trips" element={<TripsPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile/activity" element={<ActivityPage />} />
+                        <Route path="/profile/wallet" element={<WalletPage />} />
+                        <Route path="/profile/messages" element={<MessagesPage />} />
+                        <Route path="/profile/settings" element={<SettingsPage />} />
                         {/* ... other routes */}
                     </Routes>
                 </main>

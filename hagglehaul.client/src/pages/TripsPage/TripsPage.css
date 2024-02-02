@@ -1,5 +1,15 @@
-/* src/pages/Trips/TripsPage.css */
+/* src/pages/TripsPage/TripsPage.css */
 .trips-page {
-    padding: 20px;
-    /* Add more styling specific to TripsPage here */
+    padding-top: 1rem; /* Adjust based on your design */
+    overflow-y: auto; /* Allows inner scrolling if content is taller than the adjusted height */
+}
+
+.trip-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.trip-card:hover {
+    transform: scale(1.03); /* Makes the card pop out */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a shadow effect */
 }
