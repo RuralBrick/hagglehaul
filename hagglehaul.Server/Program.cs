@@ -15,6 +15,9 @@ builder.Services.Configure<HagglehaulDatabaseSettings>(
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JWT"));
 
+builder.Services.Configure<MapboxSettings>(
+    builder.Configuration.GetSection("Mapbox"));
+
 // Create singleton IMongoDatabase from HagglehaulDatabaseSettings
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
@@ -25,6 +28,7 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 
 builder.Services.AddSingleton<IMongoTestService, MongoTestService>();
 builder.Services.AddSingleton<IUserCoreService, UserCoreService>();
+builder.Services.AddSingleton<IGeographicRouteService, GeographicRouteService>();
 
 builder.Services.AddAuthentication(options =>
 {
