@@ -1,5 +1,87 @@
+@import url('https://fonts.googleapis.com/css?family=Inika&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* This ensures padding does not affect the total width or height */
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Full height of the viewport */
+    font-family: 'Inika', serif;
+    background-color: #E9EDED; /* Light background color from your color scheme */
+    overflow: hidden; /* Hide both vertical and horizontal overflow */
+}
+
 .login-wrapper {
+    width: 600px; /* Set a specific width for the wrapper */
+    padding: 1rem;
+    margin-left: 20px; /* Add some left margin or adjust as needed */
+    text-align: left; /* Align text to the left */
+}
+
+h1 {
+    color: #126391; /* Blue color for the heading, from your color scheme */
+}
+
+form {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Align form items to the start (left) */
+}
+
+form label {
+    color: #126391; /* Blue color for form labels, from your color scheme */
+    margin-bottom: 0.5rem;
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="email"] {
+    width: 200%; /* Full width of the form */
+    padding: 10px;
+    margin-bottom: 1rem;
+    border: 2px solid #91B7C7; /* Border color, from your color scheme */
+    background-color: #daf4f0; /* Input background color, from your color scheme */
+    color: #333;
+    border-radius: 5px;
+}
+
+/* Adjust the button styles */
+form button[type="submit"],
+.custom-button {
+    padding: 10px 20px;
+    background-color: #D96C06; /* Button background color, from your color scheme */
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    align-self: flex-start; /* Align buttons to the start (left) */
+}
+
+form button[type="submit"]:hover,
+.custom-button:hover {
+    background-color: #126391; /* Darker blue for button hover, from your color scheme */
+}
+
+/* Style for switching between login and registration */
+.toggle-form {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    text-align: left; /* Align text to the left */
+}
+
+.toggle-form a {
+    color: #126391; /* Blue color for toggle form link, from your color scheme */
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.toggle-form a:hover {
+    color: #6EB4D1; /* Lighter blue for link hover, from your color scheme */
 }

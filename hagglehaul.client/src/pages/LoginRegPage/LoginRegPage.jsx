@@ -67,63 +67,71 @@ function LoginRegPage({ setToken }) {
                     <div>
                         <label>
                             <p>Email</p>
-                            <input type="text" onChange={e => setEmail(e.target.value)} />
-                            </label>
+                            <input type="text" onChange={e => setEmail(e.target.value)}/>
+                        </label>
                     </div>
                     <div>
                         <label>
                             <p>Password</p>
-                            <input type="password" onChange={e => setPassword(e.target.value)} />
-                            </label>
+                            <input type="password" onChange={e => setPassword(e.target.value)}/>
+                        </label>
                     </div>
-                    <div class="btn-group">
-                        <input type="radio" class="btn-check" name="roleSelect" id="rider" autocomplete="off" checked={role === "rider"} onChange={() => setRole("rider")} />
-                        <label class="btn btn-secondary" for="rider" data-mdb-ripple-init>Rider</label>
+                    <br/>
+                    <div className="btn-group" style={{marginBottom: '20px'}}>
+                        <input type="radio" className="btn-check" name="roleSelect" id="rider" autoComplete="off"
+                               checked={role === "rider"} onChange={() => setRole("rider")}/>
+                        <label className="btn btn-secondary rider-toggle" htmlFor="rider"
+                               data-mdb-ripple-init>Rider</label>
 
-                        <input type="radio" class="btn-check" name="roleSelect" id="driver" autocomplete="off" checked={role === "driver"} onChange={() => setRole("driver")} />
-                        <label class="btn btn-secondary" for="driver" data-mdb-ripple-init>Driver</label>
+                        <input type="radio" className="btn-check" name="roleSelect" id="driver" autoComplete="off"
+                               checked={role === "driver"} onChange={() => setRole("driver")}/>
+                        <label className="btn btn-secondary driver-toggle" htmlFor="driver"
+                               data-mdb-ripple-init>Driver</label>
                     </div>
                     <div>
                         <button type="submit">Submit</button>
                     </div>
-                </form>
 
+                </form>
+                <br/>
                 <h3>Already have an account?</h3>
+                <br/>
                 <div>
-                    <button type="submit" onClick={handleSwitchFunc} >Login</button>
+                    <button type="submit" onClick={handleSwitchFunc} className="custom-button">Login</button>
                 </div>
 
             </div>
         );
 
-    }
-
-    else {
+    } else {
 
         return (
             <div className="login-wrapper">
-                <h1>Please Log In</h1>
+                <div className="centered-text">
+                    <h1>Please Log In</h1>
+                </div>
                 <form onSubmit={handleLoginSubmit}>
-                <div>
-                    <label>
-                        <p>Email</p>
-                        <input type="text" onChange={e => setEmail(e.target.value)} />
+                    <div>
+                        <label>
+                            <p>Email</p>
+                            <input type="text" onChange={e => setEmail(e.target.value)}/>
                         </label>
-                </div>
-                <div>
-                    <label>
-                        <p>Password</p>
-                        <input type="password" onChange={e => setPassword(e.target.value)} />
+                    </div>
+                    <div>
+                        <label>
+                            <p>Password</p>
+                            <input type="password" onChange={e => setPassword(e.target.value)}/>
                         </label>
-                </div>
+                    </div>
                     <div>
                         <button type="submit">Submit</button>
                     </div>
                 </form>
-
-                <h3>New?</h3>
+                <br/>
+                <h3>Don't Have an Account?</h3>
+                <br/>
                 <div>
-                    <button type="submit" onClick={handleSwitchFunc} >Register</button>
+                    <button type="submit" onClick={handleSwitchFunc} className="custom-button">Register</button>
                 </div>
 
             </div>
