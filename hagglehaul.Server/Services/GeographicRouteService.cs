@@ -11,16 +11,19 @@ namespace hagglehaul.Server.Services;
 public interface IGeographicRouteService
 {
     Task<GeographicRoute> GetGeographicRoute(double startLong, double startLat, double endLong, double endLat);
+    Task<string> GeocodingLookup(string query);
 }
 
 public class GeographicRouteService : IGeographicRouteService
 {
     private readonly IMongoCollection<GeographicRoute> _geographicRouteCollection;
+    private readonly IMongoCollection<GeocodingResult> _geocodingCollection;
     private readonly MapboxSettings _mapboxSettings;
     
     public GeographicRouteService(IMongoDatabase database, IOptions<MapboxSettings> mapboxSettings)
     {
         _geographicRouteCollection = database.GetCollection<GeographicRoute>("RouteInfoCache");
+        _geocodingCollection = database.GetCollection<GeocodingResult>("GeocodingCache");
         _mapboxSettings = mapboxSettings.Value;
     }
     
@@ -28,6 +31,7 @@ public class GeographicRouteService : IGeographicRouteService
     protected const string MAP_STYLE = "light-v11";
     protected const string IMAGE_WIDTH = "600";
     protected const string IMAGE_HEIGHT = "400";
+    protected const string SERVICE_COUNTRY = "us";
     
     protected static string CreateGeoJsonPoint(double longitude, double latitude, string name, string color) =>
         $"{{\"type\":\"Feature\",\"geometry\":{{\"type\":\"Point\",\"coordinates\":[{longitude},{latitude}]}},\"properties\":{{\"name\":\"{name}\",\"marker-color\":\"{color}\"}}}}";
@@ -141,5 +145,62 @@ public class GeographicRouteService : IGeographicRouteService
             await _geographicRouteCollection.InsertOneAsync(route);
         }
         return route;
+    }
+
+    public async Task<string> GeocodingLookup(string query)
+    {
+        query = query.ToLowerInvariant();
+        
+        var geocoding = await _geocodingCollection.Find(geocoding => geocoding.Query == query).FirstOrDefaultAsync();
+        if (geocoding != null)
+        {
+            return geocoding.Features;
+        }
+
+        using (HttpClient client = new HttpClient())
+        {
+            string encodedQuery = UrlEncoder.Default.Encode(query);
+            string geocodingUrl = $"https://api.mapbox.com/geocoding/v5/mapbox.places/{encodedQuery}.json";
+            var geocodingParameters = new Dictionary<string, string?>
+            {
+                { "country", SERVICE_COUNTRY },
+                { "fuzzyMatch", "true" },
+                { "autocomplete", "true" },
+                { "access_token", _mapboxSettings.AccessToken }
+            };
+            geocodingUrl = QueryHelpers.AddQueryString(geocodingUrl, geocodingParameters);
+            Console.WriteLine($"GET {geocodingUrl}");
+            try
+            {
+                HttpResponseMessage response = await client.GetAsync(geocodingUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    JsonDocument jsonResponse = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                    if (jsonResponse.RootElement.TryGetProperty("features", out JsonElement featuresElement))
+                    {
+                        string features = featuresElement.ToString()!;
+                        geocoding = new GeocodingResult
+                        {
+                            Id = ObjectId.GenerateNewId().ToString(),
+                            Query = query,
+                            Features = features
+                        };
+                        await _geocodingCollection.InsertOneAsync(geocoding);
+                        return features;
+                    }
+
+                    Console.WriteLine("Mapbox geocoding response is missing required attributes");
+                    return String.Empty;
+                }
+
+                Console.WriteLine($"Mapbox geocoding call returned error, status code: {response.StatusCode}");
+                return String.Empty;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Mapbox geocoding call failed, message: {e.Message} ");
+                return String.Empty;
+            }
+        }
     }
 }
