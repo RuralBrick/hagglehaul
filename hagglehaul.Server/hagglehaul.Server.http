@@ -25,3 +25,8 @@ GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/mongotest/secure/
 Accept: application/json
 
 ###
+
+GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/placelookup/
+Accept: application/json
+
+###

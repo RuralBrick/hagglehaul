@@ -41,6 +41,7 @@ jobs:
         env:
           HagglehaulDatabase.ConnectionString: ${{ secrets.HH_DB_CONNECTION_STRING }}
           JWT.Secret: ${{ secrets.HH_JWT_SECRET }}
+          Mapbox.AccessToken: ${{ secrets.HH_MAPBOX_SERVER_KEY }}
       
       # Deploy to Azure Web apps
       - name: 'Run Azure webapp deploy action using publish profile credentials'
