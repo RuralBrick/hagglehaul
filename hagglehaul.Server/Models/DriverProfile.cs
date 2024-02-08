@@ -13,7 +13,7 @@ namespace hagglehaul.Server.Models
         public string Email { get; set; } = null!;
 
         [BsonElement("rating")]
-        public int Rating { get; set; }
+        public double Rating { get; set; }
 
         [BsonElement("carDescription")]
         public string CarDescription { get; set; } = null!;
