@@ -1,56 +1,70 @@
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import Cookies from 'js-cookie';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import LoginRegPage from './pages/LoginRegPage/LoginRegPage';
+import TripsPage from './pages/TripsPage/TripsPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
+import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
+import MessagesPage from './pages/ProfilePage/MessagesPage/MessagesPage';
+import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
 import './App.css';
 
 function App() {
-    const [forecasts, setForecasts] = useState();
+    const [token, setToken] = useState(Cookies.get('token'));
 
-    useEffect(() => {
-        populateWeatherData();
-        checkMongo();
-    }, []);
+    function setTokenWithCookie(token)
+    {
+        Cookies.set('token', token, { expires: 7, secure: true });
+        setToken(token);
+    }
+    
+    function removeTokenWithCookie()
+    {
+        Cookies.remove('token');
+        setToken(null);
+    }
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tabelLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
+    if (!token) {
+        return <LoginRegPage setToken={setTokenWithCookie} />
+    }
 
     return (
-        <div>
-            <h1 id="tabelLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
-        </div>
+        <Router>
+            <div>
+                <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+                    <div className="container-fluid">
+                        <Link className="navbar-brand" to="/" style={{ fontFamily: 'Inika' }}>HaggleHaul</Link>
+                        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                            <span className="navbar-toggler-icon"></span>
+                        </button>
+                        <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
+                            <div className="navbar-nav ms-auto">
+                                <Link className="nav-link" to="/trips">My Trips</Link>
+                                <Link className="nav-link" to="/profile">Profile</Link>
+                                <button className="nav-link" onClick={removeTokenWithCookie}>Sign Out</button>
+                                {/* ... other navigation links */}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <main className="pt-5">
+                    <Routes>
+                        <Route path="/" element={<TripsPage />} />
+                        <Route path="/trips" element={<TripsPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile/activity" element={<ActivityPage />} />
+                        <Route path="/profile/wallet" element={<WalletPage />} />
+                        <Route path="/profile/messages" element={<MessagesPage />} />
+                        <Route path="/profile/settings" element={<SettingsPage />} />
+                        {/* ... other routes */}
+                    </Routes>
+                </main>
+            </div>
+        </Router>
     );
-    
-    async function populateWeatherData() {
-        const response = await fetch('api/weatherforecast');
-        const data = await response.json();
-        setForecasts(data);
-    }
-    
-    async function checkMongo() {
-        const response = await fetch('api/mongotest/insecure');
-        const data = await response.json();
-        console.log(data);
-    }
 }
 
 export default App;
