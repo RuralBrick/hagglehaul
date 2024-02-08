@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import LoginRegPage from './pages/LoginRegPage/LoginRegPage';
 import TripsPage from './pages/TripsPage/TripsPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
@@ -12,6 +13,13 @@ import Signup from './Signup';
 import './App.css';
 
 function App() {
+
+    const [token, setToken] = useState();
+
+    if (!token) {
+        return <LoginRegPage setToken={setToken} />
+    }
+
     return (
         <Router>
             <div>
