@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace hagglehaul.Server.Controllers
@@ -55,11 +56,11 @@ namespace hagglehaul.Server.Controllers
             if (string.IsNullOrEmpty(model.Email) ||
                 string.IsNullOrEmpty(model.Password) ||
                 string.IsNullOrEmpty(model.Role))
-                return BadRequest("One or more fields are empty");
+                return BadRequest(new { Error = "One or more fields are empty" });
             
             var existingUser = await _userCoreService.GetAsync(model.Email);
             if (existingUser is not null)
-                return BadRequest("User already exists");
+                return BadRequest(new { Error = "User already exists" });
             
             CreatePasswordHash(model.Password, out var hash, out var salt);
             var userCore = new UserCore
@@ -81,7 +82,7 @@ namespace hagglehaul.Server.Controllers
         {
             if (string.IsNullOrEmpty(model.Email) ||
                 string.IsNullOrEmpty(model.Password))
-                return BadRequest("One or more fields are empty");
+                return BadRequest(new { Error = "One or more fields are empty" });
             
             var userCore = await _userCoreService.GetAsync(model.Email);
 
@@ -114,6 +115,15 @@ namespace hagglehaul.Server.Controllers
                 });
             }
             return Unauthorized();
+        }
+        
+        [HttpGet]
+        [Route("role")]
+        [Authorize]
+        public async Task<String> Role()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            return currentUser.FindFirstValue(ClaimTypes.Role);
         }
     }
 }

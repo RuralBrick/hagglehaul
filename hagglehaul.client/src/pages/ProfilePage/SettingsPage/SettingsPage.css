@@ -1,0 +1,7 @@
+/* Example for ActivityPage.css */
+.activity-page {
+    /* Styles specific to the activity page */
+    padding: 20px;
+}
+
+/* Repeat similarly for WalletPage.css, MessagesPage.css, SettingsPage.css */
