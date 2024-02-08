@@ -28,6 +28,8 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
 
 builder.Services.AddSingleton<IMongoTestService, MongoTestService>();
 builder.Services.AddSingleton<IUserCoreService, UserCoreService>();
+builder.Services.AddSingleton<IRiderProfileService, RiderProfileService>();
+builder.Services.AddSingleton<IDriverProfileService, DriverProfileService>();
 builder.Services.AddSingleton<IGeographicRouteService, GeographicRouteService>();
 
 builder.Services.AddAuthentication(options =>
