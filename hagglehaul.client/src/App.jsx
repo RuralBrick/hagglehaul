@@ -59,9 +59,6 @@ function App() {
                         <Route path="/profile/wallet" element={<WalletPage />} />
                         <Route path="/profile/messages" element={<MessagesPage />} />
                         <Route path="/profile/settings" element={<SettingsPage />} />
-                        <Route path="/signin" element={<Signin />} /> 
-                        <Route path="/signup" element={<Signup />} /> 
-          
                         {/* ... other routes */}
                     </Routes>
                 </main>
