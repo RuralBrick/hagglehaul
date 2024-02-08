@@ -13,6 +13,7 @@ async function loginUser(credentials) {
         body: JSON.stringify(credentials)
     })
         .then(data => data.json())
+        .then(data => data.token)
 }
 
 async function registerUser(credentials) {
@@ -24,38 +25,80 @@ async function registerUser(credentials) {
         body: JSON.stringify(credentials)
     })
         .then(data => data.json())
+        .then(data => data.token)
 }
+
+const invalidRegistrationErrorMessage = "The user already exists or an unknown error occurred. Please try again.";
+const invalidLoginErrorMessage = "Unable to sign in. Please check your email or password.";
+const passwordValidationErrorMessage = "Your password does not conform to the requirements.";
+const emailValidationErrorMessage = "The email address is invalid.";
+
+const validateEmail = (inputEmail) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = emailRegex.test(inputEmail);
+    return isValid;
+};
+
+const validatePassword = (inputPassword) => {
+    const isValid = inputPassword.length >= 2 && inputPassword.length <= 99;
+    return isValid;
+};
 
 function LoginRegPage({ setToken }) {
 
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [role, setRole] = useState("rider");
     const [func, setFunc] = useState(false);
- 
+    const [errorMessage, setErrorMessage] = useState("");
 
+    const preSubmitValidation = () => {
+        if (!validateEmail(email)) {
+            setErrorMessage(emailValidationErrorMessage);
+            return false;
+        }
+        if (!validatePassword(password)) {
+            setErrorMessage(passwordValidationErrorMessage);
+            return false;
+        }
+        return true;
+    }
     const handleLoginSubmit = async e => {
         e.preventDefault();
+        if (!preSubmitValidation()) return;
+        
         const token = await loginUser({
             email,
             password
         });
+        if (!token) {
+            setErrorMessage(invalidLoginErrorMessage);
+            return;
+        }
         setToken(token);
     }
 
     const handleRegisterSubmit = async e => {
         e.preventDefault();
+        if (!preSubmitValidation()) return;
+        
         const token = await registerUser({
             email,
             password,
             role
         });
-        setFunc(false)
+        if (!token) {
+            setErrorMessage(invalidRegistrationErrorMessage);
+            return;
+        }
+        setToken(token);
     }
 
     const handleSwitchFunc = async e => {
         e.preventDefault();
-        setFunc(!func)
+        setEmail("");
+        setPassword("");
+        setFunc(!func);
     }
 
     if (func) {
@@ -63,17 +106,18 @@ function LoginRegPage({ setToken }) {
         return (
             <div className="login-wrapper">
                 <h1>Please Register</h1>
+                <p className="auth-error-message">{errorMessage}</p>
                 <form onSubmit={handleRegisterSubmit}>
                     <div>
                         <label>
                             <p>Email</p>
-                            <input type="text" onChange={e => setEmail(e.target.value)}/>
+                            <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
                         </label>
                     </div>
                     <div>
                         <label>
                             <p>Password</p>
-                            <input type="password" onChange={e => setPassword(e.target.value)}/>
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)}/>
                         </label>
                     </div>
                     <br/>
@@ -110,17 +154,18 @@ function LoginRegPage({ setToken }) {
                 <div className="centered-text">
                     <h1>Please Log In</h1>
                 </div>
+                <p className="auth-error-message">{errorMessage}</p>
                 <form onSubmit={handleLoginSubmit}>
                     <div>
                         <label>
                             <p>Email</p>
-                            <input type="text" onChange={e => setEmail(e.target.value)}/>
+                            <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
                         </label>
                     </div>
                     <div>
                         <label>
                             <p>Password</p>
-                            <input type="password" onChange={e => setPassword(e.target.value)}/>
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)}/>
                         </label>
                     </div>
                     <div>

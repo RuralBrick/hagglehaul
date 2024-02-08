@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Cookies from 'js-cookie';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoginRegPage from './pages/LoginRegPage/LoginRegPage';
@@ -8,16 +9,25 @@ import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
 import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
 import MessagesPage from './pages/ProfilePage/MessagesPage/MessagesPage';
 import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
-import Signin from './Signin';  
-import Signup from './Signup';  
 import './App.css';
 
 function App() {
+    const [token, setToken] = useState(Cookies.get('token'));
 
-    const [token, setToken] = useState();
+    function setTokenWithCookie(token)
+    {
+        Cookies.set('token', token, { expires: 7, secure: true });
+        setToken(token);
+    }
+    
+    function removeTokenWithCookie()
+    {
+        Cookies.remove('token');
+        setToken(null);
+    }
 
     if (!token) {
-        return <LoginRegPage setToken={setToken} />
+        return <LoginRegPage setToken={setTokenWithCookie} />
     }
 
     return (
@@ -33,6 +43,7 @@ function App() {
                             <div className="navbar-nav ms-auto">
                                 <Link className="nav-link" to="/trips">My Trips</Link>
                                 <Link className="nav-link" to="/profile">Profile</Link>
+                                <button className="nav-link" onClick={removeTokenWithCookie}>Sign Out</button>
                                 {/* ... other navigation links */}
                             </div>
                         </div>

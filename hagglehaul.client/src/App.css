@@ -2,7 +2,6 @@
 
 body, html {
     margin: 0;
-    padding-top: 56px; /* Adjust the value to match the height of your navbar */
     font-family: 'Inika', serif; /* Apply Inika font for the whole app */
 }
 

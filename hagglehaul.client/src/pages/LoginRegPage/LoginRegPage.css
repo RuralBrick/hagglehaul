@@ -85,3 +85,8 @@ form button[type="submit"]:hover,
 .toggle-form a:hover {
     color: #6EB4D1; /* Lighter blue for link hover, from your color scheme */
 }
+
+.auth-error-message {
+    color: #D96C06;
+    width: 75%;
+}
