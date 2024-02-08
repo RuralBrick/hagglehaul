@@ -1,4 +1,11 @@
-﻿#root {
+﻿@import url('https://fonts.googleapis.com/css?family=Inika&display=swap');
+
+body, html {
+    margin: 0;
+    font-family: 'Inika', serif; /* Apply Inika font for the whole app */
+}
+
+#root {
     max-width: 1280px;
     margin: 0 auto;
     padding: 2rem;
@@ -17,3 +24,17 @@ th, td {
     padding-left: 1rem;
     padding-right: 1rem;
 }
+/* src/App.css */
+/* Global styles and overrides */
+.navbar {
+    margin-bottom: 40px;
+    /* Add more global styles or overrides as needed */
+}
+
+/* src/App.css */
+.navbar-brand {
+    font-family: 'Inika', serif;
+}
+
+/* Other styles */
+
