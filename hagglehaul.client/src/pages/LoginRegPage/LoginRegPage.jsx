@@ -98,6 +98,7 @@ function LoginRegPage({ setToken }) {
         e.preventDefault();
         setEmail("");
         setPassword("");
+        setErrorMessage("");
         setFunc(!func);
     }
 
