@@ -9,10 +9,14 @@ namespace hagglehaul.Server.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
+        [BsonElement("email")]
+        public string Email { get; set; } = null!;
+
+        [BsonElement("tripId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string TripId { get; set; } = null!;
+
         [BsonElement("centsAmount")]
         public uint CentsAmount { get; set; }
-
-        // Rider (ref to rider that placed bid)
-        // Trip (ref to trip bid is placed under)
     }
 }
