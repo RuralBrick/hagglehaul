@@ -30,5 +30,8 @@ namespace hagglehaul.Server.Models
 
         [BsonElement("destinationLat")]
         public double DestinationLat { get; set; }
+
+        [BsonElement("partySize")]
+        public uint? PartySize { get; set; } = null!;
     }
 }
