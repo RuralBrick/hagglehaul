@@ -31,6 +31,8 @@ builder.Services.AddSingleton<IUserCoreService, UserCoreService>();
 builder.Services.AddSingleton<IRiderProfileService, RiderProfileService>();
 builder.Services.AddSingleton<IDriverProfileService, DriverProfileService>();
 builder.Services.AddSingleton<IGeographicRouteService, GeographicRouteService>();
+builder.Services.AddSingleton<ITripService, TripService>();
+builder.Services.AddSingleton<IBidService, BidService>();
 
 builder.Services.AddAuthentication(options =>
 {
