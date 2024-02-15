@@ -27,4 +27,34 @@ public class HhTestUtilities
 
         return result;
     }
+
+    public static List<RiderProfile> GetRiderProfileData(int count = 2)
+    {
+        var result = new List<RiderProfile>(count);
+        for (var i = 1; i <= count; i++)
+        {
+            result.Add(new RiderProfile
+            {
+                Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                Email = $"Test{i}@email.com"
+            });
+        }
+
+        return result;
+    }
+
+    public static List<DriverProfile> GetDriverProfileData(int count = 2)
+    {
+        var result = new List<DriverProfile>(count);
+        for (var i = 1; i <= count; i++)
+        {
+            result.Add(new DriverProfile
+            {
+                Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                Email = $"Test{i}@email.com"
+            });
+        }
+
+        return result;
+    }
 }
