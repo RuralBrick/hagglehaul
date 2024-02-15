@@ -1,0 +1,38 @@
+@startuml
+
+|Rider|
+start
+   :Login;
+   -> credentials;
+
+|Hagglehaul| 
+   if (authenticated?) is (yes) then
+      |Rider|
+      :Open home page;
+      :Open trip page;
+      |Hagglehaul|
+      :Show trip-making UI;
+      |Rider|
+      :Input trip info;
+      -> trip details;
+      |Hagglehaul|
+      :Process trip info;
+      |Mapbox|
+      :Produce map data;
+      -> map data;
+      |Hagglehaul|
+      :Display trip map;
+      |Rider|
+      :Post trip;
+      |Hagglehaul|
+      :Create trip object, add to list;
+      |Rider|
+      :Monitor trip status;
+      stop
+      
+   else (no)
+      |Rider|
+      :Receive error;
+      stop
+
+@enduml
