@@ -19,20 +19,11 @@ namespace hagglehaul.Server.Controllers
     {
         private readonly IOptions<JwtSettings> _settings;
         private readonly IUserCoreService _userCoreService;
-        private readonly IRiderProfileService _riderProfileService;
-        private readonly IDriverProfileService _driverProfileService;
 
-        public AuthenticationController(
-            IOptions<JwtSettings> settings,
-            IUserCoreService userCoreService,
-            IRiderProfileService riderProfileService,
-            IDriverProfileService driverProfileService
-        )
+        public AuthenticationController(IOptions<JwtSettings> settings, IUserCoreService userCoreService)
         {
             _settings = settings;
             _userCoreService = userCoreService;
-            _riderProfileService = riderProfileService;
-            _driverProfileService = driverProfileService;
         }
 
         protected void CreatePasswordHash(string password, out string hash, out string salt)
@@ -70,10 +61,7 @@ namespace hagglehaul.Server.Controllers
             var existingUser = await _userCoreService.GetAsync(model.Email);
             if (existingUser is not null)
                 return BadRequest(new { Error = "User already exists" });
-
-            if (model.Role != "rider" && model.Role != "driver")
-                return BadRequest(new { Error = "Role must either be \"rider\" or \"driver\"" });
-
+            
             CreatePasswordHash(model.Password, out var hash, out var salt);
             var userCore = new UserCore
             {
@@ -84,23 +72,6 @@ namespace hagglehaul.Server.Controllers
             };
 
             await _userCoreService.CreateAsync(userCore);
-
-            if (model.Role == "rider")
-            {
-                var riderProfile = new RiderProfile
-                {
-                    Email = model.Email
-                };
-                await _riderProfileService.CreateAsync(riderProfile);
-            }
-            else
-            {
-                var driverProfile = new DriverProfile
-                {
-                    Email = model.Email
-                };
-                await _driverProfileService.CreateAsync(driverProfile);
-            }
 
             return await Login(new Login { Email = model.Email, Password = model.Password });
         }

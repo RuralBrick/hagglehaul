@@ -1,0 +1,6 @@
+.map-wrapper {
+    width: 600px; /* Set a specific width for the wrapper */
+    padding: 1rem;
+    margin-left: 20px; /* Add some left margin or adjust as needed */
+    text-align: left; /* Align text to the left */
+}
