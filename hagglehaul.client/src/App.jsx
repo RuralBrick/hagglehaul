@@ -16,6 +16,7 @@ import './App.css';
 export const TokenContext = React.createContext(null);
 function App() {
     const [token, setToken] = useState(Cookies.get('token'));
+    const [showRiderAddTrip, setShowRiderAddTrip] = useState(false); // State to control the RiderAddTrip modal
 
     function setTokenWithCookie(token)
     {
@@ -29,9 +30,19 @@ function App() {
         setToken(null);
     }
 
+    function handleRiderAddTripModal(open) {
+        setShowRiderAddTrip(open);
+    }
+    
     if (!token) {
         return <LoginRegPage setToken={setTokenWithCookie} />
     }
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleOpenModal = () => setIsModalOpen(true);
+    const handleCloseModal = () => setIsModalOpen(false);
+
 
     return (
         <Router>
@@ -54,10 +65,10 @@ function App() {
                         </div>
                     </nav>
                     <main className="pt-5">
-                        <RiderAddTrip />
                         <Routes>
-                            <Route path="/" element={<TripsPage />} />
-                            <Route path="/trips" element={<TripsPage />} />
+                            <Route path="/" element={<TripsPage onAddTrip={() => handleRiderAddTripModal(true)} />} />
+                            <Route path="/trips" element={<TripsPage onAddTrip={() => handleRiderAddTripModal(true)} />} />
+                            <Route path="/rider-add-trip" element={<RiderAddTrip />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/profile/activity" element={<ActivityPage />} />
                             <Route path="/profile/wallet" element={<WalletPage />} />
@@ -65,6 +76,7 @@ function App() {
                             <Route path="/profile/settings" element={<SettingsPage />} />
                             {/* ... other routes */}
                         </Routes>
+                        {showRiderAddTrip && <RiderAddTrip onClose={() => handleRiderAddTripModal(false)} />}
                     </main>
                 </TokenContext.Provider>
             </div>

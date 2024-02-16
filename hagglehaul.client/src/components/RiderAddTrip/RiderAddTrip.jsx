@@ -23,6 +23,7 @@ function RiderAddTrip() {
     const [destination, setDestination] = useState();
     const [statusMessage, setStatusMessage] = useState("");
 
+
     const handleTripSubmit = async e => {
 
         e.preventDefault();
@@ -70,7 +71,7 @@ function RiderAddTrip() {
                 <br/>
                 <div>
                     <button type="submit" onClick={handleTripSubmit} className="custom-button">Submit</button>
-                </div>
+                </div>  
             </form>
         </div>
 

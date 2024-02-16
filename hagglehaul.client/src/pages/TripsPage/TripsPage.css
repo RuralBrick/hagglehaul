@@ -1,15 +1,40 @@
-/* src/pages/TripsPage/TripsPage.css */
 .trips-page {
-    padding-top: 1rem; /* Adjust based on your design */
-    overflow-y: auto; /* Allows inner scrolling if content is taller than the adjusted height */
+    padding-top: 1rem;
+    overflow-y: auto;
 }
 
-.trip-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
+/* Adjust the .trips-header if you have it from previous instructions or remove it if not needed */
+.trips-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.trip-card:hover {
-    transform: scale(1.03); /* Makes the card pop out */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a shadow effect */
+/* To ensure that the title stays centered, regardless of the button */
+.trips-header h2 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
+.btn-add-trip {
+    display: inline-block; /* Allows width and height to take effect */
+    width: 30px; /* Width of the button */
+    height: 30px; /* Height of the button */
+    background-color: #007bff; /* Button color */
+    color: #fff; /* Icon color */
+    font-size: 24px; /* Size of the plus icon */
+    line-height: 30px; /* Centers the plus icon vertically */
+    text-align: center; /* Centers the plus icon horizontally */
+    border-radius: 50%; /* Makes it circular */
+    border: none; /* Removes border */
+    cursor: pointer; /* Shows a pointer cursor on hover */
+    text-decoration: none; /* Removes underline from link */
+    margin-left: auto; /* Spacing from the header text */
+}
+
+.btn-add-trip:hover {
+    background-color: #0056b3; /* Darkens the button on hover */
+}
+
+
+/* ... rest of the styles */

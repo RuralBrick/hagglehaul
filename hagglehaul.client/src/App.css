@@ -3,6 +3,8 @@
 body, html {
     margin: 0;
     font-family: 'Inika', serif; /* Apply Inika font for the whole app */
+    height: 100%;
+    overflow-y: auto; /* This allows scrolling */
 }
 
 #root {

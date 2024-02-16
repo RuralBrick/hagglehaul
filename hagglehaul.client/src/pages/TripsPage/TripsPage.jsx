@@ -1,11 +1,14 @@
-// src/pages/TripsPage/TripsPage.jsx
 import React from 'react';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 import './TripsPage.css';
 
 function TripsPage() {
     return (
         <div className="trips-page container mt-5">
-            <h2 className="mb-4">Confirmed Trips</h2>
+            <div className="trips-header mb-4">
+                <h2>Confirmed Trips</h2>
+                <Link to="/rider-add-trip" className="btn-add-trip">+</Link> {/* Styled circular plus button */}
+            </div>
             <div className="card mb-3">
                 <div className="card-body">
                     <h5 className="card-title">Riverside Gaming Lab</h5>
