@@ -17,6 +17,8 @@ export const TokenContext = React.createContext(null);
 function App() {
     const [token, setToken] = useState(Cookies.get('token'));
     const [showRiderAddTrip, setShowRiderAddTrip] = useState(false); // State to control the RiderAddTrip modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
 
     function setTokenWithCookie(token)
     {
@@ -38,10 +40,6 @@ function App() {
         return <LoginRegPage setToken={setTokenWithCookie} />
     }
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const handleOpenModal = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
 
 
     return (

@@ -48,7 +48,7 @@ function AddressSearchBar({setCoordinates}) {
     return (
         <div >
             <input type="text" ref={inputRef} placeholder="Enter Address" value={inputText} onChange={handleAddressInput} />
-            {results.map((result, index) => (
+            {results && results.map((result, index) => (
                 <div key={index} onClick={() => handleResultClick(result.text, result.center)}>
                     {result.text}
                     ({result.place_name})
