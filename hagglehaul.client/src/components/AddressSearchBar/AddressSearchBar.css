@@ -1,0 +1,13 @@
+.address-input {
+    width: 100%;
+    max-width: 500px; /* Set a max-width for the input fields */
+    min-width: 250px; /* Prevents the input from shrinking smaller than this size */
+    box-sizing: border-box; /* Make sure padding and borders are included in the width */
+    /* Rest of your styles */
+}
+
+.results-container {
+    width: 100%;
+    box-sizing: border-box;
+    /* Rest of your styles */
+}

@@ -56,15 +56,13 @@ function RiderAddTrip() {
             <form onSubmit={() =>{}}>
                 <div>
                     <label>
-                        <p>Origin</p>
-                        <p>Debugging info: {origin}</p>
+                        <p>Please Enter Your Origin: </p>
                         <AddressSearchBar setCoordinates={setOrigin}/>
                     </label>
                 </div>
                 <div>
                     <label>
-                        <p>Destination</p>
-                        <p>Debugging info: {destination}</p>
+                        <p>Please Enter Your Destination: </p>
                         <AddressSearchBar setCoordinates={setDestination}/>
                     </label>
                 </div>

@@ -46,14 +46,23 @@ function AddressSearchBar({setCoordinates}) {
     }
 
     return (
-        <div >
-            <input type="text" ref={inputRef} placeholder="Enter Address" value={inputText} onChange={handleAddressInput} />
-            {results && results.map((result, index) => (
-                <div key={index} onClick={() => handleResultClick(result.text, result.center)}>
-                    {result.text}
-                    ({result.place_name})
-                </div>
-            ))}
+        <div className="address-search-bar">
+            <input
+                type="text"
+                ref={inputRef}
+                className="address-input" // Use the class here
+                placeholder="Enter Address"
+                value={inputText}
+                onChange={handleAddressInput}
+            />
+            <div className="results-container">
+                {Array.isArray(results) ? results.map((result, index) => (
+                    <div key={index} onClick={() => handleResultClick(result.text, result.center)}>
+                        {result.text}
+                        ({result.place_name})
+                    </div>
+                )) : null}
+            </div>
         </div>
     );
 }

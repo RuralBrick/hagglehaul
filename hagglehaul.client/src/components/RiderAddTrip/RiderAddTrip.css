@@ -67,3 +67,10 @@
     right: 10px;
     /* Style as needed */
 }
+
+/* RiderAddTrip.css */
+.address-search-container {
+    width: 100%;
+    max-width: 500px; /* Match this with the width of the address input */
+    margin-bottom: 20px; /* Add space between the search bars if needed */
+}
