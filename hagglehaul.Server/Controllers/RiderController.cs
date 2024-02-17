@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
+using System.Runtime.InteropServices;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -27,7 +28,7 @@ namespace hagglehaul.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet]
+        [HttpPost]
         [Route("modifyAcc")]
         public async Task<IActionResult> ModifyAccountDetails([FromBody] RiderUpdate riderUpdate )
         {
@@ -50,28 +51,29 @@ namespace hagglehaul.Server.Controllers
             
             if (changingPassword)
             {
-                if (_userCoreService.ComparePasswordToHash(riderUpdate.CurrentPassword, userCore.PasswordHash,userCore.Salt))
+
+                if (!_userCoreService.ComparePasswordToHash(riderUpdate.CurrentPassword, userCore.PasswordHash,userCore.Salt))
                 {
                     return BadRequest(new { Error = "Current Password is invalid" });
                 }
                 
             }
-            UserCore newUserCore = new UserCore();
-            newUserCore.Email = email;
-            newUserCore.Id = userCore.Id;
-            newUserCore.Name = userCore.Name;
-            newUserCore.Role = userCore.Role;
-            newUserCore.Phone = userCore.Phone;
+            
             if (changingPassword) {
+                Console.WriteLine("changing pass");
                 _userCoreService.CreatePasswordHash(riderUpdate.NewPassword, out var newHash, out var newSalt);
-                newUserCore.PasswordHash = newHash;
-                newUserCore.Salt = newSalt;
-            } else
-            {
-                newUserCore.PasswordHash = userCore.PasswordHash;
-                newUserCore.Salt = userCore.Salt;
+                userCore.PasswordHash = newHash;
+                userCore.Salt = newSalt;
             }
-            await _userCoreService.UpdateAsync(email, newUserCore);
+            if (!String.IsNullOrEmpty(riderUpdate.Name))
+            {
+                userCore.Name = riderUpdate.Name;
+            }
+            if (!String.IsNullOrEmpty(riderUpdate.Phone))
+            {
+                userCore.Phone = riderUpdate.Phone;
+            }
+            await _userCoreService.UpdateAsync(email, userCore);
             return Ok();
         }
     }
