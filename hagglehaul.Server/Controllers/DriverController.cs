@@ -25,9 +25,10 @@ namespace hagglehaul.Server.Controllers
         }
         
         [HttpPost]
-        [Route("createBid")]
+        [HttpPatch]
+        [Route("bid")]
         [Authorize]
-        public async Task<IActionResult> CreateBid([FromBody] CreateBid request)
+        public async Task<IActionResult> CreateOrUpdateBid([FromBody] CreateOrUpdateBid request)
         {
             ClaimsPrincipal currentUser = this.User;
             var username = currentUser.FindFirstValue(ClaimTypes.Name);
@@ -37,27 +38,76 @@ namespace hagglehaul.Server.Controllers
                 return Unauthorized();
             }
             
-            if (String.IsNullOrEmpty(request.TripId) || (await _tripService.GetTripByIdAsync(request.TripId)) == null)
+            Trip trip = await _tripService.GetTripByIdAsync(request.TripId);
+            if (String.IsNullOrEmpty(request.TripId) || trip == null)
             {
                 return BadRequest(new { Error = "Invalid tripId" });
+            }
+            
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
+            {
+                return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
             
             if (request.CentsAmount <= 0)
             {
                 return BadRequest(new { Error = "Invalid centsAmount for trip" });
             }
-            
-            if ((await _bidService.GetDriverBidsAsync(username)).Any(bid => bid.TripId == request.TripId))
+
+            Bid existingBid = (await _bidService.GetDriverBidsAsync(username)).FirstOrDefault(bid => bid.TripId == request.TripId);
+            if (existingBid != null)
             {
-                return BadRequest(new { Error = "Driver already bid on this trip" });
+                // Create bid
+                existingBid.CentsAmount = request.CentsAmount;
+                await _bidService.UpdateAsync(existingBid.Id, existingBid);
+            }
+            else
+            {
+                // Update bid
+                await _bidService.CreateAsync(new Bid
+                {
+                    DriverEmail = username,
+                    TripId = request.TripId,
+                    CentsAmount = request.CentsAmount
+                });
             }
             
-            await _bidService.CreateAsync(new Bid
+            return Ok();
+        }
+        
+        [HttpDelete]
+        [Route("bid")]
+        [Authorize]
+        public async Task<IActionResult> DeleteBid([FromQuery] string tripId)
+        {
+            ClaimsPrincipal currentUser = this.User;
+            var username = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
             {
-                DriverEmail = username,
-                TripId = request.TripId,
-                CentsAmount = request.CentsAmount
-            });
+                return Unauthorized();
+            }
+        
+            Trip trip = await _tripService.GetTripByIdAsync(tripId);
+            if (String.IsNullOrEmpty(tripId) || trip == null)
+            {
+                return BadRequest(new { Error = "Invalid tripId" });
+            }
+        
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
+            {
+                return BadRequest(new { Error = "The trip is either confirmed or in the past" });
+            }
+        
+            Bid existingBid = (await _bidService.GetDriverBidsAsync(username)).FirstOrDefault(bid => bid.TripId == tripId);
+            if (existingBid != null)
+            {
+                await _bidService.DeleteAsync(existingBid.Id);
+            }
+            else
+            {
+                return BadRequest(new { Error = "No bid found for this trip" });
+            }
             
             return Ok();
         }

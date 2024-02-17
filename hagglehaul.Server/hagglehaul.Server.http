@@ -36,7 +36,17 @@ Accept: application/json
 
 ###
 
-GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/createBid/
+POST {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/bid/
+Accept: application/json
+
+###
+
+PATCH {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/bid/
+Accept: application/json
+
+###
+
+DELETE {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/bid/
 Accept: application/json
 
 ###

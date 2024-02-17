@@ -59,7 +59,7 @@ public class DriverControllerTests
             x => x.CreateAsync(It.IsAny<Bid>())
         )!.Callback<Bid>((Bid b) => saveBid = b);
 
-        var request = new CreateBid
+        var request = new CreateOrUpdateBid
         {
             TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
             CentsAmount = 100
@@ -76,11 +76,61 @@ public class DriverControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
         
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<OkResult>());
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Once());
         
         Assert.That(saveBid.TripId, Is.EqualTo(request.TripId));
         Assert.That(saveBid.CentsAmount, Is.EqualTo(request.CentsAmount));
+    }
+    
+    [Test]
+    public async Task DriverControllerCannotCreateBidPastOrConfirmedTripTest()
+    {
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData(hasDriver: true).FirstOrDefault(trip => trip.Id == s)
+        );
+        
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>(0)
+        );
+        
+        Bid saveBid = new Bid();
+        _mockBidService.Setup(
+            x => x.CreateAsync(It.IsAny<Bid>())
+        )!.Callback<Bid>((Bid b) => saveBid = b);
+
+        var request = new CreateOrUpdateBid
+        {
+            TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+            CentsAmount = 100
+        };
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+        
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<BadRequestObjectResult>());
+        _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never());
+        
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData(inPast: true).FirstOrDefault(trip => trip.Id == s)
+        );
+        
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<BadRequestObjectResult>());
+        _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never());
     }
     
     [Test]
@@ -98,7 +148,7 @@ public class DriverControllerTests
             (string s) => new List<Bid>(0)
         );
 
-        var request = new CreateBid
+        var request = new CreateOrUpdateBid
         {
             TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
             CentsAmount = 100
@@ -115,7 +165,7 @@ public class DriverControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
         
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<UnauthorizedResult>());
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<UnauthorizedResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never());
     }
     
@@ -134,7 +184,7 @@ public class DriverControllerTests
             (string s) => new List<Bid>(0)
         );
 
-        var request = new CreateBid
+        var request = new CreateOrUpdateBid
         {
             TripId = new StringBuilder().Insert(0, "9", 24).ToString(), // nonexistent trip
             CentsAmount = 100
@@ -151,7 +201,7 @@ public class DriverControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
         
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<BadRequestObjectResult>());
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<BadRequestObjectResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never());
     }
     
@@ -170,7 +220,7 @@ public class DriverControllerTests
             (string s) => new List<Bid>(0)
         );
 
-        var request = new CreateBid
+        var request = new CreateOrUpdateBid
         {
             TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
             CentsAmount = 0
@@ -187,12 +237,12 @@ public class DriverControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
         
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<BadRequestObjectResult>());
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<BadRequestObjectResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never());
     }
     
     [Test]
-    public async Task DriverControllerCannotCreateTwoBidsOnTripTest()
+    public async Task DriverControllerCanUpdateBidTest()
     {
         _mockTripService.Setup(
             x => x.GetTripByIdAsync(It.IsAny<string>())
@@ -205,16 +255,21 @@ public class DriverControllerTests
         )!.ReturnsAsync(
             (string s) => HhTestUtilities.GetBidData(1)
         );
-        
+
+        string saveId = String.Empty;
         Bid saveBid = new Bid();
         _mockBidService.Setup(
-            x => x.CreateAsync(It.IsAny<Bid>())
-        )!.Callback<Bid>((Bid b) => saveBid = b);
+            x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Bid>())
+        )!.Callback<String, Bid>((String id, Bid b) =>
+        {
+            saveId = id;
+            saveBid = b;
+        });
 
-        var request = new CreateBid
+        var request = new CreateOrUpdateBid
         {
             TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
-            CentsAmount = 100
+            CentsAmount = 101
         };
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -228,16 +283,140 @@ public class DriverControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
         
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<BadRequestObjectResult>());
+        // Modify a bid
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never());
-        
-        request.CentsAmount = 101;
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<BadRequestObjectResult>());
-        _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Never);
-        
-        request.TripId = new StringBuilder().Insert(0, "2", 24).ToString();
-        Assert.That(await _controller.CreateBid(request), Is.InstanceOf<OkResult>());
-        _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Once());
+        _mockBidService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Bid>()), Times.Once());
+        Assert.That(saveId, Is.EqualTo(request.TripId));
         Assert.That(saveBid.TripId, Is.EqualTo(request.TripId));
+        Assert.That(saveBid.CentsAmount, Is.EqualTo(request.CentsAmount));
+        
+        // Create a new bid
+        request.TripId = new StringBuilder().Insert(0, "2", 24).ToString();
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
+        _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Once());
+        // Update was not called any further
+        _mockBidService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Bid>()), Times.Once());
+    }
+
+    [Test]
+    public async Task DriverControllerDeleteBidTest()
+    {
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
+        );
+
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetBidData(1)
+        );
+
+        string saveId = String.Empty;
+        _mockBidService.Setup(
+            x => x.DeleteAsync(It.IsAny<String>())
+        )!.Callback<String>((String id) => saveId = id);
+
+        string requestId = new StringBuilder().Insert(0, "1", 24).ToString();
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        Assert.That(await _controller.DeleteBid(requestId), Is.InstanceOf<OkResult>());
+        _mockBidService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Once());
+        Assert.That(saveId, Is.EqualTo(requestId));
+    }
+
+    [Test]
+    public async Task DriverControllerCannotDeleteNonexistentBidTest()
+    {
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
+        );
+
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>(0)
+        );
+
+        string saveId = String.Empty;
+        _mockBidService.Setup(
+            x => x.DeleteAsync(It.IsAny<String>())
+        )!.Callback<String>((String id) => saveId = id);
+
+        string requestId = new StringBuilder().Insert(0, "1", 24).ToString();
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        Assert.That(await _controller.DeleteBid(requestId), Is.InstanceOf<BadRequestObjectResult>());
+        _mockBidService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
+    }
+
+    [Test]
+    public async Task DriverControllerCannotDeletePastOrConfirmedTripBidTest()
+    {
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData(hasDriver: true).FirstOrDefault(trip => trip.Id == s)
+        );
+
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetBidData(1)
+        );
+
+        string saveId = String.Empty;
+        _mockBidService.Setup(
+            x => x.DeleteAsync(It.IsAny<String>())
+        )!.Callback<String>((String id) => saveId = id);
+
+        string requestId = new StringBuilder().Insert(0, "1", 24).ToString();
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        Assert.That(await _controller.DeleteBid(requestId), Is.InstanceOf<BadRequestObjectResult>());
+        _mockBidService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
+
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData(inPast: true).FirstOrDefault(trip => trip.Id == s)
+        );
+
+        Assert.That(await _controller.DeleteBid(requestId), Is.InstanceOf<BadRequestObjectResult>());
+        _mockBidService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
     }
 }
