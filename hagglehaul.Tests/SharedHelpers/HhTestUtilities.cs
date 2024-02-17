@@ -12,7 +12,7 @@ public class HhTestUtilities
         var json2 = JsonSerializer.Serialize(obj2);
         return json1 == json2;
     }
-    
+
     public static List<MongoTest> GetMongoTestData(int count = 2)
     {
         var result = new List<MongoTest>(count);
@@ -52,6 +52,45 @@ public class HhTestUtilities
             {
                 Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
                 Email = $"Test{i}@email.com"
+            });
+        }
+
+        return result;
+    }
+
+    public static List<Trip> GetTripData(int count = 2)
+    {
+        var result = new List<Trip>(count);
+        for (var i = 1; i <= count; i++)
+        {
+            result.Add(new Trip
+            {
+                Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                RiderEmail = "rider@example.com",
+                DriverEmail = null,
+                StartTime = DateTime.Now.AddHours(36),
+                PickupLong = 1.0 + (i * 0.1),
+                PickupLat = 1.0 + (i * 0.1),
+                DestinationLong = 2.0 + (i * 0.1),
+                DestinationLat = 2.0 + (i * 0.1),
+                PartySize = 1
+            });
+        }
+
+        return result;
+    }
+
+    public static List<Bid> GetBidData(int count = 2)
+    {
+        var result = new List<Bid>(count);
+        for (var i = 1; i <= count; i++)
+        {
+            result.Add(new Bid
+            {
+                Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                DriverEmail = "driver@example.com",
+                TripId = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                CentsAmount = 100
             });
         }
 

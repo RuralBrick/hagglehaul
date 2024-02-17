@@ -35,3 +35,8 @@ GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/placelookup/
 Accept: application/json
 
 ###
+
+GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/createBid/
+Accept: application/json
+
+###
