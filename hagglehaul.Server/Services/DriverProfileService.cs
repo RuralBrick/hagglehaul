@@ -7,6 +7,7 @@ namespace hagglehaul.Server.Services
     {
         Task<DriverProfile> GetAsync(string email);
         Task<DriverProfile> CreateAsync(DriverProfile driverProfile);
+        Task UpdateAsync(string email, DriverProfile driverProfileIn);
     }
 
     public class DriverProfileService : IDriverProfileService
@@ -23,6 +24,8 @@ namespace hagglehaul.Server.Services
             var driverProfile = await _driverProfileCollection.Find(driverProfile => driverProfile.Email == email).FirstOrDefaultAsync();
             return driverProfile;
         }
+        public async Task UpdateAsync(string email, DriverProfile driverProfileIn) =>
+            await _driverProfileCollection.ReplaceOneAsync(driverProfile => driverProfile.Email == email, driverProfileIn);
 
         public async Task<DriverProfile> CreateAsync(DriverProfile driverProfile)
         {
