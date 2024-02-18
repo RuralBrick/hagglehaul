@@ -19,6 +19,9 @@ builder.Services.Configure<JwtSettings>(
 builder.Services.Configure<MapboxSettings>(
     builder.Configuration.GetSection("Mapbox"));
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("AzureCommunicationServices"));
+
 // Create singleton IMongoDatabase from HagglehaulDatabaseSettings
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
@@ -34,6 +37,7 @@ builder.Services.AddSingleton<IDriverProfileService, DriverProfileService>();
 builder.Services.AddSingleton<IGeographicRouteService, GeographicRouteService>();
 builder.Services.AddSingleton<ITripService, TripService>();
 builder.Services.AddSingleton<IBidService, BidService>();
+builder.Services.AddSingleton<IEmailNotificationService, EmailNotificationService>();
 
 builder.Services.AddAuthentication(options =>
 {
