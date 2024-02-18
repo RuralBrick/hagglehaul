@@ -26,6 +26,27 @@ namespace hagglehaul.Server.Controllers
             _bidService = bidService;
         }
 
+        [Authorize]
+        [HttpGet]
+        [Route("about")]
+        [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Get()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(email);
+            DriverBasicInfo driverBasicInfo = new DriverBasicInfo();
+            driverBasicInfo.Name = userCore.Name;
+            driverBasicInfo.Email = email;
+            driverBasicInfo.Phone = userCore.Phone;
+            driverBasicInfo.CarDescription = driverProfile.CarDescription;
+            return Ok(driverBasicInfo);
+        }
 
         [Authorize]
         [HttpPost]
