@@ -34,6 +34,7 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpGet]
         [Route("about")]
+        [ProducesResponseType(typeof(RiderBasicInfo), StatusCodes.Status200OK)]
         public async Task<IActionResult> Get()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -44,10 +45,10 @@ namespace hagglehaul.Server.Controllers
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             RiderBasicInfo riderBasicInfo = new RiderBasicInfo();
+            riderBasicInfo.Name = userCore.Name;
             riderBasicInfo.Email = email;
             riderBasicInfo.Phone = userCore.Phone;
-            string response = JsonSerializer.Serialize(riderBasicInfo);
-            return this.Content(response, "application/json");
+            return Ok(riderBasicInfo);
         }
 
         [Authorize]
