@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
 using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Data;
+using MongoDB.Bson.IO;
+using System.Text.Json;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -25,6 +29,25 @@ namespace hagglehaul.Server.Controllers
             _userCoreService = userCoreService;
             _tripService = tripService;
             _bidService = bidService;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("about")]
+        public async Task<IActionResult> Get()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            RiderBasicInfo riderBasicInfo = new RiderBasicInfo();
+            riderBasicInfo.Email = email;
+            riderBasicInfo.Phone = userCore.Phone;
+            string response = JsonSerializer.Serialize(riderBasicInfo);
+            return this.Content(response, "application/json");
         }
 
         [Authorize]
