@@ -30,10 +30,16 @@ public class EmailNotificationService : IEmailNotificationService
     
     protected Dictionary<EmailNotificationType, string> _emailTemplates = new()
     {
-        // TODO: Replace with actual paths and use Blazor to render the HTML with data parameter
         { EmailNotificationType.NewBid, "EmailViews/NewBidEmail.cshtml" },
-        { EmailNotificationType.AcceptedBid, "somePath/AcceptedBid.html" },
-        { EmailNotificationType.Confirmation, "somePath/Confirmation.html" },
+        { EmailNotificationType.AcceptedBid, "EmailViews/AcceptedBidEmail.cshtml" },
+        { EmailNotificationType.Confirmation, "EmailViews/ConfirmationEmail.cshtml" },
+    };
+    
+    protected Dictionary<EmailNotificationType, string> _subjectLines = new()
+    {
+        { EmailNotificationType.NewBid, "Hagglehaul Trip: You have a new bid" },
+        { EmailNotificationType.AcceptedBid, "Hagglehaul Driver Management: Your bid has been accepted" },
+        { EmailNotificationType.Confirmation, "Hagglehaul Trip: Ride Confirmation" },
     };
 
     public async Task SendEmailNotification(EmailNotificationType type, string recipient, dynamic data)
@@ -43,7 +49,7 @@ public class EmailNotificationService : IEmailNotificationService
             WaitUntil.Started,
             senderAddress: _emailSettings.SenderAddress,
             recipientAddress: recipient,
-            subject: "Test Email",
+            subject: _subjectLines[type],
             htmlContent: htmlContent
         );
         await emailSendOperation.WaitForCompletionAsync();
