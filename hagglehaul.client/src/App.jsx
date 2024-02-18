@@ -16,7 +16,6 @@ import './App.css';
 export const TokenContext = React.createContext(null);
 function App() {
     const [token, setToken] = useState(Cookies.get('token'));
-    const [showRiderAddTrip, setShowRiderAddTrip] = useState(false); // State to control the RiderAddTrip modal
     
     function setTokenWithCookie(token)
     {
@@ -29,16 +28,10 @@ function App() {
         Cookies.remove('token');
         setToken(null);
     }
-
-    function handleRiderAddTripModal(open) {
-        setShowRiderAddTrip(open);
-    }
     
     if (!token) {
         return <LoginRegPage setToken={setTokenWithCookie} />
     }
-
-
 
     return (
         <Router>
@@ -72,7 +65,6 @@ function App() {
                             <Route path="/profile/settings" element={<SettingsPage />} />
                             {/* ... other routes */}
                         </Routes>
-                        {showRiderAddTrip && <RiderAddTrip onClose={() => handleRiderAddTripModal(false)} />}
                     </main>
                 </TokenContext.Provider>
             </div>
