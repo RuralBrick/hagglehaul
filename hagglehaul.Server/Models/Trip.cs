@@ -16,7 +16,7 @@ namespace hagglehaul.Server.Models
         public string DriverEmail { get; set; } = null!;
 
         [BsonElement("startTime")]
-        [BsonRepresentation(BsonType.Timestamp)]
+        [BsonRepresentation(BsonType.DateTime)]
         public DateTime StartTime { get; set; }
 
         [BsonElement("pickupLong")]

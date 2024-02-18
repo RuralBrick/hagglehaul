@@ -35,29 +35,6 @@ namespace hagglehaul.Server.Controllers
             _driverProfileService = driverProfileService;
         }
 
-        protected void CreatePasswordHash(string password, out string hash, out string salt)
-        {
-            byte[] saltBytes = RandomNumberGenerator.GetBytes(128 / 8);
-            salt = Convert.ToBase64String(saltBytes);
-            hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password!,
-                salt: saltBytes,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8));
-        }
-        
-        protected bool ComparePasswordToHash(string password, string hash, string salt)
-        {
-            string newHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password!,
-                salt: Convert.FromBase64String(salt),
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8));
-            return newHash == hash;
-        }
-
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] Register model)
@@ -74,7 +51,7 @@ namespace hagglehaul.Server.Controllers
             if (model.Role != "rider" && model.Role != "driver")
                 return BadRequest(new { Error = "Role must either be \"rider\" or \"driver\"" });
 
-            CreatePasswordHash(model.Password, out var hash, out var salt);
+            _userCoreService.CreatePasswordHash(model.Password, out var hash, out var salt);
             var userCore = new UserCore
             {
                 Email = model.Email,
@@ -116,7 +93,7 @@ namespace hagglehaul.Server.Controllers
             var userCore = await _userCoreService.GetAsync(model.Email);
 
             if (userCore is not null &&
-                ComparePasswordToHash(model.Password, userCore.PasswordHash, userCore.Salt)
+                _userCoreService.ComparePasswordToHash(model.Password, userCore.PasswordHash, userCore.Salt)
                 )
             {
                 var authClaims = new List<Claim>

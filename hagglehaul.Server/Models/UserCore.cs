@@ -12,6 +12,12 @@ namespace hagglehaul.Server.Models
         [BsonElement("email")]
         public string Email { get; set; } = null!;
 
+        [BsonElement("phone")]
+        public string Phone { get; set; } = null!;
+
+        [BsonElement("name")]
+        public string Name { get; set; } = null!;
+
         [BsonElement("salt")]
         public string Salt { get; set; } = null!;
 
