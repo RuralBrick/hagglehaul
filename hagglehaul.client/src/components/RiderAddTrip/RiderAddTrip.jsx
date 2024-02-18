@@ -50,8 +50,7 @@ function RiderAddTrip() {
     }
 
     return (
-        <div className="map-wrapper">
-            <h1>Please Enter Route</h1>
+        <div className="map-wrapper mt-3">
             <p className="trip-status-message">{statusMessage}</p>
             <form onSubmit={() =>{}}>
                 <div>

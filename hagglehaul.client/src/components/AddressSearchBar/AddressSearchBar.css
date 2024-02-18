@@ -5,9 +5,6 @@
     min-width: 250px; /* Prevents the input from shrinking smaller than this size */
     box-sizing: border-box; /* Make sure padding and borders are included in the width */
     border-radius: 4px 4px 0 0; /* This rounds the top corners */
-    
-    /* Rest of your input styles */
-    /* Other styles like padding, font-size, border, etc. */
 }
 
 /* This targets the input fields directly */
@@ -25,12 +22,13 @@ input.address-input:focus {
 /* Results container should be the same width as the input and rounded corners */
 .results-container {
     position: absolute;
-    width: calc(100% - 2px); /* Subtract border size to match input field width */
-    max-width: 498px; /* 2px less than .address-input to account for borders */
+    transform: translateY(-15px);
+    width: 450px;
+    max-width: 85%;
     max-height: 200px;
     overflow-y: auto;
     background: #fff;
-    border: none; /* this fixed it */
+    border: none;
     border-top: none;
     border-radius: 0 0 4px 4px; /* Round only the bottom corners */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -48,17 +46,3 @@ input.address-input:focus {
     background-color: #f0f0f0;
 }
 
-/* Adjust the rider-add-trip form to ensure it doesn't cause input fields to be of different lengths */
-.map-wrapper {
-    width: 100%; /* Use 100% width to make it responsive */
-    max-width: 600px; /* Optional: limit the max width */
-    margin: 0 auto; /* Center the form in the middle of the page */
-    padding: 1rem;
-    /* Rest of your styles */
-}
-
-/* Ensure the input wrapper takes the full width */
-.address-search-bar {
-    width: 100%;
-    /* Add any additional styling as needed */
-}

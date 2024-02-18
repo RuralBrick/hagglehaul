@@ -58,8 +58,8 @@ function AddressSearchBar({setCoordinates}) {
             <div className="results-container">
                 {Array.isArray(results) && results.map((result, index) => (
                     <div key={index} className="result-item" onClick={() => handleResultClick(result.text, result.center)}>
-                        {result.text}
-                        ({result.place_name})
+                        <b>{result.text}</b><br />
+                        <span style={{fontSize: "0.7em"}}>{result.place_name}</span>
                     </div>
                 ))}
             </div>
