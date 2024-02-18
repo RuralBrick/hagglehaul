@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import {Spinner} from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './LoginRegPage.css';
 
@@ -51,6 +51,7 @@ function LoginRegPage({ setToken }) {
     const [role, setRole] = useState("rider");
     const [func, setFunc] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [waiting, setWaiting] = useState(false);
 
     const preSubmitValidation = () => {
         if (!validateEmail(email)) {
@@ -67,12 +68,14 @@ function LoginRegPage({ setToken }) {
         e.preventDefault();
         if (!preSubmitValidation()) return;
         
+        setWaiting(true);
         const token = await loginUser({
             email,
             password
         });
         if (!token) {
             setErrorMessage(invalidLoginErrorMessage);
+            setWaiting(false);
             return;
         }
         setToken(token);
@@ -81,7 +84,8 @@ function LoginRegPage({ setToken }) {
     const handleRegisterSubmit = async e => {
         e.preventDefault();
         if (!preSubmitValidation()) return;
-        
+
+        setWaiting(true);
         const token = await registerUser({
             email,
             password,
@@ -89,6 +93,7 @@ function LoginRegPage({ setToken }) {
         });
         if (!token) {
             setErrorMessage(invalidRegistrationErrorMessage);
+            setWaiting(false)
             return;
         }
         setToken(token);
@@ -105,6 +110,7 @@ function LoginRegPage({ setToken }) {
     if (func) {
 
         return (
+            <div className="login-flex">
             <div className="login-wrapper">
                 <h1>Please Register</h1>
                 <p className="auth-error-message">{errorMessage}</p>
@@ -134,7 +140,13 @@ function LoginRegPage({ setToken }) {
                                data-mdb-ripple-init>Driver</label>
                     </div>
                     <div>
-                        <button type="submit">Submit</button>
+                        {waiting ?
+                            <Spinner animation="border" role="status" style={{color: "#D96C06"}}>
+                                <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                            :
+                            <button type="submit">Submit</button>
+                        }
                     </div>
 
                 </form>
@@ -146,11 +158,13 @@ function LoginRegPage({ setToken }) {
                 </div>
 
             </div>
+            </div>
         );
 
     } else {
 
         return (
+            <div className="login-flex">
             <div className="login-wrapper">
                 <div className="centered-text">
                     <h1>Please Log In</h1>
@@ -170,16 +184,23 @@ function LoginRegPage({ setToken }) {
                         </label>
                     </div>
                     <div>
-                        <button type="submit">Submit</button>
+                        {waiting ?
+                            <Spinner animation="border" role="status" style={{color: "#D96C06"}}>
+                                <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                            :
+                            <button type="submit">Submit</button>
+                        }
                     </div>
                 </form>
                 <br/>
                 <h3>Don't Have an Account?</h3>
                 <br/>
                 <div>
-                    <button type="submit" onClick={handleSwitchFunc} className="custom-button">Register</button>
+                        <button type="submit" onClick={handleSwitchFunc} className="custom-button">Register</button>
                 </div>
 
+            </div>
             </div>
         );
     }

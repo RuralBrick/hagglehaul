@@ -1,15 +1,30 @@
-/* src/pages/TripsPage/TripsPage.css */
 .trips-page {
-    padding-top: 1rem; /* Adjust based on your design */
-    overflow-y: auto; /* Allows inner scrolling if content is taller than the adjusted height */
+    width: 80vw;
 }
 
-.trip-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
+.trips-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.trip-card:hover {
-    transform: scale(1.03); /* Makes the card pop out */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a shadow effect */
+.trips-header h2 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
+.btn-add-trip {
+    display:inline-block;position:relative;left: 100%;
+    transform: translateX(-100%);
+    background-color: #007bff; /* Button color */
+    color: #fff; /* Icon color */
+    
+
+}
+
+.btn-add-trip:hover {
+    background-color: #0056b3; /* Darkens the button on hover */
+}
+
+
+/* ... rest of the styles */
