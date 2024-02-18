@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models
 {
+    [BsonIgnoreExtraElements]
     public class UserCore
     {
         [BsonId]
