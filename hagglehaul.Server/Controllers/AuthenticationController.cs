@@ -66,7 +66,8 @@ namespace hagglehaul.Server.Controllers
             {
                 var riderProfile = new RiderProfile
                 {
-                    Email = model.Email
+                    Email = model.Email,
+                    NumRatings = 0
                 };
                 await _riderProfileService.CreateAsync(riderProfile);
             }
@@ -74,7 +75,8 @@ namespace hagglehaul.Server.Controllers
             {
                 var driverProfile = new DriverProfile
                 {
-                    Email = model.Email
+                    Email = model.Email,
+                    NumRatings = 0
                 };
                 await _driverProfileService.CreateAsync(driverProfile);
             }

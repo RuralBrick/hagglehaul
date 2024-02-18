@@ -3,6 +3,7 @@ using MongoDB.Bson;
 
 namespace hagglehaul.Server.Models
 {
+    [BsonIgnoreExtraElements]
     public class DriverProfile
     {
         [BsonId]
@@ -14,6 +15,9 @@ namespace hagglehaul.Server.Models
 
         [BsonElement("rating")]
         public double? Rating { get; set; } = null!;
+        
+        [BsonElement("numRatings")]
+        public uint? NumRatings { get; set; } = null!;
 
         [BsonElement("carDescription")]
         public string CarDescription { get; set; } = null!;
