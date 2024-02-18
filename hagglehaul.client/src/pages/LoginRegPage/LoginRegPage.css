@@ -1,35 +1,21 @@
 @import url('https://fonts.googleapis.com/css?family=Inika&display=swap');
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box; /* This ensures padding does not affect the total width or height */
-}
-
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100vh; /* Full height of the viewport */
-    font-family: 'Inika', serif;
-    background-color: #E9EDED; /* Light background color from your color scheme */
-    overflow: hidden; /* Hide both vertical and horizontal overflow */
+.login-flex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+    width: 95vw;
 }
 
 .login-wrapper {
-    width: 600px; /* Set a specific width for the wrapper */
+    width: min(450px, 100%);
     padding: 1rem;
-    margin-left: 20px; /* Add some left margin or adjust as needed */
     text-align: left; /* Align text to the left */
 }
 
 h1 {
     color: #126391; /* Blue color for the heading, from your color scheme */
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* Align form items to the start (left) */
 }
 
 form label {
@@ -40,7 +26,7 @@ form label {
 form input[type="text"],
 form input[type="password"],
 form input[type="email"] {
-    width: 200%; /* Full width of the form */
+    width: min(450px, 80vw);
     padding: 10px;
     margin-bottom: 1rem;
     border: 2px solid #91B7C7; /* Border color, from your color scheme */
@@ -88,5 +74,4 @@ form button[type="submit"]:hover,
 
 .auth-error-message {
     color: #D96C06;
-    width: 75%;
 }

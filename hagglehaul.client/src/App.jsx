@@ -62,7 +62,7 @@ function App() {
                             </div>
                         </div>
                     </nav>
-                    <main className="pt-5">
+                    <main className="pt-2 hh-app-flex">
                         <Routes>
                             <Route path="/" element={<TripsPage onAddTrip={() => handleRiderAddTripModal(true)} />} />
                             <Route path="/trips" element={<TripsPage onAddTrip={() => handleRiderAddTripModal(true)} />} />

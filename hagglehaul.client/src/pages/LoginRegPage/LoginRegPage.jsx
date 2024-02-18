@@ -110,6 +110,7 @@ function LoginRegPage({ setToken }) {
     if (func) {
 
         return (
+            <div className="login-flex">
             <div className="login-wrapper">
                 <h1>Please Register</h1>
                 <p className="auth-error-message">{errorMessage}</p>
@@ -157,11 +158,13 @@ function LoginRegPage({ setToken }) {
                 </div>
 
             </div>
+            </div>
         );
 
     } else {
 
         return (
+            <div className="login-flex">
             <div className="login-wrapper">
                 <div className="centered-text">
                     <h1>Please Log In</h1>
@@ -197,6 +200,7 @@ function LoginRegPage({ setToken }) {
                         <button type="submit" onClick={handleSwitchFunc} className="custom-button">Register</button>
                 </div>
 
+            </div>
             </div>
         );
     }

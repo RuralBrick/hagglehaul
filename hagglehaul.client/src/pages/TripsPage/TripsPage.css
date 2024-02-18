@@ -1,16 +1,13 @@
 .trips-page {
-    padding-top: 1rem;
-    overflow-y: auto;
+    width: 80vw;
 }
 
-/* Adjust the .trips-header if you have it from previous instructions or remove it if not needed */
 .trips-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* To ensure that the title stays centered, regardless of the button */
 .trips-header h2 {
     position: absolute;
     left: 50%;
