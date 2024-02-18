@@ -8,6 +8,7 @@ namespace hagglehaul.Server.Services
         Task<List<Trip>> GetAllTripsAsync();
         Task<List<Trip>> GetRiderTripsAsync(string email);
         Task<List<Trip>> GetDriverTripsAsync(string email);
+        Task<Trip> GetTripByIdAsync(string id);
         Task<Trip> CreateAsync(Trip trip);
     }
 
@@ -36,6 +37,12 @@ namespace hagglehaul.Server.Services
         {
             var riderTrips = await _tripCollection.Find(trip => trip.DriverEmail == email).ToListAsync();
             return riderTrips;
+        }
+        
+        public async Task<Trip> GetTripByIdAsync(string id)
+        {
+            var trip = await _tripCollection.Find(trip => trip.Id == id).FirstOrDefaultAsync();
+            return trip;
         }
 
         public async Task<Trip> CreateAsync(Trip trip)

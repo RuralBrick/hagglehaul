@@ -8,6 +8,8 @@ namespace hagglehaul.Server.Services
         Task<List<Bid>> GetDriverBidsAsync(string email);
         Task<List<Bid>> GetTripBidsAsync(string tripId);
         Task<Bid> CreateAsync(Bid bid);
+        Task UpdateAsync(string id, Bid bidIn);
+        Task DeleteAsync(string id);
     }
 
     public class BidService : IBidService
@@ -36,5 +38,11 @@ namespace hagglehaul.Server.Services
             await _bidCollection.InsertOneAsync(bid);
             return bid;
         }
+        
+        public async Task UpdateAsync(string id, Bid bidIn) =>
+            await _bidCollection.ReplaceOneAsync(bid => bid.Id == id, bidIn);
+        
+        public async Task DeleteAsync(string id) =>
+            await _bidCollection.DeleteOneAsync(bid => bid.Id == id);
     }
 }
