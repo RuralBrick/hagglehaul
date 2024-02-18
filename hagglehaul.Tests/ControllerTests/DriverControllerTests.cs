@@ -14,6 +14,7 @@ public class DriverControllerTests
 {
     private Mock<IDriverProfileService> _mockDriverProfileService;
     private Mock<IRiderProfileService> _mockRiderProfileService;
+    private Mock<IUserCoreService> _mockUserCoreService;
     private Mock<ITripService> _mockTripService;
     private Mock<IBidService> _mockBidService;
     
@@ -24,10 +25,11 @@ public class DriverControllerTests
     {
         _mockDriverProfileService = new Mock<IDriverProfileService>();
         _mockRiderProfileService = new Mock<IRiderProfileService>();
+        _mockUserCoreService = new Mock<IUserCoreService>();
         _mockTripService = new Mock<ITripService>();
         _mockBidService = new Mock<IBidService>();
         
-        _controller = new DriverController(_mockDriverProfileService.Object, _mockRiderProfileService.Object, _mockTripService.Object, _mockBidService.Object);
+        _controller = new DriverController(_mockDriverProfileService.Object, _mockRiderProfileService.Object, _mockUserCoreService.Object, _mockTripService.Object, _mockBidService.Object);
     }
     
     [SetUp]

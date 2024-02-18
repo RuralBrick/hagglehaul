@@ -13,17 +13,76 @@ namespace hagglehaul.Server.Controllers
     {
         private readonly IDriverProfileService _driverProfileService;
         private readonly IRiderProfileService _riderProfileService;
+        private readonly IUserCoreService _userCoreService;
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
 
-        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, ITripService tripService, IBidService bidService)
+        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService)
         {
             _driverProfileService = driverProfileService;
             _riderProfileService = riderProfileService;
+            _userCoreService = userCoreService;
             _tripService = tripService;
             _bidService = bidService;
         }
-        
+
+
+        [Authorize]
+        [HttpPost]
+        [Route("modifyAcc")]
+        public async Task<IActionResult> ModifyAccountDetails([FromBody] DriverUpdate driverUpdate)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            bool changingPassword = !String.IsNullOrEmpty(driverUpdate.NewPassword);
+            if (String.IsNullOrEmpty(driverUpdate.CurrentPassword) && changingPassword)
+            {
+                return BadRequest(new { Error = "Can't make a new password" });
+            }
+
+            //check role for error
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(email);
+            if (changingPassword)
+            {
+
+                if (!_userCoreService.ComparePasswordToHash(driverUpdate.CurrentPassword, userCore.PasswordHash, userCore.Salt))
+                {
+                    return BadRequest(new { Error = "Current Password is invalid" });
+                }
+
+            }
+
+            if (changingPassword)
+            {
+                Console.WriteLine("changing pass");
+                _userCoreService.CreatePasswordHash(driverUpdate.NewPassword, out var newHash, out var newSalt);
+                userCore.PasswordHash = newHash;
+                userCore.Salt = newSalt;
+            }
+            if (!String.IsNullOrEmpty(driverUpdate.Name))
+            {
+                userCore.Name = driverUpdate.Name;
+            }
+            if (!String.IsNullOrEmpty(driverUpdate.Phone))
+            {
+                userCore.Phone = driverUpdate.Phone;
+            }
+            if (!String.IsNullOrEmpty(driverUpdate.CarDescription))
+            {
+                driverProfile.CarDescription = driverUpdate.CarDescription;
+            }
+            await _userCoreService.UpdateAsync(email, userCore);
+            await _driverProfileService.UpdateAsync(email, driverProfile);
+            return Ok();
+        }
+
         [HttpPost]
         [HttpPatch]
         [Route("bid")]
