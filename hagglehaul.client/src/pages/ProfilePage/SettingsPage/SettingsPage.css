@@ -1,7 +1,6 @@
-/* Example for ActivityPage.css */
-.activity-page {
-    /* Styles specific to the activity page */
-    padding: 20px;
+
+.car-details-wrapper {
+    display: flex;
+    flex-direction: row;
 }
 
-/* Repeat similarly for WalletPage.css, MessagesPage.css, SettingsPage.css */
