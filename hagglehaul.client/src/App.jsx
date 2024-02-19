@@ -9,6 +9,7 @@ import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
 import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
 import MessagesPage from './pages/ProfilePage/MessagesPage/MessagesPage';
 import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
+import CreateTripPage from './pages/CreateTripPage/CreateTripPage';
 import './App.css';
 
 function App() {
@@ -54,6 +55,8 @@ function App() {
                     <Routes>
                         <Route path="/" element={<TripsPage />} />
                         <Route path="/trips" element={<TripsPage />} />
+                        <Route path="/create-trip" element={<CreateTripPage />} />
+
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/profile/activity" element={<ActivityPage />} />
                         <Route path="/profile/wallet" element={<WalletPage />} />
