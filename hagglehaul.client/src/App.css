@@ -9,12 +9,13 @@ body, html {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 95vw;
+    width: 98vw;
 }
 
 #root {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
     max-width: 1280px;
-    padding: 2rem;
 }
 
 tr:nth-child(even) {
