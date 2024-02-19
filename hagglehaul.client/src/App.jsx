@@ -15,7 +15,7 @@ import './App.css';
 export const TokenContext = React.createContext({token: null, role: null});
 function App() {
     const [token, setToken] = useState(Cookies.get('token'));
-    const [role, setRole] = useState("");
+    const [role, setRole] = useState(Cookies.get('role'));
 
     const fetchRole = async (token) => {
         const m_results = await fetch('api/Authentication/role', {
@@ -26,6 +26,7 @@ function App() {
             }
         })
             .then(data => data.text());
+        Cookies.set('role', m_results, { expires: 0.125, secure: true });
         setRole(m_results);
     }
 
@@ -40,6 +41,7 @@ function App() {
     {
         Cookies.remove('token');
         setToken(null);
+        Cookies.remove('role');
         setRole(null);
     }
     
