@@ -104,6 +104,27 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        [Authorize]
+        [HttpGet]
+        [Route("bid")]
+        public async Task<IActionResult> GetDriverBids()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var dbBids = await _bidService.GetDriverBidsAsync(email);
+            var driverBids = dbBids.Select(bid => new BidInfo
+            {
+                DriverEmail = bid.DriverEmail,
+                TripId = bid.TripId,
+                CentsAmount = bid.CentsAmount,
+            }).ToList();
+            return Ok(driverBids);
+        }
+
         [HttpPost]
         [HttpPatch]
         [Route("bid")]
@@ -190,6 +211,20 @@ namespace hagglehaul.Server.Controllers
             }
             
             return Ok();
+        }
+
+        [HttpGet]
+        [Route("tripBids")]
+        public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
+        {
+            var dbBids = await _bidService.GetTripBidsAsync(tripId);
+            var driverBids = dbBids.Select(bid => new BidInfo
+            {
+                DriverEmail = bid.DriverEmail,
+                TripId = bid.TripId,
+                CentsAmount = bid.CentsAmount,
+            }).ToList();
+            return Ok(driverBids);
         }
     }
 }

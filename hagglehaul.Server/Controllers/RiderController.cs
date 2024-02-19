@@ -100,6 +100,73 @@ namespace hagglehaul.Server.Controllers
             await _userCoreService.UpdateAsync(email, userCore);
             return Ok();
         }
-    }
 
+        [Authorize]
+        [HttpGet]
+        [Route("trip")]
+        public async Task<IActionResult> GetAllRiderTrips()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var dbTrips = await _tripService.GetRiderTripsAsync(email);
+            var riderTrips = dbTrips.Select(trip => new RiderTripInfo
+            {
+                TripId = trip.Id,
+                DriverEmail = trip.DriverEmail,
+                StartTime = trip.StartTime,
+                PickupLong = trip.PickupLong,
+                PickupLat = trip.PickupLat,
+                DestinationLong = trip.DestinationLong,
+                DestinationLat = trip.DestinationLat,
+                PartySize = trip.PartySize,
+            }).ToList();
+            return Ok(riderTrips);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("trip")]
+        public async Task<IActionResult> PostRiderTrip([FromBody] CreateTrip tripDetails)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); };
+
+            Trip trip = new Trip
+            {
+                RiderEmail = email,
+                StartTime = tripDetails.StartTime,
+                PickupLong = tripDetails.PickupLong,
+                PickupLat = tripDetails.PickupLat,
+                DestinationLong = tripDetails.DestinationLong,
+                DestinationLat = tripDetails.DestinationLat,
+            };
+
+            await _tripService.CreateAsync(trip);
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("tripBids")]
+        public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
+        {
+            var dbBids = await _bidService.GetTripBidsAsync(tripId);
+            var riderBids = dbBids.Select(bid => new BidInfo
+            {
+                DriverEmail = bid.DriverEmail,
+                TripId = bid.TripId,
+                CentsAmount = bid.CentsAmount,
+            }).ToList();
+            return Ok(riderBids);
+        }
+    }
 }

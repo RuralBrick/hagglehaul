@@ -42,6 +42,53 @@ public class DriverControllerTests
     }
 
     [Test]
+    public async Task DriverGetOwnBidsTest()
+    {
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
+        );
+
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>(0)
+        );
+
+        Bid saveBid = new Bid();
+        _mockBidService.Setup(
+            x => x.CreateAsync(It.IsAny<Bid>())
+        )!.Callback<Bid>((Bid b) => saveBid = b);
+
+        var request = new CreateOrUpdateBid
+        {
+            TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+            CentsAmount = 100
+        };
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
+
+        var result = await _controller.GetDriverBids() as OkObjectResult;
+        var driverBids = result.Value as List<BidInfo>;
+        var getBid = driverBids.FirstOrDefault();
+        Assert.That(getBid.DriverEmail, Is.EqualTo("driver@example.com"));
+        Assert.That(getBid.TripId, Is.EqualTo(request.TripId));
+        Assert.That(getBid.CentsAmount, Is.EqualTo(request.CentsAmount));
+    }
+
+    [Test]
     public async Task DriverControllerCreateBidTest()
     {
         _mockTripService.Setup(
