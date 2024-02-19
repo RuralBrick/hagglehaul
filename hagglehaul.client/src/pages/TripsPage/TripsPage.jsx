@@ -1,86 +1,47 @@
-import React, { useState } from 'react';
-import Calendar from 'react-calendar';
+// src/pages/TripsPage/TripsPage.jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
 import './TripsPage.css';
 
 function TripsPage() {
-    const trips = [
-        {
-            id: 1,
-            name: 'Riverside Gaming Lab',
-            address: '3633 Market St, Riverside, CA 92501',
-            dateTime: new Date('2024-01-28T17:22:00'), 
-            price: '$23.78'
-        },
-        {
-            id: 2,
-            name: 'Disneyland Park',
-            address: 'Anaheim, CA 92802',
-            driver: 'Will Smith',
-            rating: '4.83',
-            dateTime: new Date('2024-02-03T06:32:00'), 
-            price: '$76.93'
-        }
-    ];
-
-    const [selectedDate, setSelectedDate] = useState(null);
-
-    const formatDate = (date) => {
-        const options = { day: 'numeric', month: 'short' };
-        return date.toLocaleDateString('en-US', options);
-    };
-
-    // Function to filter trips by date
-    const getTripsOnDate = (date) => {
-        if (!date) return trips; // Return all trips if no date selected
-        const filteredTrips = trips.filter(trip => {
-            const tripDate = new Date(trip.dateTime);
-            return tripDate.toDateString() === date.toDateString();
-        });
-        return filteredTrips;
-    };
-
-    const handleDateChange = (date) => {
-        setSelectedDate(date);
-    };
-// Function to highlight dates with trips
-const tileContent = ({ date, view }) => {
-    if (view === 'month') {
-        const tripDates = trips.map(trip => new Date(trip.dateTime).toDateString());
-        const dateString = date.toDateString();
-        if (tripDates.includes(dateString)) {
-            return (
-                <div className="trip-marker"></div>
-            );
-        }
-    }
-};
-
-
-
     return (
         <div className="trips-page container mt-5">
+
+            <div className="create-trip-link">
+                <Link to="/create-trip" className="nav-link" style={{ color: 'grey', fontSize: '20px', padding: '10px 20px', borderRadius: '10px', border: '1px solid grey' }}>Create New Trip</Link>            
+            </div>
+            
             <h2 className="mb-4">Confirmed Trips</h2>
-            <div className="calendar-container">
-                <Calendar
-                    onChange={handleDateChange}
-                    value={selectedDate}
-                    className="custom-calendar"
-                    tileContent={tileContent}
-                />
+            <div className="card mb-3">
+                <div className="card-body">
+                    <h5 className="card-title">Riverside Gaming Lab</h5>
+                    <h6 className="card-subtitle mb-2 text-muted">3633 Market St, Riverside, CA 92501</h6>
+                    <p className="card-text">1/28/2024, 5:22 PM - $23.78</p>
+                </div>
             </div>
-            <div className="trip-list">
-                {selectedDate && (
-                    <h3>{formatDate(selectedDate)}</h3>
-                )}
-                {getTripsOnDate(selectedDate).map(trip => (
-                    <div key={trip.id} className="trip-item">
-                        <h5>{trip.name}</h5>
-                        <p>{trip.address}</p>
-                        <p>{trip.dateTime.toLocaleString()}</p> {}
-                        <p>{trip.price}</p>
+
+            <h2 className="mb-4">Trips in Bidding</h2>
+            <div className="card mb-3">
+                <div className="card-body">
+                    <h5 className="card-title">Disneyland Park</h5>
+                    <h6 className="card-subtitle mb-2 text-muted">Anaheim, CA 92802</h6>
+                    <div className="card-text">
+                        <div className="row">
+                            <div className="col-sm">
+                                <p>Driver: Will Smith</p>
+                                <p>Rating: 4.83</p>
+                            </div>
+                            <div className="col-sm">
+                                <p>Time: 2/03/2024, 6:32 AM</p>
+                                <p>Price: $76.93</p>
+                            </div>
+                        </div>
                     </div>
-                ))}
+                </div>
             </div>
+            {/* ... Add more cards for each trip */}
+
+
         </div>
     );
 }
