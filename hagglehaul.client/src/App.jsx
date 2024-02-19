@@ -17,7 +17,7 @@ function App() {
     const [token, setToken] = useState(Cookies.get('token'));
     const [role, setRole] = useState("");
 
-    const fetchRole = async () => {
+    const fetchRole = async (token) => {
         const m_results = await fetch('api/Authentication/role', {
             method: 'GET',
             headers: {
@@ -34,7 +34,7 @@ function App() {
         Cookies.set('token', token, { expires: 0.125, secure: true });
         setToken(token);
 
-        fetchRole();
+        fetchRole(token);
     }
     
     function removeTokenWithCookie()

@@ -1,5 +1,6 @@
 // src/pages/SettingsPage/SettingsPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { TokenContext } from "@/App.jsx";
 import PropTypes from 'prop-types'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './SettingsPage.css';
@@ -20,7 +21,7 @@ function SettingsPage() {
     const [carColor, setCarColor] = useState("");
     const [license, setLicense] = useState("");
 
-    const [role, setRole] = React.useContext(TokenContext)
+    const { token, role } = useContext(TokenContext)
     const [waiting, setWaiting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -63,7 +64,7 @@ function SettingsPage() {
 
     }
 
-    if (role == 'rider') {
+    if (1==1) {
         return (
             <div className="settings-flex">
                 <div className="settings-wrapper">
@@ -72,7 +73,7 @@ function SettingsPage() {
                         < br />
                         <div>
                             <label>
-                                <p>Name</p>
+                                <p>{role}</p>
                                 <input type="text" value={userName} onChange={e => setName(e.target.value)} />
                             </label>
                         </div>
