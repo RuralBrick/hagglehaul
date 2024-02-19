@@ -1,6 +1,7 @@
 // src/pages/SettingsPage/SettingsPage.jsx
 import React, { useState, useContext } from 'react';
 import { TokenContext } from "@/App.jsx";
+import { Spinner } from 'react-bootstrap';
 import PropTypes from 'prop-types'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './SettingsPage.css';
@@ -9,6 +10,33 @@ const validatePassword = (inputPassword) => {
     const isValid = inputPassword.length >= 2 && inputPassword.length <= 99;
     return isValid;
 };
+
+async function customizeRider(details, token) {
+    return await fetch('api/Rider/modifyAcc', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: details
+    })
+        .then(data => data.json());
+}
+async function customizeDriver(details, token) {
+    return await fetch('api/Driver/modifyAcc', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: details
+    })
+        .then(data => data.json());
+}
+
+
+const invalidCustomizationErrorMessage = "There was an issue changing your details. Please try again.";
+const passwordValidationErrorMessage = "Your password does not conform to the requirements.";
 
 function SettingsPage() {
 
@@ -44,7 +72,7 @@ function SettingsPage() {
     const handleRiderChangeSubmit = async e => {
 
         e.preventDefault();
-        if (newPass && !preSubmitValidation()) return;
+        if (!preSubmitValidation()) return;
 
         setWaiting(true);
         const results = await customizeRider({
@@ -52,7 +80,7 @@ function SettingsPage() {
             phoneNum,
             oldPass,
             newPass
-        });
+        }, token);
 
         if (!results) {
             setErrorMessage(invalidCustomizationErrorMessage);
@@ -64,11 +92,36 @@ function SettingsPage() {
 
     }
 
-    if (1==1) {
+    const handleDriverChangeSubmit = async e => {
+
+        e.preventDefault();
+        if (!preSubmitValidation()) return;
+
+        const carDetails = carBrand + carColor + license;
+
+        setWaiting(true);
+        const results = await customizeDriver({
+            userName,
+            phoneNum,
+            carDetails,
+            oldPass,
+            newPass
+        }, token);
+
+        if (!results) {
+            setErrorMessage(invalidCustomizationErrorMessage);
+            setWaiting(false)
+            return;
+        }
+
+        setWaiting(false)
+
+    }
+
+    if (role == "rider") {
         return (
             <div className="settings-flex">
                 <div className="settings-wrapper">
-                    <p className="auth-error-message">{errorMessage}</p>
                     <form onSubmit={handleRiderChangeSubmit}>
                         < br />
                         <div>
@@ -96,7 +149,8 @@ function SettingsPage() {
                             </label>
                         </div>
                         <br />
-                        <div>
+                        <p className="auth-error-message">{errorMessage}</p>
+                        <div>                          
                             {waiting ?
                                 <Spinner animation="border" role="status" style={{ color: "#D96C06" }}>
                                     <span className="visually-hidden">Loading...</span>
@@ -117,8 +171,7 @@ function SettingsPage() {
         return (
             <div className="settings-flex">
                 <div className="settings-wrapper">
-                    <p className="auth-error-message">{errorMessage}</p>
-                    <form onSubmit={handleRiderChangeSubmit}>
+                    <form onSubmit={handleDriverChangeSubmit}>
                         < br />
                         <div>
                             <label>
@@ -159,7 +212,8 @@ function SettingsPage() {
                             </label>
                         </div>
                         <br />
-                        <div>
+                        <p className="auth-error-message">{errorMessage}</p>
+                        <div>                          
                             {waiting ?
                                 <Spinner animation="border" role="status" style={{ color: "#D96C06" }}>
                                     <span className="visually-hidden">Loading...</span>
