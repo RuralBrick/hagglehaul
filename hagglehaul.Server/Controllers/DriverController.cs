@@ -213,6 +213,106 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        [Authorize]
+        [HttpGet]
+        [Route("trip")]
+        public async Task<IActionResult> GetDriverTrips()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var dbTrips = await _tripService.GetDriverTripsAsync(email);
+            var driverTrips = dbTrips.Select(trip => new DriverTripInfo
+            {
+                TripId = trip.Id,
+                StartTime = trip.StartTime,
+                PickupLong = trip.PickupLong,
+                PickupLat = trip.PickupLat,
+                DestinationLong = trip.DestinationLong,
+                DestinationLat = trip.DestinationLat,
+                PartySize = trip.PartySize,
+            }).ToList();
+            return Ok(driverTrips);
+        }
+
+        [HttpGet]
+        [Route("allTrips")]
+        public async Task<IActionResult> GetAllAvailableTrips()
+        {
+            var dbTrips = await _tripService.GetAllTripsAsync();
+            var driverTrips = dbTrips.Where(
+                trip => trip.DriverEmail == null
+            ).Select(trip => new DriverTripInfo
+            {
+                TripId = trip.Id,
+                RiderEmail = trip.RiderEmail,
+                StartTime = trip.StartTime,
+                PickupLong = trip.PickupLong,
+                PickupLat = trip.PickupLat,
+                DestinationLong = trip.DestinationLong,
+                DestinationLat = trip.DestinationLat,
+                PartySize = trip.PartySize,
+            }).ToList();
+            return Ok(driverTrips);
+        }
+
+        [HttpGet]
+        [Route("tripMarket")]
+        public async Task<IActionResult> GetAvailableTrips([FromBody] TripMarketOptions options)
+        {
+            var allTrips = await _tripService.GetAllTripsAsync();
+
+            var filteredTrips = allTrips;
+
+            IOrderedEnumerable<Trip> sortedTrips = null!;
+            foreach (var sortMethod in options.SortMethods)
+            {
+                switch (sortMethod)
+                {
+                    case "euclideanDistance":
+                        break;
+                    case "routeDistance":
+                        break;
+                    case "currentToStartDistance":
+                        break;
+                    case "endToTargetDistance":
+                        break;
+                    case "currentMinBid":
+                        break;
+                    case "startTime":
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => trip.StartTime);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => trip.StartTime);
+                        break;
+                    default:
+                        return BadRequest(new { Error = "Invalid sort method" });
+                }
+            }
+
+            List<Trip> finalTrips;
+            if (sortedTrips != null)
+                finalTrips = sortedTrips.ToList();
+            else
+                finalTrips = filteredTrips;
+
+            var driverTrips = finalTrips.Select(trip => new DriverTripInfo
+            {
+                TripId = trip.Id,
+                RiderEmail = trip.RiderEmail,
+                StartTime = trip.StartTime,
+                PickupLong = trip.PickupLong,
+                PickupLat = trip.PickupLat,
+                DestinationLong = trip.DestinationLong,
+                DestinationLat = trip.DestinationLat,
+                PartySize = trip.PartySize,
+            }).ToList();
+            return Ok(driverTrips);
+        }
+
         [HttpGet]
         [Route("tripBids")]
         public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
