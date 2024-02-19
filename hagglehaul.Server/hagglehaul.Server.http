@@ -1,11 +1,6 @@
 @hagglehaul.Server_HostAddress = http://localhost:5250
 @hagglehaul.Api_Base = api
 
-GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/weatherforecast/
-Accept: application/json
-
-###
-
 POST {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/authentication/login/
 Accept: application/json
 
@@ -32,6 +27,21 @@ Accept: application/json
 ###
 
 GET {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/placelookup/
+Accept: application/json
+
+###
+
+POST {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/bid/
+Accept: application/json
+
+###
+
+PATCH {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/bid/
+Accept: application/json
+
+###
+
+DELETE {{hagglehaul.Server_HostAddress}}/{{hagglehaul.Api_Base}}/driver/bid/
 Accept: application/json
 
 ###

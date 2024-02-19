@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models
 {
+    [BsonIgnoreExtraElements]
     public class Trip
     {
         [BsonId]
@@ -16,7 +17,7 @@ namespace hagglehaul.Server.Models
         public string DriverEmail { get; set; } = null!;
 
         [BsonElement("startTime")]
-        [BsonRepresentation(BsonType.Timestamp)]
+        [BsonRepresentation(BsonType.DateTime)]
         public DateTime StartTime { get; set; }
 
         [BsonElement("pickupLong")]

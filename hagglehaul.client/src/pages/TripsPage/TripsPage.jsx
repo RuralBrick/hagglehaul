@@ -1,48 +1,86 @@
 // src/pages/TripsPage/TripsPage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import React, {useState} from 'react';
 import './TripsPage.css';
+import TripCard from "@/components/TripCard/TripCard.jsx";
+import {DropdownButton, ButtonGroup, Dropdown, Button, Row, Col} from "react-bootstrap";
+import AddTripModal from "@/components/AddTripModal/AddTripModal.jsx";
 
 function TripsPage() {
+    const [showAddTrip, setShowAddTrip] = useState(false);
+
     return (
-        <div className="trips-page container mt-5">
 
-            <div className="create-trip-link">
-                <Link to="/create-trip" className="nav-link" style={{ color: 'grey', fontSize: '20px', padding: '10px 20px', borderRadius: '10px', border: '1px solid grey' }}>Create New Trip</Link>            
-            </div>
-            
-            <h2 className="mb-4">Confirmed Trips</h2>
-            <div className="card mb-3">
-                <div className="card-body">
-                    <h5 className="card-title">Riverside Gaming Lab</h5>
-                    <h6 className="card-subtitle mb-2 text-muted">3633 Market St, Riverside, CA 92501</h6>
-                    <p className="card-text">1/28/2024, 5:22 PM - $23.78</p>
+        <>
+            <AddTripModal show={showAddTrip} setShow={setShowAddTrip}/>
+            <div className="trips-page container mt-5">
+                <div className="trips-header mb-4">
+                    <h2>Confirmed Trips</h2>
+                    <Button onClick={() => {
+                        setShowAddTrip(true)
+                    }} className="btn-add-trip">+ Add Trip</Button>
                 </div>
-            </div>
-
-            <h2 className="mb-4">Trips in Bidding</h2>
-            <div className="card mb-3">
-                <div className="card-body">
-                    <h5 className="card-title">Disneyland Park</h5>
-                    <h6 className="card-subtitle mb-2 text-muted">Anaheim, CA 92802</h6>
-                    <div className="card-text">
-                        <div className="row">
-                            <div className="col-sm">
-                                <p>Driver: Will Smith</p>
-                                <p>Rating: 4.83</p>
-                            </div>
-                            <div className="col-sm">
-                                <p>Time: 2/03/2024, 6:32 AM</p>
-                                <p>Price: $76.93</p>
-                            </div>
-                        </div>
-                    </div>
+                <Row xs={1} md={2} lg={1}>
+                    <TripCard
+                        image="https://placeholder.co/600x400.png"
+                        title="Disneyland Park"
+                        actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
+                        attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
+                        bidComponents={[
+                            <Row>
+                                <Col>Some left aligned components</Col>
+                                <Col className={"text-end"}>Some right aligned components</Col>
+                            </Row>,
+                            <Row>
+                                <Col>Some left aligned components</Col>
+                                <Col className={"text-end"}>Some right aligned components</Col>
+                            </Row>,
+                            <Button variant="light">+ Add Bid</Button>]}
+                    />
+                    <TripCard
+                        image="https://placeholder.co/600x400.png"
+                        title="Staples Center"
+                        actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
+                        attributes={[["Column 1", "Information 1"], ["Column 2", "Information 2"], ["Column 3", "Information 3"]]}
+                        bidComponents={[]}
+                    />
+                    <TripCard
+                        image="https://placeholder.co/600x400.png"
+                        title="UCLA Jules Stein Eye Institute"
+                        actionComponent={<DropdownButton as={ButtonGroup} title="Options" id="bg-nested-dropdown"
+                                                         variant="light">
+                            <Dropdown.Item>Cancel Trip</Dropdown.Item>
+                            <Dropdown.Item>Do Something</Dropdown.Item>
+                        </DropdownButton>}
+                        attributes={[["Column 1", "Information 1"], ["Column 2", "Information 2"], ["Column 3", "Information 3"]]}
+                        bidComponents={[]}
+                    />
+                </Row>
+                <div className="trips-header mt-4 mb-4">
+                    <h2>Trips in Bidding</h2>
                 </div>
+                <Row xs={1} md={2} lg={1}>
+                    <TripCard
+                        image="https://placeholder.co/600x400.png"
+                        title="Disneyland Park"
+                        actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
+                        attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
+                        bidComponents={[
+                            <Row>
+                                <Col>Some left aligned components</Col>
+                                <Col className={"text-end"}>Some right aligned components</Col>
+                            </Row>,
+                            <Row>
+                                <Col>Some left aligned components</Col>
+                                <Col className={"text-end"}>Some right aligned components</Col>
+                            </Row>,
+                            <Button variant="light">+ Add Bid</Button>]}
+                    />
+                </Row>
             </div>
-            {/* ... Add more cards for each trip */}
 
-
-        </div>
+        </>
     );
 }
 

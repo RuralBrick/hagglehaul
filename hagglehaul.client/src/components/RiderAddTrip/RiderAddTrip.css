@@ -1,0 +1,69 @@
+/* RiderAddTrip.css */
+.modal-overlay {
+    position: fixed; /* Cover the entire viewport */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    z-index: 10; /* Sit on top of other content */
+}
+
+.rider-add-trip-modal {
+    position: fixed; /* Sit on top of the overlay */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the modal */
+    z-index: 11; /* Above the overlay */
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    /* Add more styling as needed */
+}
+
+/* RiderAddTrip.css */
+.rider-add-trip-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* High z-index to ensure it's above other content */
+}
+
+.rider-add-trip-modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    z-index: 1001; /* Above the overlay */
+    /* Add other styles such as width, max-width, box-shadow as desired */
+}
+
+.rider-add-trip-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: none;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+
+.close-modal-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    /* Style as needed */
+}
+
+/* RiderAddTrip.css */
+.address-search-container {
+    width: 100%;
+    max-width: 500px; /* Match this with the width of the address input */
+    margin-bottom: 20px; /* Add space between the search bars if needed */
+}

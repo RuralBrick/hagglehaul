@@ -1,0 +1,48 @@
+/* AddressSearchBar.css */
+.address-input {
+    width: 100%;
+    max-width: 500px; /* Set a max-width for the input fields */
+    min-width: 250px; /* Prevents the input from shrinking smaller than this size */
+    box-sizing: border-box; /* Make sure padding and borders are included in the width */
+    border-radius: 4px 4px 0 0; /* This rounds the top corners */
+}
+
+/* This targets the input fields directly */
+.address-input:focus {
+    box-shadow: none;
+    outline: none; /* This removes the blue border that appears on focus */
+}
+
+/* Specificity to override global styles if necessary */
+input.address-input:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* Results container should be the same width as the input and rounded corners */
+.results-container {
+    position: absolute;
+    transform: translateY(-15px);
+    width: 450px;
+    max-width: 85%;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: none;
+    border-top: none;
+    border-radius: 0 0 4px 4px; /* Round only the bottom corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    /* Rest of your styles */
+}
+
+.result-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    /* Rest of your styles */
+}
+
+.result-item:hover {
+    background-color: #f0f0f0;
+}
+
