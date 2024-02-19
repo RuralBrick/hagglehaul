@@ -10,7 +10,15 @@ function AddressSearchBar({setCoordinates}) {
     const [results, setResults] = useState([]);
     const debouncedText = useDebounce(inputText, 500);
     let inputRef = useRef(null);
+    const canvasRef = useRef(null); // Add this line
     
+
+
+    useEffect(() => {
+        if (!shouldFetch) return;
+        fetchResults();
+    }, [debouncedText, shouldFetch, token, inputText]);
+
     const fetchResults = async () => {
         const m_results = await fetch('api/PlaceLookup?' + new URLSearchParams({
             placeName: inputText,
@@ -24,11 +32,6 @@ function AddressSearchBar({setCoordinates}) {
             .then(data => data.json());
         setResults(m_results);
     }
-
-    useEffect(() => {
-        if (!shouldFetch) return;
-        fetchResults();
-    }, [debouncedText]);
     
     const handleAddressInput = async (e) => {
         setInputText(e.target.value);
@@ -46,7 +49,19 @@ function AddressSearchBar({setCoordinates}) {
     }
 
     return (
-        <div className="address-search-bar">
+        <div className="address-search-container">
+            <svg className="address-connector" width="25" height="200" xmlns="http://www.w3.org/2000/svg">
+                {/* Top rectangle */}
+                <rect x="5" y="0" width="25" height="25" fill="#d96c06"/>
+                {/* Bottom rectangle */}
+                <rect x="5" y="175" width="25" height="25" fill="#d96c06"/>
+                {/* Top circle */}
+                <circle cx="17.5" cy="12.5" r="8" fill="white" stroke="#d96c06" strokeWidth="2"/>
+                {/* Bottom circle */}
+                <circle cx="17.5" cy="187.5" r="8" fill="white" stroke="#d96c06" strokeWidth="2"/>
+                {/* Dotted line */}
+                <line x1="17.5" y1="20" x2="17.5" y2="175" stroke="#d96c06" strokeWidth="2" strokeDasharray="5,5"/>
+            </svg>
             <input
                 type="text"
                 ref={inputRef}
@@ -55,14 +70,24 @@ function AddressSearchBar({setCoordinates}) {
                 value={inputText}
                 onChange={handleAddressInput}
             />
-            <div className="results-container">
-                {Array.isArray(results) && results.map((result, index) => (
-                    <div key={index} className="result-item" onClick={() => handleResultClick(result.text, result.center)}>
-                        <b>{result.text}</b><br />
-                        <span style={{fontSize: "0.7em"}}>{result.place_name}</span>
+            {results.length > 0 && (
+                <>
+                    <canvas ref={canvasRef} id="address-connector" width="25" height="100"
+                            className="connector-canvas"></canvas>
+                    <div className="results-container">
+                        {results.map((result, index) => (
+                            <div
+                                key={index}
+                                className="result-item"
+                                onClick={() => handleResultClick(result.text, result.center)}
+                            >
+                                <strong>{result.text}</strong><br/>
+                                <span className="place-name">{result.place_name}</span>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
+                </>
+            )}
         </div>
     );
 }
