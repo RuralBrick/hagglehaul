@@ -12,7 +12,7 @@ import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
 import RiderAddTrip from './components/RiderAddTrip/RiderAddTrip';
 import './App.css';
 
-export const TokenContext = React.createContext(null);
+export const TokenContext = React.createContext({token: null, role: null});
 function App() {
     const [token, setToken] = useState(Cookies.get('token'));
     const [role, setRole] = useState("");
@@ -25,22 +25,22 @@ function App() {
                 'Authorization': 'Bearer ' + token,
             }
         })
-            .then(data => data.json());
+            .then(data => data.text());
         setRole(m_results);
     }
 
-    function setTokenWithCookie(token)
+    async function setTokenWithCookie(token)
     {
+        await fetchRole(token);
         Cookies.set('token', token, { expires: 0.125, secure: true });
         setToken(token);
-
-        fetchRole(token);
     }
     
     function removeTokenWithCookie()
     {
         Cookies.remove('token');
         setToken(null);
+        setRole(null);
     }
     
     if (!token) {

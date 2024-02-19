@@ -78,7 +78,7 @@ function LoginRegPage({ setToken }) {
             setWaiting(false);
             return;
         }
-        setToken(token);
+        await setToken(token);
     }
 
     const handleRegisterSubmit = async e => {
@@ -96,7 +96,7 @@ function LoginRegPage({ setToken }) {
             setWaiting(false)
             return;
         }
-        setToken(token);
+        await setToken(token);
     }
 
     const handleSwitchFunc = async e => {
