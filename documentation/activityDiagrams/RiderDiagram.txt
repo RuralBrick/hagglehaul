@@ -28,6 +28,17 @@ start
       :Create trip object, add to list;
       |Rider|
       :Monitor trip status;
+      :Select bid;
+      |Hagglehaul|
+      :Remove trip from available trip list;
+      |Azure Communications Service|
+      :Email winning driver;
+      |Rider|
+      :Perform trip;
+      :Rate driver;
+      -> rating;
+      |Hagglehaul|
+      :Save rating;
       stop
       
    else (no)

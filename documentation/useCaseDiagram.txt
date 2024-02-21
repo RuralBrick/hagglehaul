@@ -3,14 +3,6 @@
 left to right direction
 
 actor "User" as u
-
-rectangle "Subject" {
-    usecase "Register" as R
-}
-
-u --> (R)
-
-@enduml
 actor "Rider" as r
 actor "Driver" as d
 
@@ -18,33 +10,58 @@ u <|- (d)
 u <|- (r)
 
 
-rectangle "Bid for Trips" {
+rectangle "Hagglehaul" {
+
+    usecase "Register" as R
+
+    usecase "Login" as L
 
     usecase "Post Trip" as P
     usecase "Assign Trip Details" as A
     A <. P : extend
 
-    usecase "View My Trips" as V
-    usecase "Manage My Trips" as MA
-    MA .> V : extend
+    usecase "View Rider's Trips" as V
+    usecase "Cancel Rider's Trips" as MA
+    usecase "Select Bid" as SEL
+    V <. MA : extend
+    V <. SEL : extend
 
-    usecase "Register" as R
+    usecase "View Driver's Trips" as DT
+    usecase "Modify Bids" as MOD
+    usecase "Withdraw Bids" as WIT
+    DT <. MOD : extend
+    DT <.. WIT : extend
 
     usecase "View Available Trips" as VA
     usecase "Make Bid" as M
-    M .> VA : extend
+    VA <. M : extend
+
+   usecase "Rate Other Trip Particpant" as RAT
 
 }
 
 
+u --> (R)
+u --> (L)
 
 r ---> V
 r ---> A
 
 d ---> VA
+d ---> DT
+
+r ---> RAT
+d ---> RAT
 
 rectangle "Mapbox"
+rectangle "Azure Communication Service"
 
 A ---> (Mapbox)
+V ---> (Mapbox)
+DT ---> (Mapbox)
+VA ---> (Mapbox)
+
+SEL ---> (Azure Communication Service)
+M ---> (Azure Communication Service)
 
 @enduml

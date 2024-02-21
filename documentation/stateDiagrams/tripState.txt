@@ -4,7 +4,7 @@ Active : exit /Remove from active trip list
 Active : eventBid /add driver's bid to trip's bid list
 Active : eventWithdraw /remove driver's bid from trip's bid list
 
-Active --> Confirmed : Rider confirms a bid
+Active --> Confirmed : [bid not empty] Rider confirms a bid
 
 Confirmed : entry /add to winning drivers' confirmed trips
 
