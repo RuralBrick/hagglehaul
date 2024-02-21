@@ -79,12 +79,13 @@ namespace hagglehaul.Tests.ControllerTests
 
             Assert.That(result, Is.TypeOf<OkObjectResult>());
 
-            var riderTrips = result.Value as List<RiderTripInfo>;
+            var riderTrips = result.Value as List<Trip>;
 
-            Assert.That(riderTrips, Is.TypeOf<List<RiderTripInfo>>());
+            Assert.That(riderTrips, Is.TypeOf<List<Trip>>());
 
             for (int i = 0; i < riderTrips.Count; i++)
             {
+                Assert.That(riderTrips[i].Name, Is.EqualTo(riderTripData[i].Name));
                 Assert.That(riderTrips[i].StartTime, Is.EqualTo(riderTripData[i].StartTime));
                 Assert.That(riderTrips[i].PickupLat, Is.EqualTo(riderTripData[i].PickupLat));
                 Assert.That(riderTrips[i].PickupLong, Is.EqualTo(riderTripData[i].PickupLong));
@@ -103,6 +104,7 @@ namespace hagglehaul.Tests.ControllerTests
 
             var request = new CreateTrip
             {
+                Name = "Road Trip",
                 StartTime = DateTime.Now,
                 PickupLat = 34.050,
                 PickupLong = -118.250,
@@ -125,11 +127,14 @@ namespace hagglehaul.Tests.ControllerTests
             _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Once());
 
             Assert.That(saveTrip.RiderEmail, Is.EqualTo("rider@example.com"));
+            Assert.That(saveTrip.Name, Is.EqualTo(request.Name));
             Assert.That(saveTrip.StartTime, Is.EqualTo(request.StartTime));
             Assert.That(saveTrip.PickupLat, Is.EqualTo(request.PickupLat));
             Assert.That(saveTrip.PickupLong, Is.EqualTo(request.PickupLong));
             Assert.That(saveTrip.DestinationLat, Is.EqualTo(request.DestinationLat));
             Assert.That(saveTrip.DestinationLong, Is.EqualTo(request.DestinationLong));
+            Assert.False(saveTrip.RiderHasBeenRated);
+            Assert.False(saveTrip.DriverHasBeenRated);
         }
     }
 }

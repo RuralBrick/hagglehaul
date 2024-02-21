@@ -68,6 +68,7 @@ public class HhTestUtilities
                 Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
                 RiderEmail = "rider@example.com",
                 DriverEmail = hasDriver ? "driver@example.com" : null,
+                Name = $"MyTrip{i}",
                 StartTime = DateTime.Now.AddHours(inPast ? (-2 - i * timeDelta) : (36 + i * timeDelta)),
                 PickupLong = 1.0 + (i * 0.1),
                 PickupLat = 1.0 + (i * 0.1),

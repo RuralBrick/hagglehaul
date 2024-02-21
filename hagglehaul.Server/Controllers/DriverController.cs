@@ -117,14 +117,8 @@ namespace hagglehaul.Server.Controllers
 
             var email = currentUser.FindFirstValue(ClaimTypes.Name);
 
-            var dbBids = await _bidService.GetDriverBidsAsync(email);
-            var driverBids = dbBids.Select(bid => new BidInfo
-            {
-                DriverEmail = bid.DriverEmail,
-                TripId = bid.TripId,
-                CentsAmount = bid.CentsAmount,
-            }).ToList();
-            return Ok(driverBids);
+            var bids = await _bidService.GetDriverBidsAsync(email);
+            return Ok(bids);
         }
 
         [HttpPost]
@@ -226,39 +220,17 @@ namespace hagglehaul.Server.Controllers
 
             var email = currentUser.FindFirstValue(ClaimTypes.Name);
 
-            var dbTrips = await _tripService.GetDriverTripsAsync(email);
-            var driverTrips = dbTrips.Select(trip => new DriverTripInfo
-            {
-                TripId = trip.Id,
-                StartTime = trip.StartTime,
-                PickupLong = trip.PickupLong,
-                PickupLat = trip.PickupLat,
-                DestinationLong = trip.DestinationLong,
-                DestinationLat = trip.DestinationLat,
-                PartySize = trip.PartySize,
-            }).ToList();
-            return Ok(driverTrips);
+            var trips = await _tripService.GetDriverTripsAsync(email);
+            return Ok(trips);
         }
 
         [HttpGet]
         [Route("allTrips")]
         public async Task<IActionResult> GetAllAvailableTrips()
         {
-            var dbTrips = await _tripService.GetAllTripsAsync();
-            var driverTrips = dbTrips.Where(
-                trip => trip.DriverEmail == null
-            ).Select(trip => new DriverTripInfo
-            {
-                TripId = trip.Id,
-                RiderEmail = trip.RiderEmail,
-                StartTime = trip.StartTime,
-                PickupLong = trip.PickupLong,
-                PickupLat = trip.PickupLat,
-                DestinationLong = trip.DestinationLong,
-                DestinationLat = trip.DestinationLat,
-                PartySize = trip.PartySize,
-            }).ToList();
-            return Ok(driverTrips);
+            var allTrips = await _tripService.GetAllTripsAsync();
+            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null);
+            return Ok(availableTrips);
         }
 
         private double TripEuclideanDistance(Trip trip)
@@ -332,32 +304,15 @@ namespace hagglehaul.Server.Controllers
             else
                 finalTrips = filteredTrips;
 
-            var driverTrips = finalTrips.Select(trip => new DriverTripInfo
-            {
-                TripId = trip.Id,
-                RiderEmail = trip.RiderEmail,
-                StartTime = trip.StartTime,
-                PickupLong = trip.PickupLong,
-                PickupLat = trip.PickupLat,
-                DestinationLong = trip.DestinationLong,
-                DestinationLat = trip.DestinationLat,
-                PartySize = trip.PartySize,
-            }).ToList();
-            return Ok(driverTrips);
+            return Ok(finalTrips);
         }
 
         [HttpGet]
         [Route("tripBids")]
         public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
         {
-            var dbBids = await _bidService.GetTripBidsAsync(tripId);
-            var driverBids = dbBids.Select(bid => new BidInfo
-            {
-                DriverEmail = bid.DriverEmail,
-                TripId = bid.TripId,
-                CentsAmount = bid.CentsAmount,
-            }).ToList();
-            return Ok(driverBids);
+            var bids = await _bidService.GetTripBidsAsync(tripId);
+            return Ok(bids);
         }
     }
 }

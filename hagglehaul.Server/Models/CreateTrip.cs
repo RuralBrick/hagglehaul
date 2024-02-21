@@ -2,6 +2,7 @@
 {
     public class CreateTrip
     {
+        public string Name { get; set; }
         public DateTime StartTime { get; set; }
         public double PickupLong { get; set; }
         public double PickupLat { get; set; }
