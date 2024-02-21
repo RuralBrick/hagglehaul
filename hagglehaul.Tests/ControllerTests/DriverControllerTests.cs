@@ -47,12 +47,64 @@ public class DriverControllerTests
     [Test]
     public async Task DriverSortTripMarketByRouteDistance()
     {
+        _mockTripService.Setup(
+            x => x.GetAllTripsAsync()
+        )!.ReturnsAsync(
+            new List<Trip>
+            {
+                new Trip
+                {
+                    Id = "1",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 2,
+                    DestinationLong = 2,
+                },
+                new Trip
+                {
+                    Id = "2",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 1,
+                    DestinationLong = 1,
+                },
+                new Trip
+                {
+                    Id = "3",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 3,
+                    DestinationLong = 3,
+                },
+            }
+        );
+
         _mockGeographicRouteService.Setup(
             x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
         )!.ReturnsAsync(
-            (double sLong, double sLat, double eLong, double eLat) => Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat)
+            (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+            {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
         );
 
+        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        {
+            SortMethods = [
+                "routeDistance",
+            ],
+        }) as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var trips = result.Value as List<Trip>;
+
+        Assert.That(trips, Is.TypeOf<List<Trip>>());
+
+        for (int i = 0; i < trips.Count; i++)
+        {
+            Assert.That(trips[i].DestinationLat, Is.EqualTo(i + 1));
+        }
     }
 
     [Test]

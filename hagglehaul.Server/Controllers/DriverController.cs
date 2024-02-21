@@ -272,7 +272,7 @@ namespace hagglehaul.Server.Controllers
                         await Task.WhenAll(filteredTrips.Select(async trip =>
                         {
                             var routeDistance = await TripRouteDistance(trip);
-                            tripRouteDistances[trip.Id] = routeDistance;
+                            tripRouteDistances.Add(trip.Id, routeDistance);
                         }));
                         if (sortedTrips == null)
                             sortedTrips = filteredTrips.OrderBy(trip => tripRouteDistances[trip.Id]);
