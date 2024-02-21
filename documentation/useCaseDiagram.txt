@@ -20,9 +20,9 @@ u <|- (r)
 
 rectangle "Bid for Trips" {
 
-    usecase "Assign Trip Details" as A
     usecase "Post Trip" as P
-    P .> A : extend
+    usecase "Assign Trip Details" as A
+    A <. P : extend
 
     usecase "View My Trips" as V
     usecase "Manage My Trips" as MA
@@ -42,9 +42,6 @@ r ---> V
 r ---> A
 
 d ---> VA
-
-r ---> R
-d ---> R
 
 rectangle "Mapbox"
 
