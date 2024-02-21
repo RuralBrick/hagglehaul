@@ -18,6 +18,7 @@ public class DriverControllerTests
     private Mock<IUserCoreService> _mockUserCoreService;
     private Mock<ITripService> _mockTripService;
     private Mock<IBidService> _mockBidService;
+    private Mock<IGeographicRouteService> _mockGeographicRouteService;
     
     private DriverController _controller;
     
@@ -29,8 +30,9 @@ public class DriverControllerTests
         _mockUserCoreService = new Mock<IUserCoreService>();
         _mockTripService = new Mock<ITripService>();
         _mockBidService = new Mock<IBidService>();
+        _mockGeographicRouteService = new Mock<IGeographicRouteService>();
         
-        _controller = new DriverController(_mockDriverProfileService.Object, _mockRiderProfileService.Object, _mockUserCoreService.Object, _mockTripService.Object, _mockBidService.Object);
+        _controller = new DriverController(_mockDriverProfileService.Object, _mockRiderProfileService.Object, _mockUserCoreService.Object, _mockTripService.Object, _mockBidService.Object, _mockGeographicRouteService.Object);
     }
     
     [SetUp]
@@ -40,6 +42,17 @@ public class DriverControllerTests
         _mockRiderProfileService.Reset();
         _mockTripService.Reset();
         _mockBidService.Reset();
+    }
+
+    [Test]
+    public async Task DriverSortTripMarketByRouteDistance()
+    {
+        _mockGeographicRouteService.Setup(
+            x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+        )!.ReturnsAsync(
+            (double sLong, double sLat, double eLong, double eLat) => Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat)
+        );
+
     }
 
     [Test]

@@ -16,14 +16,16 @@ namespace hagglehaul.Server.Controllers
         private readonly IUserCoreService _userCoreService;
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
+        private readonly IGeographicRouteService _geographicRouteService;
 
-        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService)
+        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
         {
             _driverProfileService = driverProfileService;
             _riderProfileService = riderProfileService;
             _userCoreService = userCoreService;
             _tripService = tripService;
             _bidService = bidService;
+            _geographicRouteService = geographicRouteService;
         }
 
         [Authorize]
@@ -259,6 +261,21 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverTrips);
         }
 
+        private double TripEuclideanDistance(Trip trip)
+        {
+            double dLat = trip.DestinationLat - trip.PickupLat;
+            double dLong = trip.DestinationLong - trip.PickupLong;
+            return Math.Sqrt(dLat * dLat + dLong * dLong);
+        }
+
+        private async Task<double> TripRouteDistance(Trip trip)
+        {
+            var route = await _geographicRouteService.GetGeographicRoute(
+                trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat
+            );
+            return (double)route.Distance;
+        }
+
         [HttpGet]
         [Route("tripMarket")]
         public async Task<IActionResult> GetAvailableTrips([FromBody] TripMarketOptions options)
@@ -273,8 +290,24 @@ namespace hagglehaul.Server.Controllers
                 switch (sortMethod)
                 {
                     case "euclideanDistance":
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(TripEuclideanDistance);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(TripEuclideanDistance);
                         break;
                     case "routeDistance":
+                        var tripRouteDistances = new Dictionary<string, double>();
+                        await Task.WhenAll(filteredTrips.Select(async trip =>
+                        {
+                            var routeDistance = await TripRouteDistance(trip);
+                            tripRouteDistances[trip.Id] = routeDistance;
+                        }));
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => tripRouteDistances[trip.Id]);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => tripRouteDistances[trip.Id]);
+                        break;
+                    case "routeDuration":
                         break;
                     case "currentToStartDistance":
                         break;
