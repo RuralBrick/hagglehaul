@@ -69,9 +69,9 @@ public class DriverControllerTests
 
         Assert.That(result, Is.TypeOf<OkObjectResult>());
 
-        var driverBids = result.Value as List<BidInfo>;
+        var driverBids = result.Value as List<Bid>;
 
-        Assert.That(driverBids, Is.TypeOf<List<BidInfo>>());
+        Assert.That(driverBids, Is.TypeOf<List<Bid>>());
 
         for (int i = 0; i < driverBids.Count; i++)
         {

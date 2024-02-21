@@ -79,12 +79,13 @@ namespace hagglehaul.Tests.ControllerTests
 
             Assert.That(result, Is.TypeOf<OkObjectResult>());
 
-            var riderTrips = result.Value as List<RiderTripInfo>;
+            var riderTrips = result.Value as List<Trip>;
 
-            Assert.That(riderTrips, Is.TypeOf<List<RiderTripInfo>>());
+            Assert.That(riderTrips, Is.TypeOf<List<Trip>>());
 
             for (int i = 0; i < riderTrips.Count; i++)
             {
+                Assert.That(riderTrips[i].Name, Is.EqualTo(riderTripData[i].Name));
                 Assert.That(riderTrips[i].StartTime, Is.EqualTo(riderTripData[i].StartTime));
                 Assert.That(riderTrips[i].PickupLat, Is.EqualTo(riderTripData[i].PickupLat));
                 Assert.That(riderTrips[i].PickupLong, Is.EqualTo(riderTripData[i].PickupLong));
