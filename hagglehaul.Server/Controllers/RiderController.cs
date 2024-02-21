@@ -112,19 +112,8 @@ namespace hagglehaul.Server.Controllers
 
             var email = currentUser.FindFirstValue(ClaimTypes.Name);
 
-            var dbTrips = await _tripService.GetRiderTripsAsync(email);
-            var riderTrips = dbTrips.Select(trip => new RiderTripInfo
-            {
-                TripId = trip.Id,
-                DriverEmail = trip.DriverEmail,
-                StartTime = trip.StartTime,
-                PickupLong = trip.PickupLong,
-                PickupLat = trip.PickupLat,
-                DestinationLong = trip.DestinationLong,
-                DestinationLat = trip.DestinationLat,
-                PartySize = trip.PartySize,
-            }).ToList();
-            return Ok(riderTrips);
+            var trips = await _tripService.GetRiderTripsAsync(email);
+            return Ok(trips);
         }
 
         [Authorize]
@@ -144,11 +133,14 @@ namespace hagglehaul.Server.Controllers
             Trip trip = new Trip
             {
                 RiderEmail = email,
+                Name = tripDetails.Name,
                 StartTime = tripDetails.StartTime,
                 PickupLong = tripDetails.PickupLong,
                 PickupLat = tripDetails.PickupLat,
                 DestinationLong = tripDetails.DestinationLong,
                 DestinationLat = tripDetails.DestinationLat,
+                RiderHasBeenRated = false,
+                DriverHasBeenRated = false,
             };
 
             await _tripService.CreateAsync(trip);
@@ -159,14 +151,8 @@ namespace hagglehaul.Server.Controllers
         [Route("tripBids")]
         public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
         {
-            var dbBids = await _bidService.GetTripBidsAsync(tripId);
-            var riderBids = dbBids.Select(bid => new BidInfo
-            {
-                DriverEmail = bid.DriverEmail,
-                TripId = bid.TripId,
-                CentsAmount = bid.CentsAmount,
-            }).ToList();
-            return Ok(riderBids);
+            var bids = await _bidService.GetTripBidsAsync(tripId);
+            return Ok(bids);
         }
     }
 }
