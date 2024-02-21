@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Azure.Core;
 using hagglehaul.Server.Controllers;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
@@ -44,28 +45,14 @@ public class DriverControllerTests
     [Test]
     public async Task DriverGetOwnBidsTest()
     {
-        _mockTripService.Setup(
-            x => x.GetTripByIdAsync(It.IsAny<string>())
-        )!.ReturnsAsync(
-            (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
-        );
-
+        var driverBidData = HhTestUtilities.GetBidData()
+                                           .Where(bid => bid.DriverEmail == "driver@example.com")
+                                           .ToList();
         _mockBidService.Setup(
             x => x.GetDriverBidsAsync(It.IsAny<string>())
         )!.ReturnsAsync(
-            (string s) => new List<Bid>(0)
+            (string s) => driverBidData
         );
-
-        Bid saveBid = new Bid();
-        _mockBidService.Setup(
-            x => x.CreateAsync(It.IsAny<Bid>())
-        )!.Callback<Bid>((Bid b) => saveBid = b);
-
-        var request = new CreateOrUpdateBid
-        {
-            TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
-            CentsAmount = 100
-        };
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
         {
@@ -78,14 +65,20 @@ public class DriverControllerTests
             HttpContext = new DefaultHttpContext { User = user }
         };
 
-        Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
-
         var result = await _controller.GetDriverBids() as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
         var driverBids = result.Value as List<BidInfo>;
-        var getBid = driverBids.FirstOrDefault();
-        Assert.That(getBid.DriverEmail, Is.EqualTo("driver@example.com"));
-        Assert.That(getBid.TripId, Is.EqualTo(request.TripId));
-        Assert.That(getBid.CentsAmount, Is.EqualTo(request.CentsAmount));
+
+        Assert.That(driverBids, Is.TypeOf<List<BidInfo>>());
+
+        for (int i = 0; i < driverBids.Count; i++)
+        {
+            Assert.That(driverBids[i].DriverEmail, Is.EqualTo("driver@example.com"));
+            Assert.That(driverBids[i].TripId, Is.EqualTo(driverBidData[i].TripId));
+            Assert.That(driverBids[i].CentsAmount, Is.EqualTo(driverBidData[i].CentsAmount));
+        }
     }
 
     [Test]

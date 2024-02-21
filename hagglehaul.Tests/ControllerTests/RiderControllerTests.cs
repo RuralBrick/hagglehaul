@@ -1,4 +1,5 @@
-﻿using hagglehaul.Server.Controllers;
+﻿using Azure.Core;
+using hagglehaul.Server.Controllers;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using hagglehaul.Tests.SharedHelpers;
@@ -54,10 +55,13 @@ namespace hagglehaul.Tests.ControllerTests
         [Test]
         public async Task RiderGetTripsTest()
         {
+            var riderTripData = HhTestUtilities.GetTripData()
+                                               .Where(trip => trip.RiderEmail == "rider@example.com")
+                                               .ToList();
             _mockTripService.Setup(
-                x => x.GetTripByIdAsync(It.IsAny<string>())
+                x => x.GetRiderTripsAsync(It.IsAny<string>())
             )!.ReturnsAsync(
-                (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
+                (string s) => riderTripData
             );
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -66,32 +70,27 @@ namespace hagglehaul.Tests.ControllerTests
                 new Claim(ClaimTypes.Role, "rider")
             }, "mock"));
 
-            var request = new CreateTrip
-            {
-                StartTime = DateTime.Now,
-                PickupLat = 34.050,
-                PickupLong = -118.250,
-                DestinationLat = 40.731,
-                DestinationLong = -73.935,
-            };
-
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
 
-            Assert.That(await _controller.PostRiderTrip(request), Is.InstanceOf<OkResult>());
-
-            _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Once());
-
             var result = await _controller.GetAllRiderTrips() as OkObjectResult;
+
+            Assert.That(result, Is.TypeOf<OkObjectResult>());
+
             var riderTrips = result.Value as List<RiderTripInfo>;
-            var getTrip = riderTrips.FirstOrDefault();
-            Assert.That(getTrip.StartTime, Is.EqualTo(request.StartTime));
-            Assert.That(getTrip.PickupLat, Is.EqualTo(request.PickupLat));
-            Assert.That(getTrip.PickupLong, Is.EqualTo(request.PickupLong));
-            Assert.That(getTrip.DestinationLat, Is.EqualTo(request.DestinationLat));
-            Assert.That(getTrip.DestinationLong, Is.EqualTo(request.DestinationLong));
+
+            Assert.That(riderTrips, Is.TypeOf<List<RiderTripInfo>>());
+
+            for (int i = 0; i < riderTrips.Count; i++)
+            {
+                Assert.That(riderTrips[i].StartTime, Is.EqualTo(riderTripData[i].StartTime));
+                Assert.That(riderTrips[i].PickupLat, Is.EqualTo(riderTripData[i].PickupLat));
+                Assert.That(riderTrips[i].PickupLong, Is.EqualTo(riderTripData[i].PickupLong));
+                Assert.That(riderTrips[i].DestinationLat, Is.EqualTo(riderTripData[i].DestinationLat));
+                Assert.That(riderTrips[i].DestinationLong, Is.EqualTo(riderTripData[i].DestinationLong));
+            }
         }
     }
 }
