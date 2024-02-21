@@ -133,6 +133,7 @@ namespace hagglehaul.Server.Controllers
             Trip trip = new Trip
             {
                 RiderEmail = email,
+                Name = tripDetails.Name,
                 StartTime = tripDetails.StartTime,
                 PickupLong = tripDetails.PickupLong,
                 PickupLat = tripDetails.PickupLat,
