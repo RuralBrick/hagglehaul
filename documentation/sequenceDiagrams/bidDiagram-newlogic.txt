@@ -1,0 +1,33 @@
+@startuml
+Driver -> DriverController: CreateOrUpdateBid(request)
+
+
+DriverController -> TripService: GetTripByIdAsync(request.TripId)
+
+alt trip exists
+
+    TripService -> DriverController: trip: Trip
+    DriverController -> DriverController: TripAndAmountAreValid()
+    
+    alt valid trip
+        DriverController -> BidService: GetDriverBidsAsync(username)
+            alt existing bid
+                BidService -> DriverController: bid: Bid
+                DriverController -> BidService: UpdateAsync(bid.Id, request)
+            else no existing bid
+                BidService -> DriverController: empty
+                DriverController -> BidService: Create(request)
+            end
+            DriverController -> Driver: ok (200)
+    else invalid request
+        DriverController -> Driver: failure (400)
+    end
+
+else no trip
+
+    TripService -> DriverController: empty
+    DriverController -> Driver: failure (400)
+
+end 
+
+@enduml
