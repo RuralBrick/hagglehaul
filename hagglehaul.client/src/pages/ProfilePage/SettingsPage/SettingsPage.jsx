@@ -12,24 +12,24 @@ const validatePassword = (inputPassword) => {
 };
 
 async function customizeRider(details, token) {
-    return await fetch('api/Rider/modifyAcc', {
+    return await fetch('/api/Rider/modifyAcc', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
         },
-        body: details
+        body: JSON.stringify(details)
     })
         .then(data => data.json());
 }
 async function customizeDriver(details, token) {
-    return await fetch('api/Driver/modifyAcc', {
+    return await fetch('/api/Driver/modifyAcc', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
         },
-        body: details
+        body: JSON.stringify(details)
     })
         .then(data => data.json());
 }
@@ -40,10 +40,10 @@ const passwordValidationErrorMessage = "Your password does not conform to the re
 
 function SettingsPage() {
 
-    const [oldPass, setOldPass] = useState("");
-    const [newPass, setNewPass] = useState("");
-    const [phoneNum, setPhoneNum] = useState("");
-    const [userName, setName] = useState("");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [phone, setPhoneNum] = useState("");
+    const [name, setName] = useState("");
 
     const [carBrand, setCarBrand] = useState("");
     const [carColor, setCarColor] = useState("");
@@ -62,7 +62,7 @@ function SettingsPage() {
     //}, []);
 
     const preSubmitValidation = () => {
-        if (!validatePassword(newPass)) {
+        if (!validatePassword(newPassword)) {
             setErrorMessage(passwordValidationErrorMessage);
             return false;
         }
@@ -76,10 +76,10 @@ function SettingsPage() {
 
         setWaiting(true);
         const results = await customizeRider({
-            userName,
-            phoneNum,
-            oldPass,
-            newPass
+            name,
+            phone,
+            currentPassword,
+            newPassword
         }, token);
 
         if (!results) {
@@ -97,15 +97,15 @@ function SettingsPage() {
         e.preventDefault();
         if (!preSubmitValidation()) return;
 
-        const carDetails = carBrand + carColor + license;
+        const carDescription = carBrand + carColor + license;
 
         setWaiting(true);
         const results = await customizeDriver({
-            userName,
-            phoneNum,
-            carDetails,
-            oldPass,
-            newPass
+            name,
+            phone,
+            carDescription,
+            currentPassword,
+            newPassword
         }, token);
 
         if (!results) {
@@ -127,25 +127,25 @@ function SettingsPage() {
                         <div>
                             <label>
                                 <p>{role}</p>
-                                <input type="text" value={userName} onChange={e => setName(e.target.value)} />
+                                <input type="text" value={name} onChange={e => setName(e.target.value)} />
                             </label>
                         </div>
                         <div>
                             <label>
                                 <p>Phone Number</p>
-                                <input type="text" value={phoneNum} onChange={e => setPhoneNum(e.target.value)} />
+                                <input type="text" value={phone} onChange={e => setPhoneNum(e.target.value)} />
                             </label>
                         </div>
                         <div>
                             <div>
                                 <label>
                                     <p>New Password</p>
-                                    <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} />
+                                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                                 </label>
                             </div>
                             <label>
                                 <p>Confirm Old Password</p>
-                                <input type="password" value={oldPass} onChange={e => setOldPass(e.target.value)} />
+                                <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} />
                             </label>
                         </div>
                         <br />
@@ -176,13 +176,13 @@ function SettingsPage() {
                         <div>
                             <label>
                                 <p>Name</p>
-                                <input type="text" value={userName} onChange={e => setName(e.target.value)} />
+                                <input type="text" value={name} onChange={e => setName(e.target.value)} />
                             </label>
                         </div>
                         <div>
                             <label>
                                 <p>Phone Number</p>
-                                <input type="text" value={phoneNum} onChange={e => setPhoneNum(e.target.value)} />
+                                <input type="text" value={phone} onChange={e => setPhoneNum(e.target.value)} />
                             </label>
                         </div>
                         <div className='car-details-wrapper'>
@@ -203,12 +203,12 @@ function SettingsPage() {
                             <div>
                                 <label>
                                     <p>New Password</p>
-                                    <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} />
+                                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                                 </label>
                             </div>
                             <label>
                                 <p>Confirm Old Password</p>
-                                <input type="password" value={oldPass} onChange={e => setOldPass(e.target.value)} />
+                                <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} />
                             </label>
                         </div>
                         <br />

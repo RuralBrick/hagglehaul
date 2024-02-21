@@ -12,7 +12,7 @@ function AddressSearchBar({setCoordinates}) {
     let inputRef = useRef(null);
     
     const fetchResults = async () => {
-        const m_results = await fetch('api/PlaceLookup?' + new URLSearchParams({
+        const m_results = await fetch('/api/PlaceLookup?' + new URLSearchParams({
             placeName: inputText,
         }), {
             method: 'GET',
