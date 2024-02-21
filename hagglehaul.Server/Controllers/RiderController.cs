@@ -139,6 +139,8 @@ namespace hagglehaul.Server.Controllers
                 PickupLat = tripDetails.PickupLat,
                 DestinationLong = tripDetails.DestinationLong,
                 DestinationLat = tripDetails.DestinationLat,
+                RiderHasBeenRated = false,
+                DriverHasBeenRated = false,
             };
 
             await _tripService.CreateAsync(trip);

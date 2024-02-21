@@ -104,6 +104,7 @@ namespace hagglehaul.Tests.ControllerTests
 
             var request = new CreateTrip
             {
+                Name = "Road Trip",
                 StartTime = DateTime.Now,
                 PickupLat = 34.050,
                 PickupLong = -118.250,
@@ -126,11 +127,14 @@ namespace hagglehaul.Tests.ControllerTests
             _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Once());
 
             Assert.That(saveTrip.RiderEmail, Is.EqualTo("rider@example.com"));
+            Assert.That(saveTrip.Name, Is.EqualTo(request.Name));
             Assert.That(saveTrip.StartTime, Is.EqualTo(request.StartTime));
             Assert.That(saveTrip.PickupLat, Is.EqualTo(request.PickupLat));
             Assert.That(saveTrip.PickupLong, Is.EqualTo(request.PickupLong));
             Assert.That(saveTrip.DestinationLat, Is.EqualTo(request.DestinationLat));
             Assert.That(saveTrip.DestinationLong, Is.EqualTo(request.DestinationLong));
+            Assert.False(saveTrip.RiderHasBeenRated);
+            Assert.False(saveTrip.DriverHasBeenRated);
         }
     }
 }
