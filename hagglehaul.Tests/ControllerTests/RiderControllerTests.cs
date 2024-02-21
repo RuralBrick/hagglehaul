@@ -92,5 +92,44 @@ namespace hagglehaul.Tests.ControllerTests
                 Assert.That(riderTrips[i].DestinationLong, Is.EqualTo(riderTripData[i].DestinationLong));
             }
         }
+
+        [Test]
+        public async Task RiderPostTripTest()
+        {
+            Trip saveTrip = new Trip();
+            _mockTripService.Setup(
+                x => x.CreateAsync(It.IsAny<Trip>())
+            )!.Callback<Trip>((Trip t) => saveTrip = t);
+
+            var request = new CreateTrip
+            {
+                StartTime = DateTime.Now,
+                PickupLat = 34.050,
+                PickupLong = -118.250,
+                DestinationLat = 40.731,
+                DestinationLong = -73.935,
+            };
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.PostRiderTrip(request), Is.InstanceOf<OkResult>());
+            _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Once());
+
+            Assert.That(saveTrip.RiderEmail, Is.EqualTo("rider@example.com"));
+            Assert.That(saveTrip.StartTime, Is.EqualTo(request.StartTime));
+            Assert.That(saveTrip.PickupLat, Is.EqualTo(request.PickupLat));
+            Assert.That(saveTrip.PickupLong, Is.EqualTo(request.PickupLong));
+            Assert.That(saveTrip.DestinationLat, Is.EqualTo(request.DestinationLat));
+            Assert.That(saveTrip.DestinationLong, Is.EqualTo(request.DestinationLong));
+        }
     }
 }
