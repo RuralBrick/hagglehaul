@@ -1,0 +1,18 @@
+@startuml
+Rider -> RiderController: PostRiderTrip(request)
+
+
+RiderController -> RiderController: ControllerBase.CheckPermissions()
+
+alt sufficient permissions
+
+    RiderController -> TripService: CreateAsync(request)
+    TripService -> RiderController
+    RiderController -> Rider: success (200)
+
+else insufficient permissions
+    RiderController -> Rider: failure (400)
+
+end 
+
+@enduml
