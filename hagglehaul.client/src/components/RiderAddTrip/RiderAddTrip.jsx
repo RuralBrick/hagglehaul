@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './RiderAddTrip.css';
 import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx";
+import DatePickerComponent from '@/components/DatePicker/DatePicker.jsx'; 
+
 
 async function addTrip(addressData) {
     return fetch('api/Rider/addTrip', {
@@ -22,17 +24,18 @@ function RiderAddTrip() {
     const [origin, setOrigin] = useState();
     const [destination, setDestination] = useState();
     const [statusMessage, setStatusMessage] = useState("");
-
+    const [date, setDate] = useState(new Date()); // State for selected date and time
 
     const handleTripSubmit = async e => {
 
         e.preventDefault();
 
-        if (!origin || !destination) return;
+        if (!origin || !destination  || !date) return;
 
         const result = await addTrip ({
             origin,
-            destination
+            destination,
+            date,
         });
 
         if (!result) {
@@ -65,6 +68,15 @@ function RiderAddTrip() {
                         <AddressSearchBar setCoordinates={setDestination}/>
                     </label>
                 </div>
+
+                <div>
+                    <label>
+                        <p>Select Date and Time:</p>
+                        <DatePickerComponent selectedDate={date} onChange={setDate} />
+                    </label>
+                </div>
+
+                
                 <br/>
                 <div>
                     <button type="submit" onClick={handleTripSubmit} className="custom-button">Submit</button>
