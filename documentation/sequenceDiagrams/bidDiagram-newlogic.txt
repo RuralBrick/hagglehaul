@@ -14,9 +14,11 @@ alt trip exists
             alt existing bid
                 BidService -> DriverController: bid: Bid
                 DriverController -> BidService: UpdateAsync(bid.Id, request)
+                BidService -> DriverController
             else no existing bid
                 BidService -> DriverController: empty
-                DriverController -> BidService: Create(request)
+                DriverController -> BidService: CreateAsync(request)
+                BidService -> DriverController
             end
             DriverController -> Driver: ok (200)
     else invalid request
