@@ -16,6 +16,9 @@ namespace hagglehaul.Server.Models
         [BsonElement("driverEmail")]
         public string DriverEmail { get; set; } = null!;
 
+        [BsonElement("name")]
+        public string Name { get; set; } = null!;
+
         [BsonElement("startTime")]
         [BsonRepresentation(BsonType.DateTime)]
         public DateTime StartTime { get; set; }
