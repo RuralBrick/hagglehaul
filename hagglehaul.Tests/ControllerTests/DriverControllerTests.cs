@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Azure.Core;
 using hagglehaul.Server.Controllers;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
@@ -39,6 +40,118 @@ public class DriverControllerTests
         _mockRiderProfileService.Reset();
         _mockTripService.Reset();
         _mockBidService.Reset();
+    }
+
+    [Test]
+    public async Task DriverUpdateTest()
+    {
+        _mockUserCoreService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new UserCore
+            {
+                Email = "goofywoofy@gmail.com",
+                PasswordHash = "123456",
+            }
+        );
+
+        _mockUserCoreService.Setup(
+            x => x.ComparePasswordToHash(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+        )!.Returns(true);
+
+        _mockUserCoreService.Setup(
+            x => x.CreatePasswordHash(It.IsAny<string>(), out It.Ref<string>.IsAny, out It.Ref<string>.IsAny)
+        )!.Callback(
+            (string password, out string hash, out string salt) =>
+            {
+                hash = password;
+                salt = "nosalt";
+            }
+        );
+
+        UserCore savedUserCore = null!;
+        _mockUserCoreService.Setup(
+            x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<UserCore>())
+        )!.Callback(
+            (string s, UserCore uc) => savedUserCore = uc
+        );
+
+        _mockDriverProfileService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new DriverProfile
+            {
+                Email = "goofywoofy@gmail.com",
+            }
+        );
+
+        DriverProfile savedDriverProfile = null!;
+        _mockDriverProfileService.Setup(
+            x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<DriverProfile>())
+        )!.Callback(
+            (string s, DriverProfile dp) => savedDriverProfile = dp
+        );
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "goofywoofy@gmail.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        Assert.That(await _controller.ModifyAccountDetails(new DriverUpdate
+        {
+            Name = "",
+            Phone = "",
+            CarDescription = "",
+            CurrentPassword = "123456",
+            NewPassword = "1234567",
+        }), Is.TypeOf<OkResult>());
+
+        Assert.That(savedUserCore.PasswordHash, Is.EqualTo("1234567"));
+    }
+  
+    [Test]
+    public async Task DriverGetOwnBidsTest()
+    {
+        var driverBidData = HhTestUtilities.GetBidData()
+                                           .Where(bid => bid.DriverEmail == "driver@example.com")
+                                           .ToList();
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => driverBidData
+        );
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        var result = await _controller.GetDriverBids() as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var driverBids = result.Value as List<Bid>;
+
+        Assert.That(driverBids, Is.TypeOf<List<Bid>>());
+
+        for (int i = 0; i < driverBids.Count; i++)
+        {
+            Assert.That(driverBids[i].DriverEmail, Is.EqualTo("driver@example.com"));
+            Assert.That(driverBids[i].TripId, Is.EqualTo(driverBidData[i].TripId));
+            Assert.That(driverBids[i].CentsAmount, Is.EqualTo(driverBidData[i].CentsAmount));
+        }
     }
 
     [Test]
