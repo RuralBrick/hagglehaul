@@ -3,7 +3,7 @@ import {TokenContext} from "@/App.jsx";
 import {useContext, useState, useEffect, useRef} from "react";
 import useDebounce from "@/utils/useDebounce.jsx";
 
-function AddressSearchBar({setCoordinates}) {
+function AddressSearchBar({setCoordinates, setAddressText}) {
     const { token } = useContext(TokenContext);
     const [inputText, setInputText] = useState('');
     const [shouldFetch, setShouldFetch] = useState(false);
@@ -15,7 +15,7 @@ function AddressSearchBar({setCoordinates}) {
     useEffect(() => {
         if (!shouldFetch) return;
         fetchResults();
-    }, [debouncedText, shouldFetch, token, inputText]);
+    }, [debouncedText]);
 
     const fetchResults = async () => {
         const m_results = await fetch('/api/PlaceLookup?' + new URLSearchParams({
@@ -38,8 +38,9 @@ function AddressSearchBar({setCoordinates}) {
         else setShouldFetch(false);
     };
 
-    const handleResultClick = (text, coords) => {
+    const handleResultClick = (text, coords, address) => {
         setCoordinates(coords);
+        setAddressText({summary: text, address: address});
         setResults([]);
         setInputText(text);
         setShouldFetch(false);
@@ -65,7 +66,7 @@ function AddressSearchBar({setCoordinates}) {
                             <div
                                 key={index}
                                 className="result-item"
-                                onClick={() => handleResultClick(result.text, result.center)}
+                                onClick={() => handleResultClick(result.text, result.center, result.place_name)}
                             >
                                 <strong>{result.text}</strong><br/>
                                 <span className="place-name">{result.place_name}</span>

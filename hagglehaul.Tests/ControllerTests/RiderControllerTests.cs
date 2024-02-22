@@ -110,6 +110,9 @@ namespace hagglehaul.Tests.ControllerTests
                 PickupLong = -118.250,
                 DestinationLat = 40.731,
                 DestinationLong = -73.935,
+                PickupAddress = "123 Main St",
+                DestinationAddress = "456 Elm St",
+                PartySize = 3
             };
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -133,6 +136,9 @@ namespace hagglehaul.Tests.ControllerTests
             Assert.That(saveTrip.PickupLong, Is.EqualTo(request.PickupLong));
             Assert.That(saveTrip.DestinationLat, Is.EqualTo(request.DestinationLat));
             Assert.That(saveTrip.DestinationLong, Is.EqualTo(request.DestinationLong));
+            Assert.That(saveTrip.PickupAddress, Is.EqualTo(request.PickupAddress));
+            Assert.That(saveTrip.DestinationAddress, Is.EqualTo(request.DestinationAddress));
+            Assert.That(saveTrip.PartySize, Is.EqualTo(request.PartySize));
             Assert.False(saveTrip.RiderHasBeenRated);
             Assert.False(saveTrip.DriverHasBeenRated);
         }

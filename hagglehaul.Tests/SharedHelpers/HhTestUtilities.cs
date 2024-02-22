@@ -74,7 +74,11 @@ public class HhTestUtilities
                 PickupLat = 1.0 + (i * 0.1),
                 DestinationLong = 2.0 + (i * 0.1),
                 DestinationLat = 2.0 + (i * 0.1),
-                PartySize = 1
+                PickupAddress = "123 Main St",
+                DestinationAddress = "456 Elm St",
+                PartySize = 3,
+                RiderHasBeenRated = false,
+                DriverHasBeenRated = false
             });
         }
 
