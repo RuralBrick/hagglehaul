@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Azure.Core;
 using hagglehaul.Server.Controllers;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
@@ -112,6 +113,45 @@ public class DriverControllerTests
         }), Is.TypeOf<OkResult>());
 
         Assert.That(savedUserCore.PasswordHash, Is.EqualTo("1234567"));
+    }
+  
+    [Test]
+    public async Task DriverGetOwnBidsTest()
+    {
+        var driverBidData = HhTestUtilities.GetBidData()
+                                           .Where(bid => bid.DriverEmail == "driver@example.com")
+                                           .ToList();
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => driverBidData
+        );
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        var result = await _controller.GetDriverBids() as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var driverBids = result.Value as List<Bid>;
+
+        Assert.That(driverBids, Is.TypeOf<List<Bid>>());
+
+        for (int i = 0; i < driverBids.Count; i++)
+        {
+            Assert.That(driverBids[i].DriverEmail, Is.EqualTo("driver@example.com"));
+            Assert.That(driverBids[i].TripId, Is.EqualTo(driverBidData[i].TripId));
+            Assert.That(driverBids[i].CentsAmount, Is.EqualTo(driverBidData[i].CentsAmount));
+        }
     }
 
     [Test]

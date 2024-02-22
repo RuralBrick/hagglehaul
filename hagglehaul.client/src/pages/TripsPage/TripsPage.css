@@ -2,29 +2,32 @@
     width: 80vw;
 }
 
-.trips-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.trips-header h2 {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
 .btn-add-trip {
-    display:inline-block;position:relative;left: 100%;
-    transform: translateX(-100%);
     background-color: #007bff; /* Button color */
     color: #fff; /* Icon color */
-    
-
 }
 
 .btn-add-trip:hover {
     background-color: #0056b3; /* Darkens the button on hover */
 }
 
+@media only screen and (min-width: 728px) {
+    .trips-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-/* ... rest of the styles */
+    .trips-header h2 {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .btn-add-trip {
+        display: inline-block;
+        position: relative;
+        left: 100%;
+        transform: translateX(-100%);
+    }
+}

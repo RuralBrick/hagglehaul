@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
 using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Data;
+using MongoDB.Bson.IO;
+using System.Text.Json;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -25,6 +29,26 @@ namespace hagglehaul.Server.Controllers
             _userCoreService = userCoreService;
             _tripService = tripService;
             _bidService = bidService;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("about")]
+        [ProducesResponseType(typeof(RiderBasicInfo), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Get()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            RiderBasicInfo riderBasicInfo = new RiderBasicInfo();
+            riderBasicInfo.Name = userCore.Name;
+            riderBasicInfo.Email = email;
+            riderBasicInfo.Phone = userCore.Phone;
+            return Ok(riderBasicInfo);
         }
 
         [Authorize]
@@ -76,6 +100,59 @@ namespace hagglehaul.Server.Controllers
             await _userCoreService.UpdateAsync(email, userCore);
             return Ok();
         }
-    }
 
+        [Authorize]
+        [HttpGet]
+        [Route("trip")]
+        public async Task<IActionResult> GetAllRiderTrips()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var trips = await _tripService.GetRiderTripsAsync(email);
+            return Ok(trips);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("trip")]
+        public async Task<IActionResult> PostRiderTrip([FromBody] CreateTrip tripDetails)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); };
+
+            Trip trip = new Trip
+            {
+                RiderEmail = email,
+                Name = tripDetails.Name,
+                StartTime = tripDetails.StartTime,
+                PickupLong = tripDetails.PickupLong,
+                PickupLat = tripDetails.PickupLat,
+                DestinationLong = tripDetails.DestinationLong,
+                DestinationLat = tripDetails.DestinationLat,
+                RiderHasBeenRated = false,
+                DriverHasBeenRated = false,
+            };
+
+            await _tripService.CreateAsync(trip);
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("tripBids")]
+        public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
+        {
+            var bids = await _bidService.GetTripBidsAsync(tripId);
+            return Ok(bids);
+        }
+    }
 }

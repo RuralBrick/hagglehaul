@@ -26,6 +26,27 @@ namespace hagglehaul.Server.Controllers
             _bidService = bidService;
         }
 
+        [Authorize]
+        [HttpGet]
+        [Route("about")]
+        [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Get()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(email);
+            DriverBasicInfo driverBasicInfo = new DriverBasicInfo();
+            driverBasicInfo.Name = userCore.Name;
+            driverBasicInfo.Email = email;
+            driverBasicInfo.Phone = userCore.Phone;
+            driverBasicInfo.CarDescription = driverProfile.CarDescription;
+            return Ok(driverBasicInfo);
+        }
 
         [Authorize]
         [HttpPost]
@@ -81,6 +102,21 @@ namespace hagglehaul.Server.Controllers
             await _userCoreService.UpdateAsync(email, userCore);
             await _driverProfileService.UpdateAsync(email, driverProfile);
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("bid")]
+        public async Task<IActionResult> GetDriverBids()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var bids = await _bidService.GetDriverBidsAsync(email);
+            return Ok(bids);
         }
 
         [HttpPost]
@@ -169,6 +205,81 @@ namespace hagglehaul.Server.Controllers
             }
             
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("trip")]
+        public async Task<IActionResult> GetDriverTrips()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var trips = await _tripService.GetDriverTripsAsync(email);
+            return Ok(trips);
+        }
+
+        [HttpGet]
+        [Route("allTrips")]
+        public async Task<IActionResult> GetAllAvailableTrips()
+        {
+            var allTrips = await _tripService.GetAllTripsAsync();
+            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null);
+            return Ok(availableTrips);
+        }
+
+        [HttpGet]
+        [Route("tripMarket")]
+        public async Task<IActionResult> GetAvailableTrips([FromBody] TripMarketOptions options)
+        {
+            var allTrips = await _tripService.GetAllTripsAsync();
+
+            var filteredTrips = allTrips;
+
+            IOrderedEnumerable<Trip> sortedTrips = null!;
+            foreach (var sortMethod in options.SortMethods)
+            {
+                switch (sortMethod)
+                {
+                    case "euclideanDistance":
+                        break;
+                    case "routeDistance":
+                        break;
+                    case "currentToStartDistance":
+                        break;
+                    case "endToTargetDistance":
+                        break;
+                    case "currentMinBid":
+                        break;
+                    case "startTime":
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => trip.StartTime);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => trip.StartTime);
+                        break;
+                    default:
+                        return BadRequest(new { Error = "Invalid sort method" });
+                }
+            }
+
+            List<Trip> finalTrips;
+            if (sortedTrips != null)
+                finalTrips = sortedTrips.ToList();
+            else
+                finalTrips = filteredTrips;
+
+            return Ok(finalTrips);
+        }
+
+        [HttpGet]
+        [Route("tripBids")]
+        public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
+        {
+            var bids = await _bidService.GetTripBidsAsync(tripId);
+            return Ok(bids);
         }
     }
 }

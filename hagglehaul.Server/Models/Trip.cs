@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models
 {
+    [BsonIgnoreExtraElements]
     public class Trip
     {
         [BsonId]
@@ -14,6 +15,9 @@ namespace hagglehaul.Server.Models
 
         [BsonElement("driverEmail")]
         public string DriverEmail { get; set; } = null!;
+
+        [BsonElement("name")]
+        public string Name { get; set; } = null!;
 
         [BsonElement("startTime")]
         [BsonRepresentation(BsonType.DateTime)]
@@ -33,5 +37,11 @@ namespace hagglehaul.Server.Models
 
         [BsonElement("partySize")]
         public uint? PartySize { get; set; } = null!;
+
+        [BsonElement("riderHasBeenRated")]
+        public bool RiderHasBeenRated { get; set; } = false;
+
+        [BsonElement("driverHasBeenRated")]
+        public bool DriverHasBeenRated { get; set; } = false;
     }
 }

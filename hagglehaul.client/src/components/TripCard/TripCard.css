@@ -1,0 +1,38 @@
+@media only screen and (max-width: 728px) {
+    /* CSS rules for small phone screens */
+    .large-card {
+        display: none;
+    }
+    .small-medium-card {
+        width: 100%;
+        margin-bottom: 10px;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+}
+
+@media only screen and (min-width: 728px) and (max-width: 1024px) {
+    /* CSS rules for small screens */
+    .large-card {
+        display: none;
+    }
+    .small-medium-card {
+        width: 49%;
+        margin-bottom: 10px;
+        padding-left: 0px;
+        padding-right: 0px;
+        margin-left: 0.5%;
+        margin-right: 0.5%;
+    }
+}
+
+@media only screen and (min-width: 1025px) {
+    /* CSS rules for large screens */
+    .small-medium-card {
+        display: none;
+    }
+    
+    .large-card {
+        margin-bottom: 10px;
+    }
+}
