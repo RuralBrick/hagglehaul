@@ -18,7 +18,7 @@ function App() {
     const [role, setRole] = useState(Cookies.get('role'));
 
     const fetchRole = async (token) => {
-        const m_results = await fetch('api/Authentication/role', {
+        const m_results = await fetch('/api/Authentication/role', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

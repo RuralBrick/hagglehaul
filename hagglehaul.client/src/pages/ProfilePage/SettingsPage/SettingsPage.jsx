@@ -20,7 +20,7 @@ async function customizeRider(details, token) {
         },
         body: JSON.stringify(details)
     })
-        .then(data => data.json());
+
 }
 async function customizeDriver(details, token) {
     return await fetch('/api/Driver/modifyAcc', {
@@ -31,12 +31,13 @@ async function customizeDriver(details, token) {
         },
         body: JSON.stringify(details)
     })
-        .then(data => data.json());
+
 }
 
 
 const invalidCustomizationErrorMessage = "There was an issue changing your details. Please try again.";
 const passwordValidationErrorMessage = "Your password does not conform to the requirements.";
+const customizationCompleteMessage = "Your account details have been changed!"
 
 function SettingsPage() {
 
@@ -82,12 +83,13 @@ function SettingsPage() {
             newPassword
         }, token);
 
-        if (!results) {
+        if (!results.ok) {
             setErrorMessage(invalidCustomizationErrorMessage);
             setWaiting(false)
             return;
         }
 
+        setErrorMessage(customizationCompleteMessage);
         setWaiting(false)
 
     }
@@ -108,12 +110,13 @@ function SettingsPage() {
             newPassword
         }, token);
 
-        if (!results) {
+        if (!results.ok) {
             setErrorMessage(invalidCustomizationErrorMessage);
             setWaiting(false)
             return;
         }
 
+        setErrorMessage(customizationCompleteMessage);
         setWaiting(false)
 
     }

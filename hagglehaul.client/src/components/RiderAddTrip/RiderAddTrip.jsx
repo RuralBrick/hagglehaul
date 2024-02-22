@@ -5,7 +5,7 @@ import './RiderAddTrip.css';
 import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx";
 
 async function addTrip(addressData) {
-    return fetch('api/Rider/addTrip', {
+    return fetch('/api/Rider/addTrip', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
