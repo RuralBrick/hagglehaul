@@ -10,9 +10,7 @@ function AddressSearchBar({setCoordinates}) {
     const [results, setResults] = useState([]);
     const debouncedText = useDebounce(inputText, 500);
     let inputRef = useRef(null);
-    const canvasRef = useRef(null); // Add this line
-    
-
+    const canvasRef = useRef(null); // This line remains as it seems unrelated to the SVG you mentioned.
 
     useEffect(() => {
         if (!shouldFetch) return;
@@ -31,37 +29,25 @@ function AddressSearchBar({setCoordinates}) {
         })
             .then(data => data.json());
         setResults(m_results);
-    }
-    
+    };
+
     const handleAddressInput = async (e) => {
         setInputText(e.target.value);
         setCoordinates(null);
         if (e.target.value.length >= 3) setShouldFetch(true);
         else setShouldFetch(false);
-    }
-    
+    };
+
     const handleResultClick = (text, coords) => {
         setCoordinates(coords);
         setResults([]);
         setInputText(text);
         setShouldFetch(false);
         setTimeout(() => inputRef.current.blur(), 5);
-    }
+    };
 
     return (
         <div className="address-search-container">
-            <svg className="address-connector" width="25" height="200" xmlns="http://www.w3.org/2000/svg">
-                {/* Top rectangle */}
-                <rect x="5" y="0" width="25" height="25" fill="#d96c06"/>
-                {/* Bottom rectangle */}
-                <rect x="5" y="175" width="25" height="25" fill="#d96c06"/>
-                {/* Top circle */}
-                <circle cx="17.5" cy="12.5" r="8" fill="white" stroke="#d96c06" strokeWidth="2"/>
-                {/* Bottom circle */}
-                <circle cx="17.5" cy="187.5" r="8" fill="white" stroke="#d96c06" strokeWidth="2"/>
-                {/* Dotted line */}
-                <line x1="17.5" y1="20" x2="17.5" y2="175" stroke="#d96c06" strokeWidth="2" strokeDasharray="5,5"/>
-            </svg>
             <input
                 type="text"
                 ref={inputRef}
