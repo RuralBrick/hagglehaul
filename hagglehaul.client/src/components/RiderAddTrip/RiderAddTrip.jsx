@@ -7,7 +7,7 @@ import DatePickerComponent from '@/components/DatePicker/DatePicker.jsx';
 
 
 async function addTrip(addressData) {
-    return fetch('api/Rider/addTrip', {
+    return fetch('/api/Rider/addTrip', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
