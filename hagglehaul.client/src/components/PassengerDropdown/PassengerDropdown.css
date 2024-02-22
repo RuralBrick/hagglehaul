@@ -1,0 +1,28 @@
+/* PassengerDropdown.css */
+
+.passenger-dropdown {
+    display: flex; /* Establishes a flex container */
+    align-items: center; /* Aligns children vertically in the center */
+    gap: 1rem; /* Space between the label and the select box */
+}
+
+.passenger-dropdown label {
+    margin: 0; /* Removes margin from the label */
+    white-space: nowrap; /* Prevents label from wrapping */
+}
+
+.passenger-dropdown select {
+    flex-grow: 1; /* Allows the select box to fill the space available */
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 1rem;
+    color: #333;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    position: relative;
+}
+
+/* Custom arrow indicator styling goes here (optional) */

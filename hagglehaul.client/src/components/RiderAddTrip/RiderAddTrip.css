@@ -67,3 +67,7 @@
     max-width: 500px; /* Match this with the width of the address input */
     margin-bottom: 20px; /* Add space between the search bars if needed */
 }
+
+.trip-status-message {
+    color: #D96C06;
+}

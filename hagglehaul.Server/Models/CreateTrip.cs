@@ -8,5 +8,8 @@
         public double PickupLat { get; set; }
         public double DestinationLong { get; set; }
         public double DestinationLat { get; set; }
+        public string PickupAddress { get; set; }
+        public string DestinationAddress { get; set; }
+        public uint PartySize { get; set; }
     }
 }
