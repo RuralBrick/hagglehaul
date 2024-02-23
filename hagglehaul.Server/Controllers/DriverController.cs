@@ -243,12 +243,12 @@ namespace hagglehaul.Server.Controllers
         private bool TripPassesMaxCurrentToStartDistance(Trip trip, TripMarketOptions options)
         {
             double dist = EuclideanDistance(
-                options.CurrentLat,
-                options.CurrentLong,
+                (double)options.CurrentLat,
+                (double)options.CurrentLong,
                 trip.PickupLat,
                 trip.PickupLong
             );
-            return dist <= trip.MaxCurrentToStartDistance;
+            return dist <= options.MaxCurrentToStartDistance;
         }
 
         private double TripEuclideanDistance(Trip trip)
@@ -279,7 +279,7 @@ namespace hagglehaul.Server.Controllers
 
             if (options.MaxCurrentToStartDistance != null)
             {
-                if (options.CurrentLat == null or options.CurrentLong == null)
+                if (options.CurrentLat == null || options.CurrentLong == null)
                     return BadRequest(new { Error = "Must include current coordinates" });
                 someTrips = someTrips.Where(
                     trip => TripPassesMaxCurrentToStartDistance(trip, options)
