@@ -1,0 +1,27 @@
+.trips-page {
+    width: 80vw;
+}
+
+.btn-add-trip {
+    background-color: #007bff; /* Button color */
+    color: #fff; /* Icon color */
+}
+
+    .btn-add-trip:hover {
+        background-color: #0056b3; /* Darkens the button on hover */
+    }
+
+@media only screen and (min-width: 728px) {
+    .trips-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .trips-header h2 {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+}

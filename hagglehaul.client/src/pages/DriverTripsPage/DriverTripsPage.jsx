@@ -1,28 +1,25 @@
-// src/pages/TripsPage/TripsPage.jsx
-import React, {useState} from 'react';
-import './TripsPage.css';
+import React, { useState } from 'react';
+import './DriverTripsPage.css';
 import TripCard from "@/components/TripCard/TripCard.jsx";
-import {DropdownButton, ButtonGroup, Dropdown, Button, Row, Col} from "react-bootstrap";
+import { DropdownButton, ButtonGroup, Dropdown, Button, Row, Col } from "react-bootstrap";
 import AddTripModal from "@/components/AddTripModal/AddTripModal.jsx";
 
-function TripsPage() {
+function DriverTripsPage() {
     const [showAddTrip, setShowAddTrip] = useState(false);
 
     return (
         <>
-            <AddTripModal show={showAddTrip} setShow={setShowAddTrip}/>
             <div className="trips-page container mt-5">
+                <br />
                 <div className="trips-header mb-4">
                     <h2>Confirmed Trips</h2>
-                    <Button onClick={() => {
-                        setShowAddTrip(true)
-                    }} className="btn-add-trip">+ Add Trip</Button>
                 </div>
+                <br />
                 <Row xs={1} md={2} lg={1}>
                     <TripCard
                         image="https://placeholder.co/600x400.png"
                         title="Disneyland Park"
-                        actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
+                        actionComponent={<Button style={{ backgroundColor: "#D96C06" }}>Go somewhere</Button>}
                         attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
                         bidComponents={[
                             <Row>
@@ -38,7 +35,7 @@ function TripsPage() {
                     <TripCard
                         image="https://placeholder.co/600x400.png"
                         title="Staples Center"
-                        actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
+                        actionComponent={<Button style={{ backgroundColor: "#D96C06" }}>Go somewhere</Button>}
                         attributes={[["Column 1", "Information 1"], ["Column 2", "Information 2"], ["Column 3", "Information 3"]]}
                         bidComponents={[]}
                     />
@@ -46,7 +43,7 @@ function TripsPage() {
                         image="https://placeholder.co/600x400.png"
                         title="UCLA Jules Stein Eye Institute"
                         actionComponent={<DropdownButton as={ButtonGroup} title="Options" id="bg-nested-dropdown"
-                                                         variant="light">
+                            variant="light">
                             <Dropdown.Item>Cancel Trip</Dropdown.Item>
                             <Dropdown.Item>Do Something</Dropdown.Item>
                         </DropdownButton>}
@@ -61,7 +58,7 @@ function TripsPage() {
                     <TripCard
                         image="https://placeholder.co/600x400.png"
                         title="Disneyland Park"
-                        actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
+                        actionComponent={<Button style={{ backgroundColor: "#D96C06" }}>Go somewhere</Button>}
                         attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
                         bidComponents={[
                             <Row>
@@ -80,4 +77,4 @@ function TripsPage() {
     );
 }
 
-export default TripsPage;
+export default DriverTripsPage;
