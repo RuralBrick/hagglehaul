@@ -1,38 +1,25 @@
 /* DriverSearchTrip.css */
 
-.driver-search-trip {
-    position: relative;
-    display: flex;
+.search-button {
+    display: inline-flex;
     align-items: center;
-    justify-content: flex-end; /* Align the search bar to the right */
+    justify-content: center;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background-color: #007bff; /* Bootstrap primary color */
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.2); /* Optional: adds a subtle shadow */
+    margin-left: 1rem; /* To add spacing from the left element */
+}
+
+.search-button:hover {
+    background-color: #0056b3; /* A darker blue for hover effect */
 }
 
 .search-icon {
-    position: absolute;
-    left: 10px; /* Adjust as necessary */
-    top: 50%;
-    transform: translateY(-50%);
-    color: #495057; /* Color that stands out against your input background */
-}
-
-
-.search-input {
-    width: 250px; /* Adjust width as needed */
-    padding: 8px 30px 8px 30px; /* Adjust left padding to fit the icon */
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 1rem;
-    outline: none;
-    color: #495057;
-    background-color: white;
-    transition: box-shadow 0.2s ease-in-out;
-}
-
-.search-input::placeholder {
-    color: #adb5bd;
-}
-
-.search-input:focus {
-    box-shadow: 0 0 0 2px #D96C06; /* Bootstrap's focus shadow style */
+    margin-right: 8px;
 }

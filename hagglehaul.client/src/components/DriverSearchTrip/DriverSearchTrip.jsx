@@ -1,28 +1,21 @@
-import React, { useState } from 'react';
-import { BsSearch } from 'react-icons/bs'; // Make sure this import is at the top of your file
+// DriverSearchTrip.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { BsSearch } from 'react-icons/bs';
 import './DriverSearchTrip.css';
 
-function DriverSearchTrip({ onSearch }) {
-    const [searchTerm, setSearchTerm] = useState('');
+function DriverSearchTrip() {
+    const navigate = useNavigate();
 
-    const handleSearch = (event) => {
-        setSearchTerm(event.target.value);
-        if (onSearch) {
-            onSearch(event.target.value);
-        }
+    const handleSearchClick = () => {
+        navigate('/search-trips'); // Navigates to the SearchTripsPage
     };
 
     return (
-        <div className="driver-search-trip">
-            <BsSearch className="search-icon" /> {/* Ensure this line is included */}
-            <input
-                type="text"
-                placeholder="Search trips..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="search-input"
-            />
-        </div>
+        <button onClick={handleSearchClick} className="search-button">
+            <BsSearch />
+            Search Trips
+        </button>
     );
 }
 

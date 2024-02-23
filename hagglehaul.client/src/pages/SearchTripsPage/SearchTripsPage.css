@@ -1,0 +1,46 @@
+/* SearchTripsPage.css */
+
+.search-page-container {
+    padding-top: 50px; /* Adjust as needed to push content down */
+}
+
+.search-bar-container {
+    margin-bottom: 20px; /* Space between the search bar and the next content */
+}
+
+.search-input {
+    width: 100%; /* Full width of the container */
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    color: #495057;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-position: left 10px center; /* Adjust the position of the background image (icon) */
+    background-size: 16px 16px; /* Size of the background image (icon) */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Adds a shadow to the input */
+}
+
+.search-input::placeholder {
+    color: #adb5bd;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Add a magnifying glass icon to the search input */
+.search-input {
+    padding-left: 40px; /* Make space for the icon */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23495057" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 111.06 1.06h-.1l-1.024 1.023a.75.75 0 01-1.133-.977l.073-.084 1.024-1.023a.75.75 0 01.977-.073l.084.074zm-.692 1.408a5 5 0 100-10 5 5 0 000 10z"/></svg>');
+}
+
+/* Style for the back button to match the search bar */
+.back-to-trips-btn {
+    /* ... existing styles ... */
+    /* Add any additional styles if needed */
+    background-color: #007bff; /* Bootstrap primary color */
+}
