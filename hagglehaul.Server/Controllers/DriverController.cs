@@ -233,11 +233,32 @@ namespace hagglehaul.Server.Controllers
             return Ok(availableTrips);
         }
 
+        private double EuclideanDistance(double lat1, double long1, double lat2, double long2)
+        {
+            double dLat = lat2 - lat1;
+            double dLong = long2 - long1;
+            return Math.Sqrt(dLat * dLat + dLong * dLong);
+        }
+
+        private bool TripPassesMaxCurrentToStartDistance(Trip trip, TripMarketOptions options)
+        {
+            double dist = EuclideanDistance(
+                options.CurrentLat,
+                options.CurrentLong,
+                trip.PickupLat,
+                trip.PickupLong
+            );
+            return dist <= trip.MaxCurrentToStartDistance;
+        }
+
         private double TripEuclideanDistance(Trip trip)
         {
-            double dLat = trip.DestinationLat - trip.PickupLat;
-            double dLong = trip.DestinationLong - trip.PickupLong;
-            return Math.Sqrt(dLat * dLat + dLong * dLong);
+            return EuclideanDistance(
+                trip.PickupLat,
+                trip.PickupLong,
+                trip.DestinationLat,
+                trip.DestinationLong
+            );
         }
 
         private async Task<double> TripRouteDistance(Trip trip)
@@ -254,7 +275,18 @@ namespace hagglehaul.Server.Controllers
         {
             var allTrips = await _tripService.GetAllTripsAsync();
 
-            var filteredTrips = allTrips;
+            IEnumerable<Trip> someTrips = allTrips;
+
+            if (options.MaxCurrentToStartDistance != null)
+            {
+                if (options.CurrentLat == null or options.CurrentLong == null)
+                    return BadRequest(new { Error = "Must include current coordinates" });
+                someTrips = someTrips.Where(
+                    trip => TripPassesMaxCurrentToStartDistance(trip, options)
+                );
+            }
+
+            var filteredTrips = someTrips.ToList();
 
             IOrderedEnumerable<Trip> sortedTrips = null!;
             foreach (var sortMethod in options.SortMethods)
