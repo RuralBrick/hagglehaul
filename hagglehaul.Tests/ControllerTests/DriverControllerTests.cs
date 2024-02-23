@@ -45,6 +45,130 @@ public class DriverControllerTests
     }
 
     [Test]
+    public async Task DriverFilterTripMarketByMaxEndToTargetDistance()
+    {
+        _mockTripService.Setup(
+            x => x.GetAllTripsAsync()
+        )!.ReturnsAsync(
+            new List<Trip>
+            {
+                new Trip
+                {
+                    Id = "1",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 2,
+                    DestinationLong = 0,
+                },
+                new Trip
+                {
+                    Id = "2",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 1,
+                    DestinationLong = 0,
+                },
+                new Trip
+                {
+                    Id = "3",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 3,
+                    DestinationLong = 0,
+                },
+            }
+        );
+
+        _mockGeographicRouteService.Setup(
+            x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+        )!.ReturnsAsync(
+            (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+            {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+        );
+
+        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        {
+            TargetLat = 0.0,
+            TargetLong = 0.0,
+            MaxEndToTargetDistance = 2.0
+        }) as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var trips = result.Value as List<Trip>;
+
+        Assert.That(trips, Is.TypeOf<List<Trip>>());
+
+        for (int i = 0; i < trips.Count; i++)
+        {
+            Assert.That(trips[i].DestinationLat, Is.LessThanOrEqualTo(2.0));
+        }
+    }
+
+    [Test]
+    public async Task DriverFilterTripMarketByMaxEndToTargetDistanceAndMaxEuclideanDistance()
+    {
+        _mockTripService.Setup(
+            x => x.GetAllTripsAsync()
+        )!.ReturnsAsync(
+            new List<Trip>
+            {
+                new Trip
+                {
+                    Id = "1",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 2,
+                    DestinationLong = 0,
+                },
+                new Trip
+                {
+                    Id = "2",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 1,
+                    DestinationLong = 0,
+                },
+                new Trip
+                {
+                    Id = "3",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 3,
+                    DestinationLong = 0,
+                },
+            }
+        );
+
+        _mockGeographicRouteService.Setup(
+            x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+        )!.ReturnsAsync(
+            (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+            {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+        );
+
+        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        {
+            TargetLat = 3.0,
+            TargetLong = 0.0,
+            MaxEndToTargetDistance = 1.0,
+            MaxEuclideanDistance = 2.0
+        }) as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var trips = result.Value as List<Trip>;
+
+        Assert.That(trips, Is.TypeOf<List<Trip>>());
+
+        Assert.That(trips.Count, Is.EqualTo(1));
+    }
+
+    [Test]
     public async Task DriverSortTripMarketByRouteDistance()
     {
         _mockTripService.Setup(
@@ -104,6 +228,130 @@ public class DriverControllerTests
         for (int i = 0; i < trips.Count; i++)
         {
             Assert.That(trips[i].DestinationLat, Is.EqualTo(i + 1));
+        }
+    }
+
+    [Test]
+    public async Task DriverSortTripMarketByRouteDistanceAndEndToTargetDistance()
+    {
+        _mockTripService.Setup(
+            x => x.GetAllTripsAsync()
+        )!.ReturnsAsync(
+            new List<Trip>
+            {
+                new Trip
+                {
+                    Id = "2",
+                    PickupLat = 1,
+                    PickupLong = 0,
+                    DestinationLat = 2,
+                    DestinationLong = 0,
+                },
+                new Trip
+                {
+                    Id = "3",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 3,
+                    DestinationLong = 0,
+                },
+                new Trip
+                {
+                    Id = "1",
+                    PickupLat = 0,
+                    PickupLong = 0,
+                    DestinationLat = 1,
+                    DestinationLong = 0,
+                },
+            }
+        );
+
+        _mockGeographicRouteService.Setup(
+            x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+        )!.ReturnsAsync(
+            (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+            {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+        );
+
+        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        {
+            TargetLat = 1,
+            TargetLong = 0,
+            SortMethods = [
+                "routeDistance",
+                "endToTargetDistance"
+            ],
+        }) as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var trips = result.Value as List<Trip>;
+
+        Assert.That(trips, Is.TypeOf<List<Trip>>());
+
+        for (int i = 0; i < trips.Count; i++)
+        {
+            Assert.That(trips[i].Id, Is.EqualTo((i + 1).ToString()));
+        }
+    }
+
+    [Test]
+    public async Task DriverFilterAndSortByCurrentMinBid()
+    {
+        _mockTripService.Setup(
+            x => x.GetAllTripsAsync()
+        )!.ReturnsAsync(
+            new List<Trip>
+            {
+                new Trip
+                {
+                    Id = "2",
+                },
+                new Trip
+                {
+                    Id = "3",
+                },
+                new Trip
+                {
+                    Id = "1",
+                },
+            }
+        );
+
+        _mockBidService.Setup(
+            x => x.GetTripBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>
+            {
+                new Bid
+                {
+                    TripId = s,
+                    CentsAmount = UInt32.Parse(s),
+                }
+            }
+        );
+
+        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        {
+            MinCurrentMinBid = 2,
+            SortMethods = [
+                "currentMinBid"
+            ],
+        }) as OkObjectResult;
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var trips = result.Value as List<Trip>;
+
+        Assert.That(trips, Is.TypeOf<List<Trip>>());
+
+        Assert.That(trips.Count, Is.EqualTo(2));
+
+        for (int i = 0; i < trips.Count; i++)
+        {
+            Assert.That(trips[i].Id, Is.EqualTo((i + 2).ToString()));
         }
     }
 

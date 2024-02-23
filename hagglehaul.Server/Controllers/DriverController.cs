@@ -233,22 +233,50 @@ namespace hagglehaul.Server.Controllers
             return Ok(availableTrips);
         }
 
+        private async Task<Dictionary<string, GeographicRoute>> GetTripIdToRouteMap(
+            List<Trip> trips,
+            Dictionary<string, GeographicRoute>? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var tripRoutes = new Dictionary<string, GeographicRoute>();
+            await Task.WhenAll(trips.Select(async trip =>
+            {
+                var route = await _geographicRouteService.GetGeographicRoute(
+                    trip.PickupLong,
+                    trip.PickupLat,
+                    trip.DestinationLong,
+                    trip.DestinationLat
+                );
+                tripRoutes.Add(trip.Id, route);
+            }));
+            return tripRoutes;
+        }
+
+        private async Task<Dictionary<string, uint>> GetTripIdToMinBidAmountMap(
+            List<Trip> trips,
+            Dictionary<string, uint>? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var tripMinBidAmounts = new Dictionary<string, uint>();
+            await Task.WhenAll(trips.Select(async trip =>
+            {
+                var bids = await _bidService.GetTripBidsAsync(trip.Id);
+                var bidAmounts = bids.Select(b => b.CentsAmount);
+                var minBidAmount = bidAmounts.Min();
+                tripMinBidAmounts.Add(trip.Id, minBidAmount);
+            }));
+            return tripMinBidAmounts;
+        }
+
         private double EuclideanDistance(double lat1, double long1, double lat2, double long2)
         {
             double dLat = lat2 - lat1;
             double dLong = long2 - long1;
             return Math.Sqrt(dLat * dLat + dLong * dLong);
-        }
-
-        private bool TripPassesMaxCurrentToStartDistance(Trip trip, TripMarketOptions options)
-        {
-            double dist = EuclideanDistance(
-                (double)options.CurrentLat,
-                (double)options.CurrentLong,
-                trip.PickupLat,
-                trip.PickupLong
-            );
-            return dist <= options.MaxCurrentToStartDistance;
         }
 
         private double TripEuclideanDistance(Trip trip)
@@ -261,12 +289,34 @@ namespace hagglehaul.Server.Controllers
             );
         }
 
-        private async Task<double> TripRouteDistance(Trip trip)
+        private double TripCurrentToStartDistance(Trip trip, TripMarketOptions options)
         {
-            var route = await _geographicRouteService.GetGeographicRoute(
-                trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat
+            return EuclideanDistance(
+                (double)options.CurrentLat,
+                (double)options.CurrentLong,
+                trip.PickupLat,
+                trip.PickupLong
             );
-            return (double)route.Distance;
+        }
+
+        private double TripEndToTargetDistance(Trip trip, TripMarketOptions options)
+        {
+            return EuclideanDistance(
+                trip.DestinationLat,
+                trip.DestinationLong,
+                (double)options.TargetLat,
+                (double)options.TargetLong
+            );
+        }
+
+        private bool TripPassesMaxCurrentToStartDistance(Trip trip, TripMarketOptions options)
+        {
+            return TripCurrentToStartDistance(trip, options) <= options.MaxCurrentToStartDistance;
+        }
+
+        private bool TripPassesMaxEndToTargetDistance(Trip trip, TripMarketOptions options)
+        {
+            return TripEndToTargetDistance(trip, options) <= options.MaxEndToTargetDistance;
         }
 
         [HttpGet]
@@ -274,6 +324,8 @@ namespace hagglehaul.Server.Controllers
         public async Task<IActionResult> GetAvailableTrips([FromBody] TripMarketOptions options)
         {
             var allTrips = await _tripService.GetAllTripsAsync();
+            Dictionary<string, GeographicRoute>? tripRoutes = null;
+            Dictionary<string, uint>? tripMinBidAmounts = null;
 
             IEnumerable<Trip> someTrips = allTrips;
 
@@ -281,9 +333,31 @@ namespace hagglehaul.Server.Controllers
             {
                 if (options.CurrentLat == null || options.CurrentLong == null)
                     return BadRequest(new { Error = "Must include current coordinates" });
-                someTrips = someTrips.Where(
-                    trip => TripPassesMaxCurrentToStartDistance(trip, options)
-                );
+                someTrips = someTrips.Where(trip => TripPassesMaxCurrentToStartDistance(trip, options));
+            }
+
+            if (options.MaxEndToTargetDistance != null)
+            {
+                if (options.TargetLat == null || options.TargetLong == null)
+                    return BadRequest(new { Error = "Must include target coordinates" });
+                someTrips = someTrips.Where(trip => TripPassesMaxEndToTargetDistance(trip, options));
+            }
+
+            if (options.MaxEuclideanDistance != null)
+            {
+                someTrips = someTrips.Where(trip => TripEuclideanDistance(trip) <= options.MaxEuclideanDistance);
+            }
+
+            if (options.MaxRouteDistance != null)
+            {
+                tripRoutes = await GetTripIdToRouteMap(allTrips, tripRoutes);
+                someTrips = someTrips.Where(trip => tripRoutes[trip.Id].Distance <= options.MaxRouteDistance);
+            }
+
+            if (options.MinCurrentMinBid != null)
+            {
+                tripMinBidAmounts = await GetTripIdToMinBidAmountMap(allTrips, tripMinBidAmounts);
+                someTrips = someTrips.Where(trip => tripMinBidAmounts[trip.Id] >= options.MinCurrentMinBid);
             }
 
             var filteredTrips = someTrips.ToList();
@@ -300,24 +374,43 @@ namespace hagglehaul.Server.Controllers
                             sortedTrips = sortedTrips.ThenBy(TripEuclideanDistance);
                         break;
                     case "routeDistance":
-                        var tripRouteDistances = new Dictionary<string, double>();
-                        await Task.WhenAll(filteredTrips.Select(async trip =>
-                        {
-                            var routeDistance = await TripRouteDistance(trip);
-                            tripRouteDistances.Add(trip.Id, routeDistance);
-                        }));
+                        tripRoutes = await GetTripIdToRouteMap(filteredTrips, tripRoutes);
                         if (sortedTrips == null)
-                            sortedTrips = filteredTrips.OrderBy(trip => tripRouteDistances[trip.Id]);
+                            sortedTrips = filteredTrips.OrderBy(trip => tripRoutes[trip.Id].Distance);
                         else
-                            sortedTrips = sortedTrips.ThenBy(trip => tripRouteDistances[trip.Id]);
+                            sortedTrips = sortedTrips.ThenBy(trip => tripRoutes[trip.Id].Distance);
                         break;
                     case "routeDuration":
+                        tripRoutes = await GetTripIdToRouteMap(filteredTrips, tripRoutes);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => tripRoutes[trip.Id].Duration);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => tripRoutes[trip.Id].Duration);
                         break;
                     case "currentToStartDistance":
+                        if (options.CurrentLat == null || options.CurrentLong == null)
+                            return BadRequest(new { Error = "Must include current coordinates" });
+                        if (options.TargetLat == null || options.TargetLong == null)
+                            return BadRequest(new { Error = "Must include target coordinates" });
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => TripCurrentToStartDistance(trip, options));
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => TripCurrentToStartDistance(trip, options));
                         break;
                     case "endToTargetDistance":
+                        if (options.TargetLat == null || options.TargetLong == null)
+                            return BadRequest(new { Error = "Must include target coordinates" });
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => TripEndToTargetDistance(trip, options));
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => TripEndToTargetDistance(trip, options));
                         break;
                     case "currentMinBid":
+                        tripMinBidAmounts = await GetTripIdToMinBidAmountMap(filteredTrips, tripMinBidAmounts);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => tripMinBidAmounts[trip.Id]);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => tripMinBidAmounts[trip.Id]);
                         break;
                     case "startTime":
                         if (sortedTrips == null)
