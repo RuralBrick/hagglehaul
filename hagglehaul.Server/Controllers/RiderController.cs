@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using System.Data;
 using MongoDB.Bson.IO;
 using System.Text.Json;
+using System.Diagnostics.CodeAnalysis;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -49,6 +50,31 @@ namespace hagglehaul.Server.Controllers
             riderBasicInfo.Email = email;
             riderBasicInfo.Phone = userCore.Phone;
             return Ok(riderBasicInfo);
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("dashboard")]
+        [ProducesResponseType(typeof(RiderDashboard), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetDashboard()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            RiderDashboard riderDashboard = new RiderDashboard();
+            List<ConfirmedRiderTrip> confirmedTrips = new List<ConfirmedRiderTrip>();
+            List<UnconfirmedRiderTrip> unconfirmedTrips = new List<UnconfirmedRiderTrip>();
+            List<ArchivedRiderTrip> archivedTrips = new List<ArchivedRiderTrip>();
+            List<Trip> allTrips = await _tripService.GetRiderTripsAsync(email);
+
+            riderDashboard.ConfirmedTrips = confirmedTrips;
+            riderDashboard.TripsInBidding = unconfirmedTrips;
+            riderDashboard.ArchivedTrips = archivedTrips;
+            return Ok(riderDashboard);
         }
 
         [Authorize]

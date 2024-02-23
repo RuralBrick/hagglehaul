@@ -1,6 +1,6 @@
 ﻿namespace hagglehaul.Server.Models
 {
-    public class UncomfirmedRiderTrip
+    public class UnconfirmedRiderTrip
     {
         public string TripID { get; set; } = null!;
         public string TripName { get; set; } = null!;
