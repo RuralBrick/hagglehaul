@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './LoginRegPage.css';
 
 async function loginUser(credentials) {
-    return fetch('api/Authentication/login', {
+    return fetch('/api/Authentication/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -17,7 +17,7 @@ async function loginUser(credentials) {
 }
 
 async function registerUser(credentials) {
-    return fetch('api/Authentication/register', {
+    return fetch('/api/Authentication/register', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -78,7 +78,7 @@ function LoginRegPage({ setToken }) {
             setWaiting(false);
             return;
         }
-        setToken(token);
+        await setToken(token);
     }
 
     const handleRegisterSubmit = async e => {
@@ -96,7 +96,7 @@ function LoginRegPage({ setToken }) {
             setWaiting(false)
             return;
         }
-        setToken(token);
+        await setToken(token);
     }
 
     const handleSwitchFunc = async e => {

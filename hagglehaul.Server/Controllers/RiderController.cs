@@ -129,6 +129,10 @@ namespace hagglehaul.Server.Controllers
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
 
             if (role != "rider") { return Unauthorized(); };
+            
+            if (tripDetails.StartTime < DateTime.Now) { return BadRequest(new { Error = "Start time is in the past" }); };
+            
+            if (tripDetails.PartySize is <= 0 or > 10) { return BadRequest(new { Error = "Invalid party size" }); };
 
             Trip trip = new Trip
             {
@@ -139,6 +143,9 @@ namespace hagglehaul.Server.Controllers
                 PickupLat = tripDetails.PickupLat,
                 DestinationLong = tripDetails.DestinationLong,
                 DestinationLat = tripDetails.DestinationLat,
+                PickupAddress = tripDetails.PickupAddress,
+                DestinationAddress = tripDetails.DestinationAddress,
+                PartySize = tripDetails.PartySize,
                 RiderHasBeenRated = false,
                 DriverHasBeenRated = false,
             };

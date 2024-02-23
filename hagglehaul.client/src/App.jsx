@@ -12,13 +12,27 @@ import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
 import RiderAddTrip from './components/RiderAddTrip/RiderAddTrip';
 import './App.css';
 
-
-export const TokenContext = React.createContext(null);
+export const TokenContext = React.createContext({token: null, role: null});
 function App() {
     const [token, setToken] = useState(Cookies.get('token'));
-    
-    function setTokenWithCookie(token)
+    const [role, setRole] = useState(Cookies.get('role'));
+
+    const fetchRole = async (token) => {
+        const m_results = await fetch('/api/Authentication/role', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            }
+        })
+            .then(data => data.text());
+        Cookies.set('role', m_results, { expires: 0.125, secure: true });
+        setRole(m_results);
+    }
+
+    async function setTokenWithCookie(token)
     {
+        await fetchRole(token);
         Cookies.set('token', token, { expires: 0.125, secure: true });
         setToken(token);
     }
@@ -27,6 +41,8 @@ function App() {
     {
         Cookies.remove('token');
         setToken(null);
+        Cookies.remove('role');
+        setRole(null);
     }
     
     if (!token) {
@@ -36,7 +52,7 @@ function App() {
     return (
         <Router>
             <div>
-                <TokenContext.Provider value={{token: token}}>
+                <TokenContext.Provider value={{token: token, role: role}}>
                     <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
                         <div className="container-fluid">
                             <Link className="navbar-brand" to="/" style={{ fontFamily: 'Inika' }}>HaggleHaul</Link>
