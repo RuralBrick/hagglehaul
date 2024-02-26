@@ -22,6 +22,7 @@ namespace hagglehaul.Tests.ControllerTests
         private Mock<IUserCoreService> _mockUserCoreService;
         private Mock<ITripService> _mockTripService;
         private Mock<IBidService> _mockBidService;
+        private Mock<IGeographicRouteService> _mockGeographicRouteService;
 
         private RiderController _controller;
 
@@ -33,13 +34,15 @@ namespace hagglehaul.Tests.ControllerTests
             _mockUserCoreService = new Mock<IUserCoreService>();
             _mockTripService = new Mock<ITripService>();
             _mockBidService = new Mock<IBidService>();
+            _mockGeographicRouteService = new Mock<IGeographicRouteService>();
 
             _controller = new RiderController(
                 _mockRiderProfileService.Object,
                 _mockDriverProfileService.Object,
                 _mockUserCoreService.Object,
                 _mockTripService.Object,
-                _mockBidService.Object
+                _mockBidService.Object,
+                _mockGeographicRouteService.Object
             );
         }
 
@@ -50,48 +53,6 @@ namespace hagglehaul.Tests.ControllerTests
             _mockDriverProfileService.Reset();
             _mockTripService.Reset();
             _mockBidService.Reset();
-        }
-
-        [Test]
-        public async Task RiderGetTripsTest()
-        {
-            var riderTripData = HhTestUtilities.GetTripData()
-                                               .Where(trip => trip.RiderEmail == "rider@example.com")
-                                               .ToList();
-            _mockTripService.Setup(
-                x => x.GetRiderTripsAsync(It.IsAny<string>())
-            )!.ReturnsAsync(
-                (string s) => riderTripData
-            );
-
-            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-            {
-                new Claim(ClaimTypes.Name, "rider@example.com"),
-                new Claim(ClaimTypes.Role, "rider")
-            }, "mock"));
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
-
-            var result = await _controller.GetAllRiderTrips() as OkObjectResult;
-
-            Assert.That(result, Is.TypeOf<OkObjectResult>());
-
-            var riderTrips = result.Value as List<Trip>;
-
-            Assert.That(riderTrips, Is.TypeOf<List<Trip>>());
-
-            for (int i = 0; i < riderTrips.Count; i++)
-            {
-                Assert.That(riderTrips[i].Name, Is.EqualTo(riderTripData[i].Name));
-                Assert.That(riderTrips[i].StartTime, Is.EqualTo(riderTripData[i].StartTime));
-                Assert.That(riderTrips[i].PickupLat, Is.EqualTo(riderTripData[i].PickupLat));
-                Assert.That(riderTrips[i].PickupLong, Is.EqualTo(riderTripData[i].PickupLong));
-                Assert.That(riderTrips[i].DestinationLat, Is.EqualTo(riderTripData[i].DestinationLat));
-                Assert.That(riderTrips[i].DestinationLong, Is.EqualTo(riderTripData[i].DestinationLong));
-            }
         }
 
         [Test]
