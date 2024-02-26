@@ -22,6 +22,7 @@ function SearchTripsPage() {
                     className="search-input"
                 />
             </div>
+            <div className="trips-page container mt-5">
             <Row xs={1} md={2} lg={1}>
                 <TripCard
                     image="https://placeholder.co/600x400.png"
@@ -80,6 +81,7 @@ function SearchTripsPage() {
                         <Button variant="light">+ Add Bid</Button>]}
                 />
             </Row>
+            </div>
             <button onClick={goToTrips} className="back-to-trips-btn">Back to Trips</button>
         </div>
     );
