@@ -520,7 +520,7 @@ namespace hagglehaul.Server.Controllers
             {
                 return BadRequest(new { Error = ex.Message });
             }
-            var searchedTrips = TripsToSearchedTrips(trips);
+            var searchedTrips = await TripsToSearchedTrips(trips);
             return Ok(searchedTrips);
         }
     }
