@@ -22,6 +22,7 @@ namespace hagglehaul.Tests.ControllerTests
         private Mock<IUserCoreService> _mockUserCoreService;
         private Mock<ITripService> _mockTripService;
         private Mock<IBidService> _mockBidService;
+        private Mock<IGeographicRouteService> _mockGeographicRouteService;
 
         private RiderController _controller;
 
@@ -33,13 +34,15 @@ namespace hagglehaul.Tests.ControllerTests
             _mockUserCoreService = new Mock<IUserCoreService>();
             _mockTripService = new Mock<ITripService>();
             _mockBidService = new Mock<IBidService>();
+            _mockGeographicRouteService = new Mock<IGeographicRouteService>();
 
             _controller = new RiderController(
                 _mockRiderProfileService.Object,
                 _mockDriverProfileService.Object,
                 _mockUserCoreService.Object,
                 _mockTripService.Object,
-                _mockBidService.Object
+                _mockBidService.Object,
+                _mockGeographicRouteService.Object
             );
         }
 
