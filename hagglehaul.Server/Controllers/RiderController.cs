@@ -4,12 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
-using System.Runtime.InteropServices;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Data;
-using MongoDB.Bson.IO;
-using System.Text.Json;
-using System.Diagnostics.CodeAnalysis;
 
 namespace hagglehaul.Server.Controllers
 {
