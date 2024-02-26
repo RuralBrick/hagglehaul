@@ -59,6 +59,12 @@ namespace hagglehaul.Server.Controllers
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
             }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "rider")
+            {
+                return Unauthorized();
+            }
+            
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             RiderDashboard riderDashboard = new RiderDashboard();

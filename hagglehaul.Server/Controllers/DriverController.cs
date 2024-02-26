@@ -40,6 +40,12 @@ namespace hagglehaul.Server.Controllers
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
             }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
+            }
+            
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             DriverDashboard driverDashboard = new DriverDashboard();
