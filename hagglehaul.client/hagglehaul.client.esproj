@@ -8,4 +8,8 @@
     <!-- Folder where production build objects will be placed -->
     <PublishAssetsDirectory>$(MSBuildProjectDirectory)\dist</PublishAssetsDirectory>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="src\pages\DriverTripsPage\" />
+    <Folder Include="src\pages\RiderTripsPage\" />
+  </ItemGroup>
 </Project>

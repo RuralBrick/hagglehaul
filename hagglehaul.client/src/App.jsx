@@ -3,7 +3,8 @@ import Cookies from 'js-cookie';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoginRegPage from './pages/LoginRegPage/LoginRegPage';
-import TripsPage from './pages/TripsPage/TripsPage';
+import RiderTripsPage from './pages/RiderTripsPage/RiderTripsPage';
+import DriverTripsPage from './pages/DriverTripsPage/DriverTripsPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ActivityPage from './pages/ProfilePage/ActivityPage/ActivityPage';
 import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
@@ -71,8 +72,8 @@ function App() {
                     </nav>
                     <main className="pt-2 hh-app-flex">
                         <Routes>
-                            <Route path="/" element={<TripsPage onAddTrip={() => handleRiderAddTripModal(true)} />} />
-                            <Route path="/trips" element={<TripsPage onAddTrip={() => handleRiderAddTripModal(true)} />} />
+                            <Route path="/" element={role === "rider" ? <RiderTripsPage /> : <DriverTripsPage />} />
+                            <Route path="/trips" element={role === "rider" ? <RiderTripsPage /> : <DriverTripsPage />} />
                             <Route path="/rider-add-trip" element={<RiderAddTrip />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/profile/activity" element={<ActivityPage />} />
