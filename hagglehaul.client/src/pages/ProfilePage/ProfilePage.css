@@ -1,8 +1,16 @@
 /* src/pages/Profile/ProfilePage.css */
+
+/* Make sure the entire profile page takes up the full viewport height */
 .profile-page {
+    display: flex; /* Use flexbox */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    height: 100vh; /* 100% of the viewport height */
     padding: 20px;
+    margin: 0; /* Remove any default margins */
 }
 
+/* Style your menu to align items in the center */
 .profile-menu {
     display: flex;
     flex-direction: column;

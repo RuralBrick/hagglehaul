@@ -1,13 +1,15 @@
-/* AddressSearchBar.css */
+/* AddressInput Styles */
 .address-input {
     width: 100%;
     max-width: 500px; /* Set a max-width for the input fields */
     min-width: 250px; /* Prevents the input from shrinking smaller than this size */
     box-sizing: border-box; /* Make sure padding and borders are included in the width */
     border-radius: 4px 4px 0 0; /* This rounds the top corners */
+    position: relative; /* This allows absolute positioning inside the input */
+    z-index: 0;
 }
 
-/* This targets the input fields directly */
+/* Styles when AddressInput is focused */
 .address-input:focus {
     box-shadow: none;
     outline: none; /* This removes the blue border that appears on focus */
@@ -19,7 +21,7 @@ input.address-input:focus {
     outline: none;
 }
 
-/* Results container should be the same width as the input and rounded corners */
+/* Results Container Styles */
 .results-container {
     position: absolute;
     transform: translateY(-15px);
@@ -44,5 +46,24 @@ input.address-input:focus {
 
 .result-item:hover {
     background-color: #f0f0f0;
+}
+
+/* Connector Canvas Styles */
+.connector-canvas {
+    position: absolute;
+    left: 10px; /* Adjust as needed to align with the input fields */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: -1; /* Ensures the canvas is behind the input field */
+}
+
+
+
+.address-connector {
+    position: absolute;
+    top: 50%;
+    left: 10px; /* Adjust this value as needed to shift the SVG to the right */
+    transform: translateY(-50%);
+    z-index: 1; /* Ensure the SVG is above other elements if needed */
 }
 

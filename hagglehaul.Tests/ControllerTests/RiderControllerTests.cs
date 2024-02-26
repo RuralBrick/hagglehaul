@@ -105,11 +105,14 @@ namespace hagglehaul.Tests.ControllerTests
             var request = new CreateTrip
             {
                 Name = "Road Trip",
-                StartTime = DateTime.Now,
+                StartTime = DateTime.Now.AddDays(1),
                 PickupLat = 34.050,
                 PickupLong = -118.250,
                 DestinationLat = 40.731,
                 DestinationLong = -73.935,
+                PickupAddress = "123 Main St",
+                DestinationAddress = "456 Elm St",
+                PartySize = 3
             };
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -133,8 +136,53 @@ namespace hagglehaul.Tests.ControllerTests
             Assert.That(saveTrip.PickupLong, Is.EqualTo(request.PickupLong));
             Assert.That(saveTrip.DestinationLat, Is.EqualTo(request.DestinationLat));
             Assert.That(saveTrip.DestinationLong, Is.EqualTo(request.DestinationLong));
+            Assert.That(saveTrip.PickupAddress, Is.EqualTo(request.PickupAddress));
+            Assert.That(saveTrip.DestinationAddress, Is.EqualTo(request.DestinationAddress));
+            Assert.That(saveTrip.PartySize, Is.EqualTo(request.PartySize));
             Assert.False(saveTrip.RiderHasBeenRated);
             Assert.False(saveTrip.DriverHasBeenRated);
+        }
+        
+         [Test]
+        public async Task RiderCannotPostInvalidTripTest()
+        {
+            Trip saveTrip = new Trip();
+            _mockTripService.Setup(
+                x => x.CreateAsync(It.IsAny<Trip>())
+            )!.Callback<Trip>((Trip t) => saveTrip = t);
+
+            var request = new CreateTrip
+            {
+                Name = "Road Trip",
+                StartTime = DateTime.Now.AddDays(-1),
+                PickupLat = 34.050,
+                PickupLong = -118.250,
+                DestinationLat = 40.731,
+                DestinationLong = -73.935,
+                PickupAddress = "123 Main St",
+                DestinationAddress = "456 Elm St",
+                PartySize = 3
+            };
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.PostRiderTrip(request), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Never);
+            
+            
+            request.StartTime = DateTime.Now.AddDays(1);
+            request.PartySize = 0;
+            Assert.That(await _controller.PostRiderTrip(request), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Never);
         }
     }
 }

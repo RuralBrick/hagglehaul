@@ -34,6 +34,12 @@ namespace hagglehaul.Server.Models
 
         [BsonElement("destinationLat")]
         public double DestinationLat { get; set; }
+        
+        [BsonElement("pickupAddress")]
+        public string PickupAddress { get; set; } = null!;
+        
+        [BsonElement("destinationAddress")]
+        public string DestinationAddress { get; set; } = null!;
 
         [BsonElement("partySize")]
         public uint? PartySize { get; set; } = null!;
