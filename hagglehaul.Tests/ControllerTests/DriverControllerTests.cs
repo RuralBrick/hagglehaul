@@ -161,16 +161,12 @@ public class DriverControllerTests
             }
         );
 
-        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
         {
             TargetLat = 0.0,
             TargetLong = 0.0,
             MaxEndToTargetDistance = 2.0
-        }) as OkObjectResult;
-
-        Assert.That(result, Is.TypeOf<OkObjectResult>());
-
-        var trips = result.Value as List<Trip>;
+        });
 
         Assert.That(trips, Is.TypeOf<List<Trip>>());
 
@@ -224,18 +220,13 @@ public class DriverControllerTests
             }
         );
 
-        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
         {
             TargetLat = 3.0,
             TargetLong = 0.0,
             MaxEndToTargetDistance = 1.0,
             MaxEuclideanDistance = 2.0
-        }) as OkObjectResult;
-
-        Assert.That(result, Is.TypeOf<OkObjectResult>());
-
-        var trips = result.Value as List<Trip>;
-
+        });
         Assert.That(trips, Is.TypeOf<List<Trip>>());
 
         Assert.That(trips.Count, Is.EqualTo(1));
@@ -285,16 +276,12 @@ public class DriverControllerTests
             }
         );
 
-        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
         {
             SortMethods = [
                 "routeDistance",
             ],
-        }) as OkObjectResult;
-
-        Assert.That(result, Is.TypeOf<OkObjectResult>());
-
-        var trips = result.Value as List<Trip>;
+        });
 
         Assert.That(trips, Is.TypeOf<List<Trip>>());
 
@@ -348,7 +335,7 @@ public class DriverControllerTests
             }
         );
 
-        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
         {
             TargetLat = 1,
             TargetLong = 0,
@@ -356,11 +343,7 @@ public class DriverControllerTests
                 "routeDistance",
                 "endToTargetDistance"
             ],
-        }) as OkObjectResult;
-
-        Assert.That(result, Is.TypeOf<OkObjectResult>());
-
-        var trips = result.Value as List<Trip>;
+        });
 
         Assert.That(trips, Is.TypeOf<List<Trip>>());
 
@@ -406,17 +389,13 @@ public class DriverControllerTests
             }
         );
 
-        var result = await _controller.GetAvailableTrips(new TripMarketOptions
+        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
         {
             MinCurrentMinBid = 2,
             SortMethods = [
                 "currentMinBid"
             ],
-        }) as OkObjectResult;
-
-        Assert.That(result, Is.TypeOf<OkObjectResult>());
-
-        var trips = result.Value as List<Trip>;
+        });
 
         Assert.That(trips, Is.TypeOf<List<Trip>>());
 
