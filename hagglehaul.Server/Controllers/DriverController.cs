@@ -210,7 +210,7 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
-        public async Task<Dictionary<string, GeographicRoute>> GetTripIdToRouteMap(
+        private async Task<Dictionary<string, GeographicRoute>> GetTripIdToRouteMap(
             IEnumerable<Trip> trips,
             Dictionary<string, GeographicRoute>? cache
         )
@@ -394,7 +394,7 @@ namespace hagglehaul.Server.Controllers
             return TripEndToTargetDistance(trip, options) <= options.MaxEndToTargetDistance;
         }
 
-        public async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
+        private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
         {
             var allTrips = await _tripService.GetAllTripsAsync();
             Dictionary<string, GeographicRoute>? tripRoutes = null;
@@ -507,6 +507,7 @@ namespace hagglehaul.Server.Controllers
 
 
         [HttpGet]
+        [HttpPost]
         [Route("tripMarket")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAvailableTrips([FromBody] TripMarketOptions options)

@@ -151,6 +151,12 @@ public class DriverControllerTests
                 },
             }
         );
+        
+        _mockBidService.Setup(
+            x => x.GetTripBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>(0)
+        );
 
         _mockGeographicRouteService.Setup(
             x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
@@ -160,20 +166,22 @@ public class DriverControllerTests
                 Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
             }
         );
-
-        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
+        
+        var tripsResult = await _controller.GetAllAvailableTrips(new TripMarketOptions
         {
             TargetLat = 0.0,
             TargetLong = 0.0,
             MaxEndToTargetDistance = 2.0
         });
 
-        Assert.That(trips, Is.TypeOf<List<Trip>>());
+        Assert.That(tripsResult, Is.TypeOf<OkObjectResult>());
+        var trips = ((OkObjectResult) tripsResult).Value as List<SearchedTrip>;
 
         for (int i = 0; i < trips.Count; i++)
         {
-            Assert.That(trips[i].DestinationLat, Is.LessThanOrEqualTo(2.0));
+            Assert.That(trips[i].TripId, Is.AnyOf(["1", "2"]));
         }
+        
     }
 
     [Test]
@@ -219,15 +227,22 @@ public class DriverControllerTests
                 Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
             }
         );
+        
+        _mockBidService.Setup(
+            x => x.GetTripBidsAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) => new List<Bid>(0)
+            );
 
-        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
+        var tripsResult = await _controller.GetAllAvailableTrips(new TripMarketOptions
         {
             TargetLat = 3.0,
             TargetLong = 0.0,
             MaxEndToTargetDistance = 1.0,
             MaxEuclideanDistance = 2.0
         });
-        Assert.That(trips, Is.TypeOf<List<Trip>>());
+        Assert.That(tripsResult, Is.TypeOf<OkObjectResult>());
+        var trips = ((OkObjectResult) tripsResult).Value as List<SearchedTrip>;
 
         Assert.That(trips.Count, Is.EqualTo(1));
     }
@@ -275,20 +290,26 @@ public class DriverControllerTests
                 Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
             }
         );
-
-        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
+        
+        _mockBidService.Setup(
+            x => x.GetTripBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>(0)
+        );
+        
+        var tripsResult = await _controller.GetAllAvailableTrips(new TripMarketOptions
         {
             SortMethods = [
                 "routeDistance",
             ],
         });
 
-        Assert.That(trips, Is.TypeOf<List<Trip>>());
-
-        for (int i = 0; i < trips.Count; i++)
-        {
-            Assert.That(trips[i].DestinationLat, Is.EqualTo(i + 1));
-        }
+        Assert.That(tripsResult, Is.TypeOf<OkObjectResult>());
+        
+        var trips = ((OkObjectResult) tripsResult).Value as List<SearchedTrip>;
+        Assert.That(trips[0].TripId, Is.EqualTo("2"));
+        Assert.That(trips[1].TripId, Is.EqualTo("1"));
+        Assert.That(trips[2].TripId, Is.EqualTo("3"));
     }
 
     [Test]
@@ -335,7 +356,13 @@ public class DriverControllerTests
             }
         );
 
-        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
+        _mockBidService.Setup(
+            x => x.GetTripBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new List<Bid>(0)
+        );
+        
+        var tripsResult = await _controller.GetAllAvailableTrips(new TripMarketOptions
         {
             TargetLat = 1,
             TargetLong = 0,
@@ -344,12 +371,13 @@ public class DriverControllerTests
                 "endToTargetDistance"
             ],
         });
-
-        Assert.That(trips, Is.TypeOf<List<Trip>>());
-
+        
+        Assert.That(tripsResult, Is.TypeOf<OkObjectResult>());
+        
+        var trips = ((OkObjectResult) tripsResult).Value as List<SearchedTrip>;
         for (int i = 0; i < trips.Count; i++)
         {
-            Assert.That(trips[i].Id, Is.EqualTo((i + 1).ToString()));
+            Assert.That(trips[i].TripId, Is.EqualTo((i + 1).ToString()));
         }
     }
 
@@ -383,27 +411,56 @@ public class DriverControllerTests
             {
                 new Bid
                 {
+                    Id = new StringBuilder().Insert(0, "1", 24).ToString(),
                     TripId = s,
                     CentsAmount = UInt32.Parse(s),
+                    DriverEmail = "driver@example.com"
                 }
             }
         );
+        
+        _mockDriverProfileService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new DriverProfile
+            {
+                Email = "driver@example.com",
+            }
+        );
+        
+        _mockGeographicRouteService.Setup(
+            x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+        )!.ReturnsAsync(
+            (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+            {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+        );
 
-        var trips = await _controller.GetFilteredAndSortedTrips(new TripMarketOptions
+        _mockUserCoreService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new UserCore
+            {
+                Email = "driver@example.com"
+            }
+        );
+        
+        var tripsResult = await _controller.GetAllAvailableTrips(new TripMarketOptions
         {
             MinCurrentMinBid = 2,
             SortMethods = [
                 "currentMinBid"
             ],
         });
+        Assert.That(tripsResult, Is.InstanceOf<OkObjectResult>());
 
-        Assert.That(trips, Is.TypeOf<List<Trip>>());
-
+        var trips = ((OkObjectResult) tripsResult).Value as List<SearchedTrip>;
         Assert.That(trips.Count, Is.EqualTo(2));
 
         for (int i = 0; i < trips.Count; i++)
         {
-            Assert.That(trips[i].Id, Is.EqualTo((i + 2).ToString()));
+            Assert.That(trips[i].TripId, Is.EqualTo((i + 2).ToString()));
         }
     }
 

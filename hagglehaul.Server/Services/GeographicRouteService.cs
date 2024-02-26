@@ -65,7 +65,7 @@ public class GeographicRouteService : IGeographicRouteService
                 {
                     { "alternatives", "false" },
                     { "geometries", "geojson" },
-                    { "overview", "full" },
+                    { "overview", "simplified" },
                     { "steps", "false" },
                     { "access_token", _mapboxSettings.AccessToken }
                 };
