@@ -221,21 +221,6 @@ namespace hagglehaul.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        [Route("trip")]
-        public async Task<IActionResult> GetAllRiderTrips()
-        {
-            ClaimsPrincipal currentUser = this.User;
-
-            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
-
-            var email = currentUser.FindFirstValue(ClaimTypes.Name);
-
-            var trips = await _tripService.GetRiderTripsAsync(email);
-            return Ok(trips);
-        }
-
-        [Authorize]
         [HttpPost]
         [Route("trip")]
         public async Task<IActionResult> PostRiderTrip([FromBody] CreateTrip tripDetails)
@@ -271,14 +256,6 @@ namespace hagglehaul.Server.Controllers
 
             await _tripService.CreateAsync(trip);
             return Ok();
-        }
-
-        [HttpGet]
-        [Route("tripBids")]
-        public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
-        {
-            var bids = await _bidService.GetTripBidsAsync(tripId);
-            return Ok(bids);
         }
     }
 }
