@@ -152,6 +152,7 @@ namespace hagglehaul.Server.Controllers
                         UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
                         DriverProfile driver = await _driverProfileService.GetAsync(tripBid.DriverEmail);
                         bidUserView.BidId = tripBid.Id;
+                        bidUserView.YourBid = false;
                         bidUserView.DriverName = driverCore.Name;
                         bidUserView.DriverRating = driver.Rating;
                         bidUserView.DriverNumRating = driver.NumRatings;
