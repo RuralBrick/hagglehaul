@@ -29,8 +29,8 @@ function RiderTripsPage() {
                         attributes={[["Mon, Feb 19, 08:00 AM", "12 miles - 36 minutes"], ["Tim Pajim", "4.5\u2605 (130)"], ["$39.99", ""]]}
                         bidComponents={[
                             <Row>
-                                <Col
-                                     style={{ display: 'flex', justifyContent: 'center' }}> <span style={{ fontSize: "1.5em" }}>Rate Driver: &#x2606;&#x2606;&#x2606;&#x2606;&#x2606; </span>
+                                <Col style={{ display: 'flex', justifyContent: 'center', fontSize: "1.5em" }}>
+                                    Rate Driver: &#x2606;&#x2606;&#x2606;&#x2606;&#x2606;
                                 </Col>
                             </Row>]}
                     />

@@ -27,8 +27,8 @@ function DriverTripsPage() {
                         attributes={[["Mon, Feb 19, 08:00 AM", "12 miles - 36 minutes"], ["Jim Patim", "4.2\u2605 (122)"], ["$39.99", ""]]}
                         bidComponents={[
                             <Row>
-                                <Col
-                                    style={{ display: 'flex', justifyContent: 'center' }}> <span style={{ fontSize: "1.5em" }}> Rate Rider: &#x2606;&#x2606;&#x2606;&#x2606;&#x2606; </span>
+                                <Col style={{ display: 'flex', justifyContent: 'center', fontSize: "1.5em" }}>
+                                    Rate Rider: &#x2606;&#x2606;&#x2606;&#x2606;&#x2606;
                                 </Col>
                             </Row>]}
                     />
@@ -48,7 +48,7 @@ function DriverTripsPage() {
                         attributes={[["Mon, Feb 19, 08:00 AM", "12 miles - 36 minutes"], ["Pickup:", "1234 Virginia Ave."], ["Destination:", "4567 Disney Rd."]]}
                         bidComponents={[
                             <Row>
-                                <Col> Tim Pajim <br /> 4.5&#9733; (130) </Col>
+                                <Col> Tim Pajim (me) <br /> 4.5&#9733; (130) </Col>
                                 <Col style={{ display: 'flex', justifyContent: 'right' }}> $Price </Col>
                             </Row>,
                             <Row>
