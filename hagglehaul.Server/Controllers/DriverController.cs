@@ -3,6 +3,7 @@ using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace hagglehaul.Server.Controllers
@@ -304,21 +305,15 @@ namespace hagglehaul.Server.Controllers
             return bidUsers;
         }
 
-        [HttpGet]
-        [Route("allTrips")]
-        [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllAvailableTrips()
+        private async Task<List<SearchedTrip>> TripsToSearchedTrips(List<Trip> trips)
         {
-            var allTrips = await _tripService.GetAllTripsAsync();
-            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null).ToList();
-
-            var tripRoutes = await GetTripIdToRouteMap(availableTrips, null);
-            var tripBids = await GetTripIdToBidMap(availableTrips, null);
-            var tripMinBids = await GetTripIdToMinBidAmountMap(availableTrips, null, tripBids);
+            var tripRoutes = await GetTripIdToRouteMap(trips, null);
+            var tripBids = await GetTripIdToBidMap(trips, null);
+            var tripMinBids = await GetTripIdToMinBidAmountMap(trips, null, tripBids);
             var bidDrivers = await GetBidIdToDriverMap(tripBids.Values.SelectMany(x => x), null);
             var bidUsers = await GetBidIdToUserMap(tripBids.Values.SelectMany(x => x), null);
 
-            var searchedTrips = availableTrips.Select(trip => new SearchedTrip
+            var searchedTrips = trips.Select(trip => new SearchedTrip
             {
                 TripId = trip.Id,
                 TripName = trip.Name,
@@ -338,6 +333,17 @@ namespace hagglehaul.Server.Controllers
                 }).ToList(),
             }).ToList();
 
+            return searchedTrips;
+        }
+
+        [HttpGet]
+        [Route("allTrips")]
+        [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllAvailableTrips()
+        {
+            var allTrips = await _tripService.GetAllTripsAsync();
+            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null).ToList();
+            var searchedTrips = await TripsToSearchedTrips(availableTrips);
             return Ok(searchedTrips);
         }
 
@@ -497,6 +503,25 @@ namespace hagglehaul.Server.Controllers
                 finalTrips = filteredTrips;
 
             return finalTrips;
+        }
+
+
+        [HttpGet]
+        [Route("tripMarket")]
+        [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllAvailableTrips([FromBody] TripMarketOptions options)
+        {
+            List<Trip> trips;
+            try
+            {
+                trips = await GetFilteredAndSortedTrips(options);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+            var searchedTrips = TripsToSearchedTrips(trips);
+            return Ok(searchedTrips);
         }
     }
 }
