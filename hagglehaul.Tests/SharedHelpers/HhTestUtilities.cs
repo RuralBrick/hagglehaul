@@ -58,7 +58,7 @@ public class HhTestUtilities
         return result;
     }
 
-    public static List<Trip> GetTripData(int count = 2, bool inPast = false, bool hasDriver = false)
+    public static List<Trip> GetTripData(int count = 2, bool inPast = false, bool hasDriver = false, int timeDelta = 0)
     {
         var result = new List<Trip>(count);
         for (var i = 1; i <= count; i++)
@@ -69,7 +69,7 @@ public class HhTestUtilities
                 RiderEmail = "rider@example.com",
                 DriverEmail = hasDriver ? "driver@example.com" : null,
                 Name = $"MyTrip{i}",
-                StartTime = DateTime.Now.AddHours(inPast ? -2 : 36),
+                StartTime = DateTime.Now.AddHours(inPast ? (-2 - i * timeDelta) : (36 + i * timeDelta)),
                 PickupLong = 1.0 + (i * 0.1),
                 PickupLat = 1.0 + (i * 0.1),
                 DestinationLong = 2.0 + (i * 0.1),
