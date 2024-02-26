@@ -22,14 +22,16 @@ namespace hagglehaul.Server.Controllers
         private readonly IUserCoreService _userCoreService;
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
+        private readonly IGeographicRouteService _geographicRouteService;
 
-        public RiderController(IRiderProfileService riderProfileService, IDriverProfileService driverProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService)
+        public RiderController(IRiderProfileService riderProfileService, IDriverProfileService driverProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
         {
             _riderProfileService = riderProfileService;
             _driverProfileService = driverProfileService;
             _userCoreService = userCoreService;
             _tripService = tripService;
             _bidService = bidService;
+            _geographicRouteService = geographicRouteService;
         }
 
         [Authorize]
@@ -70,7 +72,90 @@ namespace hagglehaul.Server.Controllers
             List<UnconfirmedRiderTrip> unconfirmedTrips = new List<UnconfirmedRiderTrip>();
             List<ArchivedRiderTrip> archivedTrips = new List<ArchivedRiderTrip>();
             List<Trip> allTrips = await _tripService.GetRiderTripsAsync(email);
-
+            foreach (Trip trip in allTrips)
+            {
+                //if trip date is in past, trip is archived
+                //if trip date is in future, email null, trip is in bidding
+                //if trip date is in future, email !null, trip is confirmed
+                TimeSpan day = new TimeSpan(24, 0, 0);
+                DateTime pastPlusOne = trip.StartTime.Add(day);
+                //archived Trips
+                GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
+                uint cost = 0;
+                if (trip.DriverEmail != null )
+                {
+                    List<Bid> bids = await _bidService.GetDriverBidsAsync(trip.DriverEmail);
+                    foreach (Bid bid in bids)
+                    {
+                        if (bid.TripId == trip.Id)
+                        {
+                            cost = bid.CentsAmount; break;
+                        }
+                    }
+                }
+                bool hasDriver = !String.IsNullOrEmpty(trip.DriverEmail);
+                if ( DateTime.Now > pastPlusOne )
+                {
+                    ArchivedRiderTrip archive = new ArchivedRiderTrip();
+                    archive.TripId = trip.Id;
+                    archive.TripName = trip.Name;
+                    archive.StartTime = trip.StartTime;
+                    archive.Thumbnail = geographicRoute.Image;
+                    archive.Distance = geographicRoute.Distance;
+                    archive.Duration = geographicRoute.Duration;
+                    archive.HasDriver = hasDriver;
+                    if (archive.HasDriver)
+                    {
+                        archive.Cost = cost;
+                        DriverProfile driver = await _driverProfileService.GetAsync(trip.DriverEmail);
+                        UserCore driverCore = await _userCoreService.GetAsync(trip.DriverEmail);
+                        archive.DriverName = driverCore.Name;
+                        archive.DriverNumRating = driver.NumRatings;
+                        archive.DriverRating = driver.Rating;
+                    }
+                    archive.PickupAddress = trip.PickupAddress;
+                    archive.DestinationAddress = trip.DestinationAddress;
+                    archivedTrips.Add(archive);
+                } else if (hasDriver)
+                {
+                    //confirmed trip
+                    ConfirmedRiderTrip confirmedTrip = new ConfirmedRiderTrip();
+                    DriverProfile driver = await _driverProfileService.GetAsync(trip.DriverEmail);
+                    UserCore driverCore = await _userCoreService.GetAsync(trip.DriverEmail);
+                    confirmedTrip.TripID = trip.Id;
+                    confirmedTrip.TripName = trip.Name;
+                    confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.StartTime = trip.StartTime;
+                    confirmedTrip.Distance = geographicRoute.Distance;
+                    confirmedTrip.Duration = geographicRoute.Duration;
+                    confirmedTrip.Cost = cost;
+                    confirmedTrip.DriverName = driverCore.Name;
+                    confirmedTrip.DriverRating = driver.Rating;
+                    confirmedTrip.DriverNumRating = driver.NumRatings;
+                    confirmedTrip.ShowRatingPrompt = trip.DriverHasBeenRated && DateTime.Now > trip.StartTime && DateTime.Now <= pastPlusOne;
+                    confirmedTrip.DriverEmail = driverCore.Email;
+                    confirmedTrip.DriverPhone = driverCore.Phone;
+                    confirmedTrip.DriverCarModel = driver.CarDescription;
+                    confirmedTrip.PickupAddress = trip.PickupAddress;
+                    confirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    confirmedTrips.Add(confirmedTrip);
+                }
+                else
+                {
+                    //unconfirmed trip
+                    UnconfirmedRiderTrip unconfirmedTrip = new UnconfirmedRiderTrip();
+                    unconfirmedTrip.TripID = trip.Id;
+                    unconfirmedTrip.TripName = trip.Name;
+                    unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.StartTime = trip.StartTime;
+                    unconfirmedTrip.Distance = geographicRoute.Distance;
+                    unconfirmedTrip.Duration = geographicRoute.Duration;
+                    unconfirmedTrip.Bids = await _bidService.GetTripBidsAsync(trip.Id);
+                    unconfirmedTrip.PickupAddress = trip.PickupAddress;
+                    unconfirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    unconfirmedTrips.Add(unconfirmedTrip);
+                }
+            }
             riderDashboard.ConfirmedTrips = confirmedTrips;
             riderDashboard.TripsInBidding = unconfirmedTrips;
             riderDashboard.ArchivedTrips = archivedTrips;
