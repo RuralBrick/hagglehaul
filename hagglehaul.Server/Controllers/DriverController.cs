@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -253,6 +254,10 @@ namespace hagglehaul.Server.Controllers
         [HttpPatch]
         [Route("bid")]
         [Authorize]
+        [SwaggerOperation(Summary = "Create or update a bid for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "The bid was successfully created or updated.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The tripId is invalid or the trip is either confirmed or in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> CreateOrUpdateBid([FromBody] CreateOrUpdateBid request)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -303,6 +308,10 @@ namespace hagglehaul.Server.Controllers
         [HttpDelete]
         [Route("bid")]
         [Authorize]
+        [SwaggerOperation(Summary = "Delete a bid for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "The bid was successfully deleted.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The tripId is invalid or the trip is either confirmed or in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> DeleteBid([FromQuery] string tripId)
         {
             ClaimsPrincipal currentUser = this.User;
