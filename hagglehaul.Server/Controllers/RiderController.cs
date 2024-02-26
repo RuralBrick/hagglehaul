@@ -144,7 +144,20 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.StartTime = trip.StartTime;
                     unconfirmedTrip.Distance = geographicRoute.Distance;
                     unconfirmedTrip.Duration = geographicRoute.Duration;
-                    unconfirmedTrip.Bids = await _bidService.GetTripBidsAsync(trip.Id);
+                    unconfirmedTrip.Bids = new List<BidUserView>();
+                    List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
+                    foreach (Bid tripBid in tripBids)
+                    {
+                        BidUserView bidUserView = new BidUserView();
+                        UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
+                        DriverProfile driver = await _driverProfileService.GetAsync(tripBid.DriverEmail);
+                        bidUserView.BidId = tripBid.Id;
+                        bidUserView.DriverName = driverCore.Name;
+                        bidUserView.DriverRating = driver.Rating;
+                        bidUserView.DriverNumRating = driver.NumRatings;
+                        bidUserView.Cost = tripBid.CentsAmount;
+                        unconfirmedTrip.Bids.Add(bidUserView);
+                    }
                     unconfirmedTrip.PickupAddress = trip.PickupAddress;
                     unconfirmedTrip.DestinationAddress = trip.DestinationAddress;
                     unconfirmedTrips.Add(unconfirmedTrip);

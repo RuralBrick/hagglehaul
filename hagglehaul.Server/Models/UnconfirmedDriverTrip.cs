@@ -11,7 +11,7 @@
         public string RiderName { get; set; } = null!;
         public double? RiderRating { get; set; }
         public uint? RiderNumRating { get; set; }
-        public List<Bid>? Bids { get; set; }
+        public List<BidUserView>? Bids { get; set; }
         public string PickupAddress { get; set; } = null!;
         public string DestinationAddress { get; set; } = null!;
     }

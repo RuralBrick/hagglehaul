@@ -58,7 +58,7 @@ namespace hagglehaul.Server.Controllers
                 GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
                 uint cost = bid.CentsAmount;
                 bool hasDriver = !String.IsNullOrEmpty(trip.DriverEmail);
-                if (DateTime.Now > pastPlusOne || (hasDriver && trip.DriverEmail != email) )
+                if (DateTime.Now > pastPlusOne || (hasDriver && trip.DriverEmail != email))
                 {
                     ArchivedDriverTrip archive = new ArchivedDriverTrip();
                     archive.TripId = trip.Id;
@@ -116,17 +116,26 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.RiderRating = rider.Rating;
                     unconfirmedTrip.RiderNumRating = rider.NumRatings;
                     List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
-                    for (int i = 0; i < tripBids.Count; i++)
+                    unconfirmedTrip.Bids = new List<BidUserView>();
+                    foreach (Bid tripBid in tripBids)
                     {
-                        var tripBid = tripBids[i];
+                        BidUserView bidUserView = new BidUserView();
+                        UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
+                        DriverProfile driver = await _driverProfileService.GetAsync(tripBid.DriverEmail);
+                        bidUserView.BidId = tripBid.Id;
+                        bidUserView.DriverName = driverCore.Name;
+                        bidUserView.DriverRating = driver.Rating;
+                        bidUserView.DriverNumRating = driver.NumRatings;
+                        bidUserView.Cost = tripBid.CentsAmount;
                         if (tripBid.DriverEmail == email)
                         {
-                            tripBids.RemoveAt(i);
-                            tripBids.Insert(0, tripBid);
-                            break;
+                            unconfirmedTrip.Bids.Insert(0, bidUserView);
+                        }
+                        else
+                        {
+                            unconfirmedTrip.Bids.Add(bidUserView);
                         }
                     }
-                    unconfirmedTrip.Bids = tripBids;
                     unconfirmedTrip.PickupAddress = trip.PickupAddress;
                     unconfirmedTrip.DestinationAddress = trip.DestinationAddress;
                     unconfirmedTrips.Add(unconfirmedTrip);
