@@ -130,10 +130,12 @@ namespace hagglehaul.Server.Controllers
                         bidUserView.Cost = tripBid.CentsAmount;
                         if (tripBid.DriverEmail == email)
                         {
+                            bidUserView.YourBid = true;
                             unconfirmedTrip.Bids.Insert(0, bidUserView);
                         }
                         else
                         {
+                            bidUserView.YourBid = false;
                             unconfirmedTrip.Bids.Add(bidUserView);
                         }
                     }
