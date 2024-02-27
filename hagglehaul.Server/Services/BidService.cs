@@ -10,6 +10,7 @@ namespace hagglehaul.Server.Services
         Task<Bid> CreateAsync(Bid bid);
         Task UpdateAsync(string id, Bid bidIn);
         Task DeleteAsync(string id);
+        Task DeleteByTripIdAsync(string tripId);
     }
 
     public class BidService : IBidService
@@ -44,5 +45,8 @@ namespace hagglehaul.Server.Services
         
         public async Task DeleteAsync(string id) =>
             await _bidCollection.DeleteOneAsync(bid => bid.Id == id);
+        
+        public async Task DeleteByTripIdAsync(string tripId) =>
+            await _bidCollection.DeleteManyAsync(bid => bid.TripId == tripId);
     }
 }

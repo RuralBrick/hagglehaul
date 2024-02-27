@@ -521,9 +521,15 @@ namespace hagglehaul.Server.Controllers
             return TripEndToTargetDistance(trip, options) <= options.MaxEndToTargetDistance;
         }
 
-        private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
+        private async Task<List<Trip>> GetEligibleMarketTrips()
         {
             var allTrips = await _tripService.GetAllTripsAsync();
+            return allTrips.Where(trip => String.IsNullOrEmpty(trip.DriverEmail) && trip.StartTime > DateTime.Now).ToList();
+        }
+
+        private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
+        {
+            var allTrips = await GetEligibleMarketTrips();
             Dictionary<string, GeographicRoute>? tripRoutes = null;
             Dictionary<string, uint?>? tripMinBidAmounts = null;
 

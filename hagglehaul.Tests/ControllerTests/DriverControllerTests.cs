@@ -40,8 +40,10 @@ public class DriverControllerTests
     {
         _mockDriverProfileService.Reset();
         _mockRiderProfileService.Reset();
+        _mockUserCoreService.Reset();
         _mockTripService.Reset();
         _mockBidService.Reset();
+        _mockGeographicRouteService.Reset();
     }
 
     [Test]
@@ -199,6 +201,7 @@ public class DriverControllerTests
                     PickupLong = 0,
                     DestinationLat = 2,
                     DestinationLong = 0,
+                    StartTime = DateTime.Now.AddHours(36),
                 },
                 new Trip
                 {
@@ -207,6 +210,7 @@ public class DriverControllerTests
                     PickupLong = 0,
                     DestinationLat = 1,
                     DestinationLong = 0,
+                    StartTime = DateTime.Now.AddHours(36),
                 },
                 new Trip
                 {
@@ -215,6 +219,7 @@ public class DriverControllerTests
                     PickupLong = 0,
                     DestinationLat = 3,
                     DestinationLong = 0,
+                    StartTime = DateTime.Now.AddHours(36),
                 },
             }
         );
@@ -262,6 +267,7 @@ public class DriverControllerTests
                     PickupLong = 0,
                     DestinationLat = 2,
                     DestinationLong = 2,
+                    StartTime = DateTime.Now.AddHours(36),
                 },
                 new Trip
                 {
@@ -270,6 +276,7 @@ public class DriverControllerTests
                     PickupLong = 0,
                     DestinationLat = 1,
                     DestinationLong = 1,
+                    StartTime = DateTime.Now.AddHours(36),
                 },
                 new Trip
                 {
@@ -278,6 +285,7 @@ public class DriverControllerTests
                     PickupLong = 0,
                     DestinationLat = 3,
                     DestinationLong = 3,
+                    StartTime = DateTime.Now.AddHours(36),
                 },
             }
         );
@@ -392,14 +400,17 @@ public class DriverControllerTests
                 new Trip
                 {
                     Id = "2",
+                    StartTime = DateTime.Now.AddHours(36),
                 },
                 new Trip
                 {
                     Id = "3",
+                    StartTime = DateTime.Now.AddHours(36),
                 },
                 new Trip
                 {
                     Id = "1",
+                    StartTime = DateTime.Now.AddHours(36),
                 },
             }
         );
