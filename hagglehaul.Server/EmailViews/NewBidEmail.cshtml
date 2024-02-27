@@ -1,24 +1,51 @@
 @model hagglehaul.Server.EmailViews.NewBidEmail
 
-@{
-    Layout = null;
-}
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-    <title>Hagglehaul Trip: You have a new bid</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Bid Notification</title>
     <style>
-        .blue-accent {
-            color: #126391;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #999;
         }
     </style>
 </head>
 <body>
-<div>
-    <h1>New Bid Email template</h1>
-    <p class="blue-accent">@Model.ExampleProperty</p>
-</div>
+    <div class="container">
+        <h1>New Bid Notification</h1>
+        <p>Dear @Model.RiderName,</p>
+        <p>A new bid has been placed for your trip. Please review the details below:</p>
+        <p><strong>Start Location:</strong> @Model.StartLocation</p>
+        <p><strong>End Location:</strong> @Model.EndLocation</p>
+        <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+        </div>
+    </div>
 </body>
 </html>
