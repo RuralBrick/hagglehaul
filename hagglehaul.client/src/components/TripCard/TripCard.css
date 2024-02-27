@@ -36,3 +36,15 @@
         margin-bottom: 10px;
     }
 }
+
+.map-thumbnail {
+    cursor: pointer;
+}
+
+.map-thumbnail {
+    transition: transform 0.3s ease;
+}
+
+.map-thumbnail:hover {
+    transform: scale(1.1);
+}
