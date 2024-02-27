@@ -263,5 +263,58 @@ namespace hagglehaul.Server.Controllers
             await _tripService.CreateAsync(trip);
             return Ok();
         }
+        
+        [Authorize]
+        [HttpDelete]
+        [Route("trip")]
+        public async Task<IActionResult> DeleteRiderTrip([FromQuery] string tripId)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); }
+
+            Trip trip = await _tripService.GetTripByIdAsync(tripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+            if (trip.RiderEmail != email) { return Unauthorized(); }
+            if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = "Trip has a driver" }); }
+            if (trip.StartTime < DateTime.Now) { return BadRequest(new { Error = "Trip has already started" }); }
+
+            await _tripService.DeleteAsync(tripId);
+            await _bidService.DeleteByTripIdAsync(tripId);
+            return Ok();
+        }
+        
+        [Authorize]
+        [HttpPost]
+        [Route("tripDriver")]
+        public async Task<IActionResult> ConfirmDriver([FromBody] AddTripDriver addTripDriver)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); }
+
+            Trip trip = await _tripService.GetTripByIdAsync(addTripDriver.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+            if (trip.RiderEmail != email) { return Unauthorized(); }
+            if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = "Trip already has a driver" }); }
+            if (trip.StartTime < DateTime.Now) { return BadRequest(new { Error = "Trip is in the past and is therefore cancelled" }); }
+
+            var bids = await _bidService.GetTripBidsAsync(addTripDriver.TripId);
+            Bid bid = bids.FirstOrDefault(b => b.Id == addTripDriver.BidId);
+            if (bid == null) { return BadRequest(new { Error = "Bid does not exist" }); }
+            trip.DriverEmail = bid.DriverEmail;
+            await _tripService.UpdateAsync(addTripDriver.TripId, trip);
+            return Ok();
+        }
     }
 }
