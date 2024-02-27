@@ -101,6 +101,7 @@ namespace hagglehaul.Server.Controllers
                     archive.TripName = trip.Name;
                     archive.StartTime = trip.StartTime;
                     archive.Thumbnail = geographicRoute.Image;
+                    archive.GeoJson = geographicRoute.GeoJson;
                     archive.Distance = geographicRoute.Distance;
                     archive.Duration = geographicRoute.Duration;
                     archive.HasDriver = hasDriver;
@@ -125,6 +126,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.TripID = trip.Id;
                     confirmedTrip.TripName = trip.Name;
                     confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.GeoJson = geographicRoute.GeoJson;
                     confirmedTrip.StartTime = trip.StartTime;
                     confirmedTrip.Distance = geographicRoute.Distance;
                     confirmedTrip.Duration = geographicRoute.Duration;
@@ -147,6 +149,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.TripID = trip.Id;
                     unconfirmedTrip.TripName = trip.Name;
                     unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.GeoJson = geographicRoute.GeoJson;
                     unconfirmedTrip.StartTime = trip.StartTime;
                     unconfirmedTrip.Distance = geographicRoute.Distance;
                     unconfirmedTrip.Duration = geographicRoute.Duration;

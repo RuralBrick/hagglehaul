@@ -9,6 +9,7 @@ import MetersToMiles from "@/utils/MetersToMiles.jsx";
 import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
 import CancellationModal from "@/components/CancellationModal/CancellationModal.jsx";
 import SelectBidModal from "@/components/SelectBidModal/SelectBidModal.jsx";
+import TripMapModal from "@/components/TripMapModal/TripMapModal.jsx";
 
 function RiderTripsPage() {
     const [showAddTrip, setShowAddTrip] = useState(false);
@@ -38,6 +39,9 @@ function RiderTripsPage() {
     
     const [showSelectBidModal, setShowSelectBidModal] = useState(false);
     const [selectBidData, setSelectBidData] = useState();
+    
+    const [showMapModal, setShowMapModal] = useState(false);
+    const [mapGeoJSON, setMapGeoJSON] = useState();
 
     const [error, setError] = useState();
     const errorModal = (
@@ -104,6 +108,7 @@ function RiderTripsPage() {
             {showInfoModal ? infoModal : null}
             {showCancellationModal ? <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} /> : null}
             {showSelectBidModal ? <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} /> : null}
+            {showMapModal ? <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} /> : null}
             
             <AddTripModal show={showAddTrip} setShow={setShowAddTrip} />
             <div className="trips-page container mt-5">
@@ -123,6 +128,7 @@ function RiderTripsPage() {
                             {data.confirmedTrips.map((trip) =>
                                 <TripCard
                                     image={"data:image/png;base64," + trip.thumbnail}
+                                    onClickImg={() => { setMapGeoJSON(JSON.parse(trip.geoJson)); setShowMapModal(true);}}
                                     title={trip.tripName}
                                     actionComponent={<DropdownButton as={ButtonGroup} title="Options" id="bg-nested-dropdown"
                                                                      variant="light">
@@ -170,6 +176,7 @@ function RiderTripsPage() {
                             {data.tripsInBidding.map((trip) =>
                                 <TripCard
                                     image={"data:image/png;base64," + trip.thumbnail}
+                                    onClickImg={() => { setMapGeoJSON(JSON.parse(trip.geoJson)); setShowMapModal(true);}}
                                     title={trip.tripName}
                                     actionComponent={<Button style={{ backgroundColor: "#D96C06" }} onClick={() => {
                                         setCancellationId(trip.tripID);
@@ -213,6 +220,7 @@ function RiderTripsPage() {
                             {data.archivedTrips.map((trip) =>
                                 <TripCard
                                     image={"data:image/png;base64," + trip.thumbnail}
+                                    onClickImg={() => { setMapGeoJSON(JSON.parse(trip.geoJson)); setShowMapModal(true);}}
                                     title={trip.tripName}
                                     actionComponent={""}
                                     attributes={trip.hasDriver ? 
