@@ -898,7 +898,7 @@ public class DriverControllerTests
     [Test]
     public async Task DriverPostRating()
     {
-        _mockRiderProfileService.SetUp(
+        _mockRiderProfileService.Setup(
             x => x.GetAsync(It.IsAny<string>())
         )!.ReturnsAsync(
             (string s) => new RiderProfile
@@ -910,7 +910,7 @@ public class DriverControllerTests
         );
 
         RiderProfile saveProfile;
-        _mockRiderProfileService.SetUp(
+        _mockRiderProfileService.Setup(
             x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<RiderProfile>())
         )!.Callback(
             (string s, RiderProfile rp) =>

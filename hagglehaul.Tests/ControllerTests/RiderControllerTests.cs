@@ -501,7 +501,7 @@ namespace hagglehaul.Tests.ControllerTests
         [Test]
         public async Task RiderPostRating()
         {
-            _mockDriverProfileService.SetUp(
+            _mockDriverProfileService.Setup(
                 x => x.GetAsync(It.IsAny<string>())
             )!.ReturnsAsync(
                 (string s) => new DriverProfile
@@ -513,7 +513,7 @@ namespace hagglehaul.Tests.ControllerTests
             );
 
             DriverProfile saveProfile;
-            _mockDriverProfileService.SetUp(
+            _mockDriverProfileService.Setup(
                 x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<DriverProfile>())
             )!.Callback(
                 (string s, DriverProfile dp) =>
