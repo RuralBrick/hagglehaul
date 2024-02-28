@@ -13,7 +13,7 @@ const LeafletMapRoute = ({mapGeoJSON}) => {
     }, []);
     
     return (
-        <GeoJSON ref={gjRef} data={mapGeoJSON} />
+        <GeoJSON ref={gjRef} data={mapGeoJSON} style={{color: "#D96C06", weight: 5}} />
     );
 }
 

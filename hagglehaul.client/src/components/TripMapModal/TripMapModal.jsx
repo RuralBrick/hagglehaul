@@ -20,10 +20,10 @@ const TripMapModal = ({show, setShow, mapGeoJSON}) => {
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body >
-                <MapContainer className="hh-map-frame" center={[51.505, -0.09]} zoom={13} scrollWheelZoom={true}>
+                <MapContainer className="hh-map-frame" scrollWheelZoom={true}>
                     <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png"
                     />
                     <LeafletMapRoute mapGeoJSON={mapGeoJSON} />
                 </MapContainer>
