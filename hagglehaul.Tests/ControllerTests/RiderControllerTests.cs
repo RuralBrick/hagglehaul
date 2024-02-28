@@ -497,5 +497,52 @@ namespace hagglehaul.Tests.ControllerTests
             _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
             _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
         }
+
+        [Test]
+        public async Task RiderPostRating()
+        {
+            _mockDriverProfileService.SetUp(
+                x => x.GetAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) => new DriverProfile
+                {
+                    Email = "driver@example.com",
+                    Rating = 4.0,
+                    NumRatings = 9,
+                }
+            );
+
+            DriverProfile saveProfile;
+            _mockDriverProfileService.SetUp(
+                x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<DriverProfile>())
+            )!.Callback(
+                (string s, DriverProfile dp) =>
+                {
+                    saveProfile = dp;
+                }
+            );
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.RateDriver(new GiveRating
+            {
+                TargetUserEmail = "driver@example.com",
+                RatingGiven = 5.0,
+            }), Is.InstanceOf<OkResult>());
+            _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
+            _mockDriverProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<DriverProfile>()), Times.Once());
+
+            Assert.That(saveProfile.Rating, Is.EqualTo(4.1));
+            Assert.That(saveProfile.NumRatings, Is.EqualTo(10));
+        }
     }
 }

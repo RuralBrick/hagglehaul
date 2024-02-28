@@ -894,4 +894,51 @@ public class DriverControllerTests
         Assert.That(await _controller.DeleteBid(requestId), Is.InstanceOf<BadRequestObjectResult>());
         _mockBidService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
     }
+
+    [Test]
+    public async Task DriverPostRating()
+    {
+        _mockRiderProfileService.SetUp(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => new RiderProfile
+            {
+                Email = "rider@example.com",
+                Rating = 4.0,
+                NumRatings = 9,
+            }
+        );
+
+        RiderProfile saveProfile;
+        _mockRiderProfileService.SetUp(
+            x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<RiderProfile>())
+        )!.Callback(
+            (string s, RiderProfile rp) =>
+            {
+                saveProfile = rp;
+            }
+        );
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim(ClaimTypes.Name, "driver@example.com"),
+            new Claim(ClaimTypes.Role, "driver")
+        }, "mock"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        Assert.That(await _controller.RateRider(new GiveRating
+        {
+            TargetUserEmail = "rider@example.com",
+            RatingGiven = 5.0,
+        }), Is.InstanceOf<OkResult>());
+        _mockRiderProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
+        _mockRiderProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<RiderProfile>()), Times.Once());
+
+        Assert.That(saveProfile.Rating, Is.EqualTo(4.1));
+        Assert.That(saveProfile.NumRatings, Is.EqualTo(10));
+    }
 }
