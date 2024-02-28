@@ -45,7 +45,7 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-            
+
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             DriverDashboard driverDashboard = new DriverDashboard();
@@ -660,6 +660,37 @@ namespace hagglehaul.Server.Controllers
             }
             var searchedTrips = await TripsToSearchedTrips(trips);
             return Ok(searchedTrips);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("rating")]
+        public async Task<IActionResult> RateRider([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "driver") { return Unauthorized(); }
+
+            RiderProfile rider = await _riderProfileService.GetAsync(giveRating.Email);
+            if (rider == null) { return BadRequest(new { Error = "Rider does not exist" }); }
+
+            if (rider.Rating == null)
+                rider.Rating = 0;
+            if (rider.NumRatings == null)
+                rider.NumRatings = 0;
+
+            var totalRatings = rider.Rating * (double)rider.NumRatings;
+
+            rider.NumRatings++;
+
+            rider.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)rider.NumRatings;
+
+            await _riderProfileService.UpdateAsync(rider.Email, rider);
+            return Ok();
         }
     }
 }
