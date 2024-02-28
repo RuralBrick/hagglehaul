@@ -536,7 +536,7 @@ namespace hagglehaul.Tests.ControllerTests
             Assert.That(await _controller.RateDriver(new GiveRating
             {
                 TargetUserEmail = "driver@example.com",
-                RatingGiven = 5.0,
+                RatingGiven = 5,
             }), Is.InstanceOf<OkResult>());
             _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
             _mockDriverProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<DriverProfile>()), Times.Once());

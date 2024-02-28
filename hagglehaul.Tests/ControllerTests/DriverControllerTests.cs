@@ -933,7 +933,7 @@ public class DriverControllerTests
         Assert.That(await _controller.RateRider(new GiveRating
         {
             TargetUserEmail = "rider@example.com",
-            RatingGiven = 5.0,
+            RatingGiven = 5,
         }), Is.InstanceOf<OkResult>());
         _mockRiderProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
         _mockRiderProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<RiderProfile>()), Times.Once());
