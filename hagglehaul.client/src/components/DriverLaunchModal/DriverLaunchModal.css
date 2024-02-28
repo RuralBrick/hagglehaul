@@ -1,0 +1,41 @@
+.launch-labeled-section {
+    position: relative;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+}
+
+.launch-labeled-section::before {
+    position: absolute;
+    font-size: 1.2em;
+    top: -12px; 
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.google-maps-launch::before {
+    content: "Google Maps";
+}
+
+.apple-maps-launch::before {
+    content: "Apple Maps";
+}
+
+.waze-launch::before {
+    content: "Waze";
+}
+
+.launch-button {
+    width: 49%;
+    margin-top: 10px;
+}
+
+@media only screen and (max-width: 768px) {
+    .launch-button {
+        width: 100%;
+    }
+}

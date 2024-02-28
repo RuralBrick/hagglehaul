@@ -10,6 +10,7 @@ import MetersToMiles from "@/utils/MetersToMiles.jsx";
 import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
 import ModifyBidModal from "@/components/ModifyBidModal/ModifyBidModal.jsx";
 import WithdrawBidModal from "@/components/WithdrawBidModal/WithdrawBidModal.jsx";
+import DriverLaunchModal from "@/components/DriverLaunchModal/DriverLaunchModal.jsx";
 
 function DriverTripsPage() {
     const [data, setData] = useState();
@@ -41,6 +42,9 @@ function DriverTripsPage() {
     
     const [showWithdrawBidModal, setShowWithdrawBidModal] = useState(false);
     const [withdrawBidTripId, setWithdrawBidTripId] = useState();
+    
+    const [showDriverLaunchModal, setShowDriverLaunchModal] = useState(false);
+    const [driverLaunchModalData, setDriverLaunchModalData] = useState({riderPhone: "", riderEmail: "", geoJSON: {}});
     
     const [error, setError] = useState();
     const errorModal = (
@@ -108,6 +112,7 @@ function DriverTripsPage() {
             {showInfoModal ? infoModal : null}
             {showModifyBidModal ? <ModifyBidModal show={showModifyBidModal} setShow={setShowModifyBidModal} setError={setError} tripId={modifyBidTripId} /> : null}
             {showWithdrawBidModal ? <WithdrawBidModal show={showWithdrawBidModal} setShow={setShowWithdrawBidModal} setError={setError} tripId={withdrawBidTripId} /> : null}
+            {showDriverLaunchModal ? <DriverLaunchModal show={showDriverLaunchModal} setShow={setShowDriverLaunchModal} {...driverLaunchModalData} /> : null}
 
             <div className="trips-page container mt-5">
                 <br/>
@@ -147,7 +152,12 @@ function DriverTripsPage() {
                                                 <span style={{cursor: "pointer"}}>&#x2606;</span>
                                             )}
                                             </Col>
-                                        </Row>] : []}
+                                        </Row>] : [
+                                        <Button style={{width: "100%"}} variant="primary" onClick={() => {
+                                            setDriverLaunchModalData({riderPhone: trip.riderPhone, riderEmail: trip.riderEmail, geoJSON: JSON.parse(trip.geoJson)});
+                                            setShowDriverLaunchModal(true);
+                                        }}>Launch Trip</Button>
+                                    ]}
                                 />
                             )}
                         </Row>
