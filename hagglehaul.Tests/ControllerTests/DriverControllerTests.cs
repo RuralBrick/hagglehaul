@@ -909,7 +909,7 @@ public class DriverControllerTests
             }
         );
 
-        RiderProfile saveProfile;
+        RiderProfile saveProfile = new RiderProfile();
         _mockRiderProfileService.Setup(
             x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<RiderProfile>())
         )!.Callback(

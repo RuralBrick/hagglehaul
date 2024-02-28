@@ -512,7 +512,7 @@ namespace hagglehaul.Tests.ControllerTests
                 }
             );
 
-            DriverProfile saveProfile;
+            DriverProfile saveProfile = new DriverProfile();
             _mockDriverProfileService.Setup(
                 x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<DriverProfile>())
             )!.Callback(
