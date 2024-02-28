@@ -675,7 +675,7 @@ namespace hagglehaul.Server.Controllers
 
             if (role != "driver") { return Unauthorized(); }
 
-            RiderProfile rider = await _riderProfileService.GetAsync(giveRating.Email);
+            RiderProfile rider = await _riderProfileService.GetAsync(giveRating.TargetUserEmail);
             if (rider == null) { return BadRequest(new { Error = "Rider does not exist" }); }
 
             if (rider.Rating == null)

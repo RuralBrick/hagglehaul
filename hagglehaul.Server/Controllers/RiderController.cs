@@ -333,7 +333,7 @@ namespace hagglehaul.Server.Controllers
 
             if (role != "rider") { return Unauthorized(); }
 
-            DriverProfile driver = await _driverProfileService.GetAsync(giveRating.Email);
+            DriverProfile driver = await _driverProfileService.GetAsync(giveRating.TargetUserEmail);
             if (driver == null) { return BadRequest(new { Error = "Driver does not exist" }); }
 
             if (driver.Rating == null)
