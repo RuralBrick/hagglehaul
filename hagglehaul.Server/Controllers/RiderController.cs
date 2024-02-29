@@ -64,7 +64,7 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-            
+
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             RiderDashboard riderDashboard = new RiderDashboard();
@@ -185,7 +185,7 @@ namespace hagglehaul.Server.Controllers
         public async Task<IActionResult> ModifyAccountDetails([FromBody] RiderUpdate riderUpdate )
         {
             ClaimsPrincipal currentUser = this.User;
-  
+
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
@@ -195,12 +195,12 @@ namespace hagglehaul.Server.Controllers
             {
                 return BadRequest(new { Error = "Can't make a new password" });
             }
-            
+
             //check role for error
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
             UserCore userCore = await _userCoreService.GetAsync(email);
-            
+
             if (changingPassword)
             {
 
@@ -208,9 +208,9 @@ namespace hagglehaul.Server.Controllers
                 {
                     return BadRequest(new { Error = "Current Password is invalid" });
                 }
-                
+
             }
-            
+
             if (changingPassword) {
                 Console.WriteLine("changing pass");
                 _userCoreService.CreatePasswordHash(riderUpdate.NewPassword, out var newHash, out var newSalt);
@@ -242,9 +242,9 @@ namespace hagglehaul.Server.Controllers
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
 
             if (role != "rider") { return Unauthorized(); };
-            
+
             if (tripDetails.StartTime < DateTime.Now) { return BadRequest(new { Error = "Start time is in the past" }); };
-            
+
             if (tripDetails.PartySize is <= 0 or > 10) { return BadRequest(new { Error = "Invalid party size" }); };
 
             Trip trip = new Trip
@@ -266,7 +266,7 @@ namespace hagglehaul.Server.Controllers
             await _tripService.CreateAsync(trip);
             return Ok();
         }
-        
+
         [Authorize]
         [HttpDelete]
         [Route("trip")]
@@ -291,7 +291,7 @@ namespace hagglehaul.Server.Controllers
             await _bidService.DeleteByTripIdAsync(tripId);
             return Ok();
         }
-        
+
         [Authorize]
         [HttpPost]
         [Route("tripDriver")]
@@ -317,6 +317,54 @@ namespace hagglehaul.Server.Controllers
             if (bid == null) { return BadRequest(new { Error = "Bid does not exist" }); }
             trip.DriverEmail = bid.DriverEmail;
             await _tripService.UpdateAsync(addTripDriver.TripId, trip);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("rating")]
+        public async Task<IActionResult> RateDriver([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); }
+
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+
+            var riderEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (riderEmail != trip.RiderEmail) { return Unauthorized(); }
+
+            var driverEmail = trip.DriverEmail;
+            if (string.IsNullOrEmpty(driverEmail)) { return BadRequest(new { Error = "Trip does not have a driver" }); }
+
+            if (trip.StartTime >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+
+            if (trip.DriverHasBeenRated) { return BadRequest(new { Error = "Driver has already been rated for this trip" }); }
+
+            var driver = await _driverProfileService.GetAsync(driverEmail);
+            if (driver == null) { return BadRequest(new { Error = "Driver does not exist" }); }
+
+            if (driver.Rating == null)
+                driver.Rating = 0;
+            if (driver.NumRatings == null)
+                driver.NumRatings = 0;
+
+            var totalRatings = driver.Rating * (double)driver.NumRatings;
+
+            driver.NumRatings++;
+
+            driver.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)driver.NumRatings;
+
+            await _driverProfileService.UpdateAsync(driver.Email, driver);
+
+            trip.DriverHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
             return Ok();
         }
     }

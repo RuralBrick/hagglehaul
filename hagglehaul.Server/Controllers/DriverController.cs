@@ -45,7 +45,7 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-            
+
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             DriverDashboard driverDashboard = new DriverDashboard();
@@ -660,6 +660,54 @@ namespace hagglehaul.Server.Controllers
             }
             var searchedTrips = await TripsToSearchedTrips(trips);
             return Ok(searchedTrips);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("rating")]
+        public async Task<IActionResult> RateRider([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "driver") { return Unauthorized(); }
+
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+
+            var driverEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (driverEmail != trip.DriverEmail) { return Unauthorized(); }
+
+            var riderEmail = trip.RiderEmail;
+            if (string.IsNullOrEmpty(riderEmail)) { return BadRequest(new { Error = "Trip does not have a rider (somehow)" }); }
+
+            if (trip.StartTime >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+
+            if (trip.RiderHasBeenRated) { return BadRequest(new { Error = "Rider has already been rated for this trip" }); }
+
+            var rider = await _riderProfileService.GetAsync(riderEmail);
+            if (rider == null) { return BadRequest(new { Error = "Rider does not exist" }); }
+
+            if (rider.Rating == null)
+                rider.Rating = 0;
+            if (rider.NumRatings == null)
+                rider.NumRatings = 0;
+
+            var totalRatings = rider.Rating * (double)rider.NumRatings;
+
+            rider.NumRatings++;
+
+            rider.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)rider.NumRatings;
+
+            await _riderProfileService.UpdateAsync(rider.Email, rider);
+
+            trip.RiderHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
+            return Ok();
         }
     }
 }

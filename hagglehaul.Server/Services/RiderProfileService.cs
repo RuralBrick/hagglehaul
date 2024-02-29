@@ -7,6 +7,7 @@ namespace hagglehaul.Server.Services
     {
         Task<RiderProfile> GetAsync(string email);
         Task<RiderProfile> CreateAsync(RiderProfile riderProfile);
+        Task UpdateAsync(string email, RiderProfile riderProfileIn);
     }
 
     public class RiderProfileService : IRiderProfileService
@@ -29,5 +30,8 @@ namespace hagglehaul.Server.Services
             await _riderProfileCollection.InsertOneAsync(riderProfile);
             return riderProfile;
         }
+
+        public async Task UpdateAsync(string email, RiderProfile riderProfileIn) =>
+            await _riderProfileCollection.ReplaceOneAsync(riderProfile => riderProfile.Email == email, riderProfileIn);
     }
 }
