@@ -14,7 +14,6 @@
     flex-grow: 1;
 }
 
-
 .btn-add-trip {
     background-color: #007bff; /* Button color */
     color: #fff; /* Icon color */
@@ -44,13 +43,5 @@
     justify-content: center; /* Center the search bar horizontally */
     margin-top: 20px;    /* Provide some spacing from the top */
     margin-bottom: 20px; /* Provide some spacing from the bottom */
-}
-
-.driver-search-input {
-    width: 50%; /* Adjust this as necessary to fit your design */
-    padding: 10px; /* Add padding inside the search input for better visuals */
-    border-radius: 20px; /* Fully round the corners of the search input */
-    border: 1px solid #ccc; /* Light grey border, or none if not desired */
-    font-size: 16px; /* Adjust the font size as needed */
 }
 

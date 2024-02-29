@@ -10,6 +10,8 @@ namespace hagglehaul.Server.Services
         Task<List<Trip>> GetDriverTripsAsync(string email);
         Task<Trip> GetTripByIdAsync(string id);
         Task<Trip> CreateAsync(Trip trip);
+        Task DeleteAsync(string id);
+        Task UpdateAsync(string id, Trip tripIn);
     }
 
     public class TripService : ITripService
@@ -49,6 +51,16 @@ namespace hagglehaul.Server.Services
         {
             await _tripCollection.InsertOneAsync(trip);
             return trip;
+        }
+        
+        public async Task DeleteAsync(string id)
+        {
+            await _tripCollection.DeleteOneAsync(trip => trip.Id == id);
+        }
+        
+        public async Task UpdateAsync(string id, Trip tripIn)
+        {
+            await _tripCollection.ReplaceOneAsync(trip => trip.Id == id, tripIn);
         }
     }
 }

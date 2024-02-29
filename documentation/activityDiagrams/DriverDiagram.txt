@@ -1,0 +1,46 @@
+@startuml
+
+|Driver|
+start
+   :Login;
+   -> credentials;
+
+|Hagglehaul| 
+   if (authenticated?) is (yes) then
+      |Driver|
+      :Open home page;
+      :Open trip page;
+      |Hagglehaul|
+      :Fetch trip list;
+      -> map data;
+      |Mapbox|
+      :Produce maps;
+      |Hagglehaul|
+      :Display available trips;
+      |Driver|
+      repeat
+         :Make bid on a trip;
+         -> Bid amount;
+         |Hagglehaul|
+         :Save bid;
+         |Azure Communication Service|
+         :Email trip's rider;
+      |Hagglehaul|
+      repeat while (Won this trip?) is (no)
+      -> yes;
+      |Azure Communication Service|
+      :Send email to winning driver;
+      |Driver|
+      :Perform trip;
+      :Rate rider;
+      -> rating;
+      |Hagglehaul|
+      :Save rating;
+      stop
+
+   else (no)
+      |Driver|
+      :Receive error;
+      stop
+
+@enduml

@@ -65,13 +65,13 @@ public class GeographicRouteService : IGeographicRouteService
                 {
                     { "alternatives", "false" },
                     { "geometries", "geojson" },
-                    { "overview", "full" },
+                    { "overview", "simplified" },
                     { "steps", "false" },
                     { "access_token", _mapboxSettings.AccessToken }
                 };
                 navigationUrl = QueryHelpers.AddQueryString(navigationUrl, navigationParameters);
                 Console.WriteLine($"GET {navigationUrl}");
-                
+                string tripGeometry = String.Empty;
                 try
                 {
                     HttpResponseMessage response = await client.GetAsync(navigationUrl);
@@ -85,7 +85,7 @@ public class GeographicRouteService : IGeographicRouteService
                                 routeElement.TryGetProperty("distance", out JsonElement distanceElement) &&
                                 routeElement.TryGetProperty("duration", out JsonElement durationElement))
                             {
-                                route.GeoJson = geometryElement.ToString()!;
+                                tripGeometry = geometryElement.ToString()!;
                                 route.Distance = distanceElement.GetDouble();
                                 route.Duration = durationElement.GetDouble();
                             }
@@ -111,7 +111,8 @@ public class GeographicRouteService : IGeographicRouteService
                 // Part 2: Get static map image
                 string point1 = CreateGeoJsonPoint(startLong, startLat, "P", ACCENT_COLOR);
                 string point2 = CreateGeoJsonPoint(endLong, endLat, "D", ACCENT_COLOR);
-                string inputGeoJson = CreateGeoJsonRouteObject(point1, point2, route.GeoJson, ACCENT_COLOR);
+                string inputGeoJson = CreateGeoJsonRouteObject(point1, point2, tripGeometry, ACCENT_COLOR);
+                route.GeoJson = inputGeoJson;
                 string encodedInputGeoJson = UrlEncoder.Default.Encode(inputGeoJson);
                 string imageUrl = $"https://api.mapbox.com/styles/v1/mapbox/{MAP_STYLE}/static/geojson({encodedInputGeoJson})/auto/{IMAGE_WIDTH}x{IMAGE_HEIGHT}";
                 var imageParameters = new Dictionary<string, string?>

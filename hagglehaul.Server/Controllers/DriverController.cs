@@ -3,6 +3,7 @@ using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace hagglehaul.Server.Controllers
@@ -16,14 +17,146 @@ namespace hagglehaul.Server.Controllers
         private readonly IUserCoreService _userCoreService;
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
+        private readonly IGeographicRouteService _geographicRouteService;
 
-        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService)
+        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
         {
             _driverProfileService = driverProfileService;
             _riderProfileService = riderProfileService;
             _userCoreService = userCoreService;
             _tripService = tripService;
             _bidService = bidService;
+            _geographicRouteService = geographicRouteService;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("dashboard")]
+        [ProducesResponseType(typeof(DriverDashboard), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetDashboard()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
+            }
+            
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverDashboard driverDashboard = new DriverDashboard();
+            List<ConfirmedDriverTrip> confirmedTrips = new List<ConfirmedDriverTrip>();
+            List<UnconfirmedDriverTrip> unconfirmedTrips = new List<UnconfirmedDriverTrip>();
+            List<ArchivedDriverTrip> archivedTrips = new List<ArchivedDriverTrip>();
+            List<Bid> allBids = await _bidService.GetDriverBidsAsync(email);
+            foreach (Bid bid in allBids)
+            {
+                //if trip date is in past, trip is archived
+                //if trip date is in future, email null, trip is in bidding
+                //if trip date is in future, email !null, trip is confirmed
+                Trip trip = await _tripService.GetTripByIdAsync(bid.TripId);
+                TimeSpan day = new TimeSpan(24, 0, 0);
+                DateTime pastPlusOne = trip.StartTime.Add(day);
+                //archived Trips
+                GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
+                uint cost = bid.CentsAmount;
+                bool hasDriver = !String.IsNullOrEmpty(trip.DriverEmail);
+                if (DateTime.Now > pastPlusOne || (hasDriver && trip.DriverEmail != email))
+                {
+                    ArchivedDriverTrip archive = new ArchivedDriverTrip();
+                    archive.TripId = trip.Id;
+                    archive.TripName = trip.Name;
+                    archive.StartTime = trip.StartTime;
+                    archive.Thumbnail = geographicRoute.Image;
+                    archive.GeoJson = geographicRoute.GeoJson;
+                    archive.Distance = geographicRoute.Distance;
+                    archive.Duration = geographicRoute.Duration;
+                    archive.Cost = cost;
+                    DriverProfile rider = await _driverProfileService.GetAsync(trip.RiderEmail);
+                    UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
+                    archive.RiderName = riderCore.Name;
+                    archive.RiderNumRating = rider.NumRatings;
+                    archive.RiderRating = rider.Rating;
+                    archive.PickupAddress = trip.PickupAddress;
+                    archive.DestinationAddress = trip.DestinationAddress;
+                    archivedTrips.Add(archive);
+                }
+                else if (hasDriver && trip.DriverEmail == email)
+                {
+                    //confirmed trip
+                    ConfirmedDriverTrip confirmedTrip = new ConfirmedDriverTrip();
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
+                    UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
+                    confirmedTrip.TripID = trip.Id;
+                    confirmedTrip.TripName = trip.Name;
+                    confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.GeoJson = geographicRoute.GeoJson;
+                    confirmedTrip.StartTime = trip.StartTime;
+                    confirmedTrip.Distance = geographicRoute.Distance;
+                    confirmedTrip.Duration = geographicRoute.Duration;
+                    confirmedTrip.Cost = cost;
+                    confirmedTrip.RiderName = riderCore.Name;
+                    confirmedTrip.RiderRating = rider.Rating;
+                    confirmedTrip.RiderNumRating = rider.NumRatings;
+                    confirmedTrip.ShowRatingPrompt = trip.DriverHasBeenRated && DateTime.Now > trip.StartTime && DateTime.Now <= pastPlusOne;
+                    confirmedTrip.RiderEmail = riderCore.Email;
+                    confirmedTrip.RiderPhone = riderCore.Phone;
+                    confirmedTrip.PickupAddress = trip.PickupAddress;
+                    confirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    confirmedTrips.Add(confirmedTrip);
+                }
+                else
+                {
+                    //unconfirmed trip
+                    UnconfirmedDriverTrip unconfirmedTrip = new UnconfirmedDriverTrip();
+                    UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
+                    unconfirmedTrip.TripID = trip.Id;
+                    unconfirmedTrip.TripName = trip.Name;
+                    unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.GeoJson = geographicRoute.GeoJson;
+                    unconfirmedTrip.StartTime = trip.StartTime;
+                    unconfirmedTrip.Distance = geographicRoute.Distance;
+                    unconfirmedTrip.Duration = geographicRoute.Duration;
+                    unconfirmedTrip.RiderName = riderCore.Name;
+                    unconfirmedTrip.RiderRating = rider.Rating;
+                    unconfirmedTrip.RiderNumRating = rider.NumRatings;
+                    List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
+                    unconfirmedTrip.Bids = new List<BidUserView>();
+                    foreach (Bid tripBid in tripBids)
+                    {
+                        BidUserView bidUserView = new BidUserView();
+                        UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
+                        DriverProfile driver = await _driverProfileService.GetAsync(tripBid.DriverEmail);
+                        bidUserView.BidId = tripBid.Id;
+                        bidUserView.DriverName = driverCore.Name;
+                        bidUserView.DriverRating = driver.Rating;
+                        bidUserView.DriverNumRating = driver.NumRatings;
+                        bidUserView.Cost = tripBid.CentsAmount;
+                        if (tripBid.DriverEmail == email)
+                        {
+                            bidUserView.YourBid = true;
+                            unconfirmedTrip.Bids.Insert(0, bidUserView);
+                        }
+                        else
+                        {
+                            bidUserView.YourBid = false;
+                            unconfirmedTrip.Bids.Add(bidUserView);
+                        }
+                    }
+                    unconfirmedTrip.PickupAddress = trip.PickupAddress;
+                    unconfirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    unconfirmedTrips.Add(unconfirmedTrip);
+                }
+            }
+            driverDashboard.ConfirmedTrips = confirmedTrips;
+            driverDashboard.TripsInBidding = unconfirmedTrips;
+            driverDashboard.ArchivedTrips = archivedTrips;
+            return Ok(driverDashboard);
         }
 
         [Authorize]
@@ -132,18 +265,18 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-            
+
             Trip trip = await _tripService.GetTripByIdAsync(request.TripId);
             if (String.IsNullOrEmpty(request.TripId) || trip == null)
             {
                 return BadRequest(new { Error = "Invalid tripId" });
             }
-            
+
             if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
             {
                 return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
-            
+
             if (request.CentsAmount <= 0)
             {
                 return BadRequest(new { Error = "Invalid centsAmount for trip" });
@@ -166,10 +299,10 @@ namespace hagglehaul.Server.Controllers
                     CentsAmount = request.CentsAmount
                 });
             }
-            
+
             return Ok();
         }
-        
+
         [HttpDelete]
         [Route("bid")]
         [Authorize]
@@ -182,18 +315,18 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-        
+
             Trip trip = await _tripService.GetTripByIdAsync(tripId);
             if (String.IsNullOrEmpty(tripId) || trip == null)
             {
                 return BadRequest(new { Error = "Invalid tripId" });
             }
-        
+
             if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
             {
                 return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
-        
+
             Bid existingBid = (await _bidService.GetDriverBidsAsync(username)).FirstOrDefault(bid => bid.TripId == tripId);
             if (existingBid != null)
             {
@@ -203,41 +336,241 @@ namespace hagglehaul.Server.Controllers
             {
                 return BadRequest(new { Error = "No bid found for this trip" });
             }
-            
+
             return Ok();
         }
 
-        [Authorize]
-        [HttpGet]
-        [Route("trip")]
-        public async Task<IActionResult> GetDriverTrips()
+        private async Task<Dictionary<string, GeographicRoute>> GetTripIdToRouteMap(
+            IEnumerable<Trip> trips,
+            Dictionary<string, GeographicRoute>? cache
+        )
         {
-            ClaimsPrincipal currentUser = this.User;
+            if (cache != null)
+                return cache;
+            var tripRoutes = new Dictionary<string, GeographicRoute>();
+            await Task.WhenAll(trips.Select(async trip =>
+            {
+                var route = await _geographicRouteService.GetGeographicRoute(
+                    trip.PickupLong,
+                    trip.PickupLat,
+                    trip.DestinationLong,
+                    trip.DestinationLat
+                );
+                tripRoutes.Add(trip.Id, route);
+            }));
+            return tripRoutes;
+        }
 
-            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+        private async Task<Dictionary<string, List<Bid>>> GetTripIdToBidMap(
+            IEnumerable<Trip> trips,
+            Dictionary<string, List<Bid>>? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var tripBids = new Dictionary<string, List<Bid>>();
+            await Task.WhenAll(trips.Select(async trip =>
+            {
+                var bids = await _bidService.GetTripBidsAsync(trip.Id);
+                tripBids.Add(trip.Id, bids);
+            }));
+            return tripBids;
+        }
 
-            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+        private async Task<Dictionary<string, uint?>> GetTripIdToMinBidAmountMap(
+            IEnumerable<Trip> trips,
+            Dictionary<string, uint?>? cache,
+            Dictionary<string, List<Bid>>? bidCache
+        )
+        {
+            if (cache != null)
+                return cache;
+            bidCache = await GetTripIdToBidMap(trips, bidCache);
+            var tripMinBidAmounts = new Dictionary<string, uint?>();
+            foreach (var trip in trips)
+            {
+                tripMinBidAmounts.Add(
+                    trip.Id,
+                    bidCache[trip.Id].Select(bid => bid.CentsAmount).DefaultIfEmpty().Min()
+                );
+            }
+            return tripMinBidAmounts;
+        }
 
-            var trips = await _tripService.GetDriverTripsAsync(email);
-            return Ok(trips);
+        private async Task<Dictionary<string, DriverProfile>> GetBidIdToDriverMap(
+            IEnumerable<Bid> bids,
+            Dictionary<string, DriverProfile>? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var bidDrivers = new Dictionary<string, DriverProfile>();
+            await Task.WhenAll(bids.Select(async bid =>
+            {
+                if (!bidDrivers.ContainsKey(bid.Id))
+                {
+                    var driver = await _driverProfileService.GetAsync(bid.DriverEmail);
+                    bidDrivers.Add(bid.Id, driver);
+                }
+            }));
+            return bidDrivers;
+        }
+
+        private async Task<Dictionary<string, UserCore>> GetBidIdToUserMap(
+            IEnumerable<Bid> bids,
+            Dictionary<string, UserCore>? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var bidUsers = new Dictionary<string, UserCore>();
+            await Task.WhenAll(bids.Select(async bid =>
+            {
+                if (!bidUsers.ContainsKey(bid.Id))
+                {
+                    var user = await _userCoreService.GetAsync(bid.DriverEmail);
+                    bidUsers.Add(bid.Id, user);
+                }
+            }));
+            return bidUsers;
+        }
+
+        private async Task<List<SearchedTrip>> TripsToSearchedTrips(List<Trip> trips)
+        {
+            var tripRoutes = await GetTripIdToRouteMap(trips, null);
+            var tripBids = await GetTripIdToBidMap(trips, null);
+            var tripMinBids = await GetTripIdToMinBidAmountMap(trips, null, tripBids);
+            var bidDrivers = await GetBidIdToDriverMap(tripBids.Values.SelectMany(x => x), null);
+            var bidUsers = await GetBidIdToUserMap(tripBids.Values.SelectMany(x => x), null);
+
+            var searchedTrips = trips.Select(trip => new SearchedTrip
+            {
+                TripId = trip.Id,
+                TripName = trip.Name,
+                Thumbnail = tripRoutes[trip.Id].Image,
+                GeoJson = tripRoutes[trip.Id].GeoJson,
+                StartTime = trip.StartTime,
+                Distance = tripRoutes[trip.Id].Distance,
+                Duration = tripRoutes[trip.Id].Duration,
+                PickupAddress = trip.PickupAddress,
+                DestinationAddress = trip.DestinationAddress,
+                CurrentMinBidCentsAmount = tripMinBids[trip.Id],
+                TripBids = tripBids[trip.Id].Select(bid => new SearchedBid
+                {
+                    DriverName = bidUsers[bid.Id].Name,
+                    DriverRating = bidDrivers[bid.Id].Rating,
+                    DriverNumRatings = bidDrivers[bid.Id].NumRatings,
+                    CentsAmount = bid.CentsAmount
+                }).ToList(),
+            }).ToList();
+
+            return searchedTrips;
         }
 
         [HttpGet]
         [Route("allTrips")]
+        [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAvailableTrips()
         {
             var allTrips = await _tripService.GetAllTripsAsync();
-            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null);
-            return Ok(availableTrips);
+            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null).ToList();
+            var searchedTrips = await TripsToSearchedTrips(availableTrips);
+            return Ok(searchedTrips);
         }
 
-        [HttpGet]
-        [Route("tripMarket")]
-        public async Task<IActionResult> GetAvailableTrips([FromBody] TripMarketOptions options)
+        private double EuclideanDistance(double lat1, double long1, double lat2, double long2)
+        {
+            double dLat = lat2 - lat1;
+            double dLong = long2 - long1;
+            return Math.Sqrt(dLat * dLat + dLong * dLong);
+        }
+
+        private double TripEuclideanDistance(Trip trip)
+        {
+            return EuclideanDistance(
+                trip.PickupLat,
+                trip.PickupLong,
+                trip.DestinationLat,
+                trip.DestinationLong
+            );
+        }
+
+        private double TripCurrentToStartDistance(Trip trip, TripMarketOptions options)
+        {
+            return EuclideanDistance(
+                (double)options.CurrentLat,
+                (double)options.CurrentLong,
+                trip.PickupLat,
+                trip.PickupLong
+            );
+        }
+
+        private double TripEndToTargetDistance(Trip trip, TripMarketOptions options)
+        {
+            return EuclideanDistance(
+                trip.DestinationLat,
+                trip.DestinationLong,
+                (double)options.TargetLat,
+                (double)options.TargetLong
+            );
+        }
+
+        private bool TripPassesMaxCurrentToStartDistance(Trip trip, TripMarketOptions options)
+        {
+            return TripCurrentToStartDistance(trip, options) <= options.MaxCurrentToStartDistance;
+        }
+
+        private bool TripPassesMaxEndToTargetDistance(Trip trip, TripMarketOptions options)
+        {
+            return TripEndToTargetDistance(trip, options) <= options.MaxEndToTargetDistance;
+        }
+
+        private async Task<List<Trip>> GetEligibleMarketTrips()
         {
             var allTrips = await _tripService.GetAllTripsAsync();
+            return allTrips.Where(trip => String.IsNullOrEmpty(trip.DriverEmail) && trip.StartTime > DateTime.Now).ToList();
+        }
 
-            var filteredTrips = allTrips;
+        private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
+        {
+            var allTrips = await GetEligibleMarketTrips();
+            Dictionary<string, GeographicRoute>? tripRoutes = null;
+            Dictionary<string, uint?>? tripMinBidAmounts = null;
+
+            IEnumerable<Trip> someTrips = allTrips;
+
+            if (options.MaxCurrentToStartDistance != null)
+            {
+                if (options.CurrentLat == null || options.CurrentLong == null)
+                    throw new ArgumentException("Must include current coordinates");
+                someTrips = someTrips.Where(trip => TripPassesMaxCurrentToStartDistance(trip, options));
+            }
+
+            if (options.MaxEndToTargetDistance != null)
+            {
+                if (options.TargetLat == null || options.TargetLong == null)
+                    throw new ArgumentException("Must include target coordinates");
+                someTrips = someTrips.Where(trip => TripPassesMaxEndToTargetDistance(trip, options));
+            }
+
+            if (options.MaxEuclideanDistance != null)
+            {
+                someTrips = someTrips.Where(trip => TripEuclideanDistance(trip) <= options.MaxEuclideanDistance);
+            }
+
+            if (options.MaxRouteDistance != null)
+            {
+                tripRoutes = await GetTripIdToRouteMap(allTrips, tripRoutes);
+                someTrips = someTrips.Where(trip => tripRoutes[trip.Id].Distance <= options.MaxRouteDistance);
+            }
+
+            if (options.MinCurrentMinBid != null)
+            {
+                tripMinBidAmounts = await GetTripIdToMinBidAmountMap(allTrips, tripMinBidAmounts, null);
+                someTrips = someTrips.Where(trip => tripMinBidAmounts[trip.Id] >= options.MinCurrentMinBid);
+            }
+
+            var filteredTrips = someTrips.ToList();
 
             IOrderedEnumerable<Trip> sortedTrips = null!;
             foreach (var sortMethod in options.SortMethods)
@@ -245,14 +578,49 @@ namespace hagglehaul.Server.Controllers
                 switch (sortMethod)
                 {
                     case "euclideanDistance":
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(TripEuclideanDistance);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(TripEuclideanDistance);
                         break;
                     case "routeDistance":
+                        tripRoutes = await GetTripIdToRouteMap(filteredTrips, tripRoutes);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => tripRoutes[trip.Id].Distance);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => tripRoutes[trip.Id].Distance);
+                        break;
+                    case "routeDuration":
+                        tripRoutes = await GetTripIdToRouteMap(filteredTrips, tripRoutes);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => tripRoutes[trip.Id].Duration);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => tripRoutes[trip.Id].Duration);
                         break;
                     case "currentToStartDistance":
+                        if (options.CurrentLat == null || options.CurrentLong == null)
+                            throw new ArgumentException("Must include current coordinates");
+                        if (options.TargetLat == null || options.TargetLong == null)
+                            throw new ArgumentException("Must include target coordinates");
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => TripCurrentToStartDistance(trip, options));
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => TripCurrentToStartDistance(trip, options));
                         break;
                     case "endToTargetDistance":
+                        if (options.TargetLat == null || options.TargetLong == null)
+                            throw new ArgumentException("Must include target coordinates");
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => TripEndToTargetDistance(trip, options));
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => TripEndToTargetDistance(trip, options));
                         break;
                     case "currentMinBid":
+                        tripMinBidAmounts = await GetTripIdToMinBidAmountMap(filteredTrips, tripMinBidAmounts, null);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip => tripMinBidAmounts[trip.Id]);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip => tripMinBidAmounts[trip.Id]);
                         break;
                     case "startTime":
                         if (sortedTrips == null)
@@ -261,7 +629,7 @@ namespace hagglehaul.Server.Controllers
                             sortedTrips = sortedTrips.ThenBy(trip => trip.StartTime);
                         break;
                     default:
-                        return BadRequest(new { Error = "Invalid sort method" });
+                        throw new ArgumentException("Invalid sort method");
                 }
             }
 
@@ -271,15 +639,27 @@ namespace hagglehaul.Server.Controllers
             else
                 finalTrips = filteredTrips;
 
-            return Ok(finalTrips);
+            return finalTrips;
         }
 
+
         [HttpGet]
-        [Route("tripBids")]
-        public async Task<IActionResult> GetTripBids([FromQuery] string tripId)
+        [HttpPost]
+        [Route("tripMarket")]
+        [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllAvailableTrips([FromBody] TripMarketOptions options)
         {
-            var bids = await _bidService.GetTripBidsAsync(tripId);
-            return Ok(bids);
+            List<Trip> trips;
+            try
+            {
+                trips = await GetFilteredAndSortedTrips(options);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+            var searchedTrips = await TripsToSearchedTrips(trips);
+            return Ok(searchedTrips);
         }
     }
 }
