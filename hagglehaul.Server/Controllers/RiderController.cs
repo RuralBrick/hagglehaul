@@ -333,7 +333,20 @@ namespace hagglehaul.Server.Controllers
 
             if (role != "rider") { return Unauthorized(); }
 
-            DriverProfile driver = await _driverProfileService.GetAsync(giveRating.TargetUserEmail);
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+
+            var riderEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (riderEmail != trip.RiderEmail) { return Unauthorized(); }
+
+            var driverEmail = trip.DriverEmail;
+            if (string.IsNullOrEmpty(driverEmail)) { return BadRequest(new { Error = "Trip does not have a driver" }); }
+
+            if (trip.StartTime >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+
+            if (trip.DriverHasBeenRated) { return BadRequest(new { Error = "Driver has already been rated for this trip" }); }
+
+            var driver = await _driverProfileService.GetAsync(driverEmail);
             if (driver == null) { return BadRequest(new { Error = "Driver does not exist" }); }
 
             if (driver.Rating == null)
@@ -348,6 +361,10 @@ namespace hagglehaul.Server.Controllers
             driver.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)driver.NumRatings;
 
             await _driverProfileService.UpdateAsync(driver.Email, driver);
+
+            trip.DriverHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
             return Ok();
         }
     }

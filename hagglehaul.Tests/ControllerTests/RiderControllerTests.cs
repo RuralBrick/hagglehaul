@@ -501,6 +501,30 @@ namespace hagglehaul.Tests.ControllerTests
         [Test]
         public async Task RiderPostRating()
         {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) => new Trip
+                {
+                    Id = "testTrip",
+                    RiderEmail = "rider@example.com",
+                    DriverEmail = "driver@example.com",
+                    StartTime = DateTime.Now.AddHours(-12),
+                    RiderHasBeenRated = false,
+                    DriverHasBeenRated = false,
+                }
+            );
+
+            Trip saveTrip = new Trip();
+            _mockTripService.Setup(
+                x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<Trip>())
+            )!.Callback(
+                (string s, Trip t) =>
+                {
+                    saveTrip = t;
+                }
+            );
+
             _mockDriverProfileService.Setup(
                 x => x.GetAsync(It.IsAny<string>())
             )!.ReturnsAsync(
@@ -535,14 +559,18 @@ namespace hagglehaul.Tests.ControllerTests
 
             Assert.That(await _controller.RateDriver(new GiveRating
             {
-                TargetUserEmail = "driver@example.com",
+                TripId = "testTrip",
                 RatingGiven = 5,
             }), Is.InstanceOf<OkResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<string>()), Times.Once());
             _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
             _mockDriverProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<DriverProfile>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<Trip>()), Times.Once());
 
             Assert.That(saveProfile.Rating, Is.EqualTo(4.1));
             Assert.That(saveProfile.NumRatings, Is.EqualTo(10));
+
+            Assert.That(saveTrip.DriverHasBeenRated, Is.EqualTo(true));
         }
     }
 }

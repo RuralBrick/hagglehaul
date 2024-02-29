@@ -675,7 +675,20 @@ namespace hagglehaul.Server.Controllers
 
             if (role != "driver") { return Unauthorized(); }
 
-            RiderProfile rider = await _riderProfileService.GetAsync(giveRating.TargetUserEmail);
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+
+            var driverEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (driverEmail != trip.DriverEmail) { return Unauthorized(); }
+
+            var riderEmail = trip.RiderEmail;
+            if (string.IsNullOrEmpty(riderEmail)) { return BadRequest(new { Error = "Trip does not have a rider (somehow)" }); }
+
+            if (trip.StartTime >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+
+            if (trip.RiderHasBeenRated) { return BadRequest(new { Error = "Rider has already been rated for this trip" }); }
+
+            var rider = await _riderProfileService.GetAsync(riderEmail);
             if (rider == null) { return BadRequest(new { Error = "Rider does not exist" }); }
 
             if (rider.Rating == null)
@@ -690,6 +703,10 @@ namespace hagglehaul.Server.Controllers
             rider.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)rider.NumRatings;
 
             await _riderProfileService.UpdateAsync(rider.Email, rider);
+
+            trip.RiderHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
             return Ok();
         }
     }
