@@ -42,14 +42,18 @@
         <p>Dear @Model.RiderName,</p>
         <p>A new bid has been placed for the trip. Please review the details below:</p>
         <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐) </p>
-        <p><strong>start at::</strong> @Model.PickupLocation</p>
-        <p><strong>end at::</strong> @Model.DestinationLocation</p>
-        <p><strong>price is ::</strong> @Model.Price</p>
+        <p><strong>Driver email:</strong> @Model.DriverEmail </p>
+        <p><strong>Driver phone:</strong> @Model.DriverPhone</p>
+        <p><strong>start at:</strong> @Model.PickupLocation</p>
+        <p><strong>end at:</strong> @Model.DestinationLocation</p>
+        <p><strong>price is :</strong> @Model.Price</p>
         
         <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here to manage your trips</a>
 
         <div class="footer">
             <p>This is an automated email, please do not reply.</p>
+            <p><strong>This email is send to :</strong> @Model.RiderEmail</p>
+
         </div>
     </div>
 </body>

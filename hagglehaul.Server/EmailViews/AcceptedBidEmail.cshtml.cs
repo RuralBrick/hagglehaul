@@ -9,6 +9,7 @@ namespace hagglehaul.Server.EmailViews
         public string RiderPhone { get; set; }
 
         public string DriverName { get; set; }
+        public string DriverEmail { get; set; }
         public string pickupLocation { get; set; }
         public string destinationLocation { get; set; }
         public decimal Price { get; set; }
