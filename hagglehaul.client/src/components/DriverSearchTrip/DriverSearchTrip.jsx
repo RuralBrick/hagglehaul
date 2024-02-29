@@ -1,7 +1,6 @@
 // DriverSearchTrip.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BsSearch } from 'react-icons/bs';
 import './DriverSearchTrip.css';
 
 function DriverSearchTrip() {
@@ -13,7 +12,6 @@ function DriverSearchTrip() {
 
     return (
         <button onClick={handleSearchClick} className="search-button">
-            <BsSearch />
             Search Trips
         </button>
     );

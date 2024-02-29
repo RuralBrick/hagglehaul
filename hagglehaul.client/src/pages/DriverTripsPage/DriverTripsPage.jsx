@@ -11,6 +11,7 @@ import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
 import ModifyBidModal from "@/components/ModifyBidModal/ModifyBidModal.jsx";
 import WithdrawBidModal from "@/components/WithdrawBidModal/WithdrawBidModal.jsx";
 import DriverLaunchModal from "@/components/DriverLaunchModal/DriverLaunchModal.jsx";
+import DriverSearchTrip from "@/components/DriverSearchTrip/DriverSearchTrip.jsx";
 
 function DriverTripsPage() {
     const [data, setData] = useState();

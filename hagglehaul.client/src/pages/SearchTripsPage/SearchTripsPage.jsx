@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BsSearch } from 'react-icons/bs';
 import './SearchTripsPage.css';
 import {Button, ButtonGroup, Col, Dropdown, DropdownButton, Row} from "react-bootstrap";
 import TripCard from "@/components/TripCard/TripCard.jsx";
+import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx";
 
 function SearchTripsPage() {
     let navigate = useNavigate();
@@ -11,22 +11,46 @@ function SearchTripsPage() {
     const goToTrips = () => {
         navigate('/trips');
     };
+    
+    const setCurrentCoords = (coords) => {
+    }
+    
+    const setTargetCoords = (coords) => {
+    }
 
     return (
         <div className="search-page-container">
             <h1>Search for Trips</h1>
             <div className="search-bar-container">
-                <input
-                    type="text"
-                    placeholder="Search trips..."
-                    className="search-input"
-                />
+                {/* #1 current and target location */}
+                <label>
+                    <p>Please Enter Your Current Location: </p>
+                    <AddressSearchBar setCoordinates={setCurrentCoords} />
+                </label>
+                <label>
+                    <p>Please Enter Your Target Location: </p>
+                    <AddressSearchBar setCoordinates={setTargetCoords} />
+                </label>
+                {/* #2 max current-to-start distance */}
+                <label htmlFor="quantity">Max Current-To-Pickup Distance:</label>
+                <input type="number" id="quantity" name="quantity" min="1" max="5"/>
+
+                {/* #3 sort by dropdown --> */}
+                <label htmlFor="sort_by">Sort By:</label>
+
+                <select name="sort_by" id="sort_by">
+                    <option value="#">sort option</option>
+                    <option value="#">sort option</option>
+                    <option value="#">sort option</option>
+                    <option value="#">sort option</option>
+                </select>
+
             </div>
             <div className="trips-page container mt-5">
-            <Row xs={1} md={2} lg={1}>
-                <TripCard
-                    image="https://placeholder.co/600x400.png"
-                    title="Disneyland Park"
+                <Row xs={1} md={2} lg={1}>
+                    <TripCard
+                        image="https://placeholder.co/600x400.png"
+                        title="Disneyland Park"
                     actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
                     attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
                     bidComponents={[
