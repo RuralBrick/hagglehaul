@@ -76,7 +76,7 @@ namespace hagglehaul.Server.Controllers
                     archive.Distance = geographicRoute.Distance;
                     archive.Duration = geographicRoute.Duration;
                     archive.Cost = cost;
-                    DriverProfile rider = await _driverProfileService.GetAsync(trip.RiderEmail);
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
                     UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
                     archive.RiderName = riderCore.Name;
                     archive.RiderNumRating = rider.NumRatings;
