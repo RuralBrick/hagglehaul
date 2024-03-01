@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SearchTripsPage.css';
-import {Button, ButtonGroup, Col, Dropdown, DropdownButton, Modal, Row, Spinner} from "react-bootstrap";
+import {Accordion, Button, Col, Modal, Row, Spinner} from "react-bootstrap";
 import TripCard from "@/components/TripCard/TripCard.jsx";
 import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx";
 import {TokenContext} from "@/App.jsx";
@@ -114,14 +114,45 @@ function SearchTripsPage() {
     
     const searchTrips = async () => {
         setData(null);
-        filters.map((filter, index) => {
-            let filterChecked = document.getElementById("filter-check-" + index).checked;
-            let filterValue = document.getElementById("filter-val-" + index).value;
-            console.log("Filter " + filter.requestAttribute + " checked: " + filterChecked + ", value: " + filterValue);
-        });
         
-        console.log("Sort by: " + document.getElementById("sort-by").value);
-        console.log("Then by: " + document.getElementById("then-by").value);
+        const tripMarketRequest = {}
+
+        var invalidFilter = false;
+        filters.map((filter, index) => {
+            if (document.getElementById("filter-check-" + index).checked) {
+                let filterValue = document.getElementById("filter-val-" + index).value;
+                if (filterValue === "") {
+                    setError("Please enter a value for the " + filter.name + " filter.");
+                    invalidFilter = true;
+                }
+                filter.requisites.map((requisite) => {
+                    if (!requisite) {
+                        setError("You need to enter a location to use the " + filter.name + " filter.");
+                        invalidFilter = true;
+                    }
+                });
+                tripMarketRequest[filter.requestAttribute] = parseFloat(filterValue) * filter.conversionFactor;
+            }
+        });
+        if (invalidFilter) return;
+        
+        if (current) {
+            tripMarketRequest.currentLat = current[1];
+            tripMarketRequest.currentLong = current[0];
+        }
+        if (target) {
+            tripMarketRequest.targetLat = target[1];
+            tripMarketRequest.targetLong = target[0];
+        }
+        
+        if (document.getElementById("sort-by").value) {
+            if (document.getElementById("then-by").value) {
+                tripMarketRequest.sortMethods = [document.getElementById("sort-by").value, document.getElementById("then-by").value];
+            }
+            else {
+                tripMarketRequest.sortMethods = [document.getElementById("sort-by").value];
+            }
+        }
         
         fetch('/api/Driver/tripMarket', {
                 method: 'POST',
@@ -129,7 +160,7 @@ function SearchTripsPage() {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token,
                 },
-                body: JSON.stringify({})
+                body: JSON.stringify(tripMarketRequest)
             }
         ).then(async (response) => {
             var data = await response.text();
@@ -161,49 +192,50 @@ function SearchTripsPage() {
             <AddBidModal show={showAddBidModal} setShow={setShowAddBidModal} tripId={addBidTripId}/>
             <div className="search-page-container">
                 <h1>Search for Trips</h1>
-                <div className="search-bar-container">
-                    {/* #1 current and target location */}
-                    <label>
-                        <p>Please Enter Your Current Location: </p>
-                        <AddressSearchBar setCoordinates={setCurrent}/>
-                    </label>
-                    <label>
-                        <p>Please Enter Your Target Location: </p>
-                        <AddressSearchBar setCoordinates={setTarget}/>
-                    </label>
-                    {/* #2 filters */}
-                    {
-                        filters.map((filter, index) =>
-                            <p>
-                                <label htmlFor={"filter-check-" + index}>
-                                    <input type="checkbox" id={"filter-check-" + index}/>{filter.name}:
-                                </label>
-                                <input type="text" id={"filter-val-" + index} name={filter.requestAttribute}
-                                       inputMode="numeric"/>
-                            </p>
-                        )
-                    }
+                <Accordion>
+                    <Accordion.Item eventKey="0">
+                        <Accordion.Header>Advanced Search</Accordion.Header>
+                        <Accordion.Body>
+                            {/* #1 current and target location */}
+                            <label>
+                                <p>Your Current Location: </p>
+                                <AddressSearchBar setCoordinates={setCurrent} setAddressText={() => {}}/>
+                            </label>
+                            <label>
+                                <p>Your Target Location: </p>
+                                <AddressSearchBar setCoordinates={setTarget} setAddressText={() => {}}/>
+                            </label>
+                            {/* #2 filters */}
+                            {
+                                filters.map((filter, index) =>
+                                    <p>
+                                        <label htmlFor={"filter-check-" + index}>
+                                            <input type="checkbox" id={"filter-check-" + index}/>{filter.name}:
+                                        </label>
+                                        <input type="text" id={"filter-val-" + index} name={filter.requestAttribute}
+                                               inputMode="numeric"/>
+                                    </p>
+                                )
+                            }
 
-                    {/* #3 sort by --> */}
-                    <label htmlFor="sort-by">Sort By:</label>
+                            {/* #3 sort by --> */}
+                            <label htmlFor="sort-by">Sort By:</label>
+                            <select name="sortBy" id="sort-by">
+                                <option></option>
+                                {sortMethods.map((method, index) => <option
+                                    value={method.requestAttribute}>{method.name}</option>)}
+                            </select>
 
-                    <select name="sortBy" id="sort-by">
-                        <option></option>
-                        {sortMethods.map((method, index) => <option
-                            value={method.requestAttribute}>{method.name}</option>)}
-                    </select>
-
-                    <label htmlFor="then-by">Then By:</label>
-
-                    <select name="thenBy" id="then-by">
-                        <option></option>
-                        {sortMethods.map((method, index) => <option
-                            value={method.requestAttribute}>{method.name}</option>)}
-                    </select>
-
-                    <Button style={{backgroundColor: "#D96C06"}} onClick={searchTrips}>Search</Button>
-
-                </div>
+                            <label htmlFor="then-by">Then By:</label>
+                            <select name="thenBy" id="then-by">
+                                <option></option>
+                                {sortMethods.map((method, index) => <option
+                                    value={method.requestAttribute}>{method.name}</option>)}
+                            </select>
+                            <Button style={{backgroundColor: "#D96C06"}} onClick={searchTrips}>Search</Button>
+                        </Accordion.Body>
+                    </Accordion.Item>
+                </Accordion>
                 {
                     Array.isArray(data) && data.length > 0 ?
                         <div className="trips-page container mt-5">
@@ -245,16 +277,16 @@ function SearchTripsPage() {
                             </Row>
                         </div>
                         :
-                        <>{
+                        <span style={{padding: "15px"}}>{
                             Array.isArray(data) ?
-                                <h5>We've searched far and wide, but we couldn't find any trips. Try another
+                                <h5>We've looked far and wide, but we couldn't find any trips. Try another
                                     search.</h5>
                                 :
                                 <Spinner animation="border" role="status"
                                          style={{color: "#D96C06", textAlign: "center"}}>
                                     <span className="visually-hidden">Loading...</span>
                                 </Spinner>
-                        }</>
+                        }</span>
                 }
                 <button onClick={goToTrips} className="back-to-trips-btn">Back to Trips</button>
             </div>
