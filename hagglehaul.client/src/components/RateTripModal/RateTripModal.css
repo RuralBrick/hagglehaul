@@ -1,43 +1,29 @@
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* New styles for RateTripModal */
+.rate-trip-modal {
+    color: #333; /* Text color for the modal */
 }
 
-.modal {
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* shadow effect */
-    text-align: center;
+.rate-trip-modal .modal-header {
+    background-color: #f8f9fa; /* Slightly lighter than default to match theme */
+    border-bottom: 2px solid #dee2e6; /* Adds a bit of contrast */
 }
 
-h2 {
-    margin-top: 0;
+.rate-trip-modal .modal-body {
+    background-color: #fff; /* Ensures the body is bright and clean */
 }
 
-.button-container {
-    margin-top: 20px;
+.rate-trip-modal .modal-footer {
+    background-color: #f8f9fa; /* Matches the header */
+    border-top: 2px solid #dee2e6; /* Consistency with header border */
 }
 
-button {
-    margin: 0 10px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff; /* blue color */
-    color: white;
-    cursor: pointer;
+.rate-trip-modal button {
+    background-color: #007bff; /* Matches the .btn-add-trip button */
+    color: #fff; /* White text */
 }
 
-button:hover {
-    background-color: #0056b3; /* darker blue color on hover */
+.rate-trip-modal button:hover {
+    background-color: #0056b3; /* Hover effect to match the .btn-add-trip button */
 }
 
 .rate-trip-modal .star {

@@ -78,7 +78,7 @@ namespace hagglehaul.Server.Controllers
                 //if trip date is in future, email null, trip is in bidding
                 //if trip date is in future, email !null, trip is confirmed
                 TimeSpan day = new TimeSpan(24, 0, 0);
-                DateTime pastPlusOne = trip.StartTime.Add(day);
+                DateTime pastPlusOne = trip.StartTime.ToLocalTime().Add(day);
                 //archived Trips
                 GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
                 uint cost = 0;
@@ -134,7 +134,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.DriverName = driverCore.Name;
                     confirmedTrip.DriverRating = driver.Rating;
                     confirmedTrip.DriverNumRating = driver.NumRatings;
-                    confirmedTrip.ShowRatingPrompt = trip.DriverHasBeenRated && DateTime.Now > trip.StartTime && DateTime.Now <= pastPlusOne;
+                    confirmedTrip.ShowRatingPrompt = !trip.DriverHasBeenRated && DateTime.Now > trip.StartTime.ToLocalTime() && DateTime.Now <= pastPlusOne;
                     confirmedTrip.DriverEmail = driverCore.Email;
                     confirmedTrip.DriverPhone = driverCore.Phone;
                     confirmedTrip.DriverCarModel = driver.CarDescription;
@@ -243,7 +243,7 @@ namespace hagglehaul.Server.Controllers
 
             if (role != "rider") { return Unauthorized(); };
 
-            if (tripDetails.StartTime < DateTime.Now) { return BadRequest(new { Error = "Start time is in the past" }); };
+            if (tripDetails.StartTime.ToLocalTime() < DateTime.Now) { return BadRequest(new { Error = "Start time is in the past" }); };
 
             if (tripDetails.PartySize is <= 0 or > 10) { return BadRequest(new { Error = "Invalid party size" }); };
 
@@ -285,7 +285,7 @@ namespace hagglehaul.Server.Controllers
             if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
             if (trip.RiderEmail != email) { return Unauthorized(); }
             if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = "Trip has a driver" }); }
-            if (trip.StartTime < DateTime.Now) { return BadRequest(new { Error = "Trip has already started" }); }
+            if (trip.StartTime.ToLocalTime() < DateTime.Now) { return BadRequest(new { Error = "Trip has already started" }); }
 
             await _tripService.DeleteAsync(tripId);
             await _bidService.DeleteByTripIdAsync(tripId);
@@ -310,7 +310,7 @@ namespace hagglehaul.Server.Controllers
             if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
             if (trip.RiderEmail != email) { return Unauthorized(); }
             if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = "Trip already has a driver" }); }
-            if (trip.StartTime < DateTime.Now) { return BadRequest(new { Error = "Trip is in the past and is therefore cancelled" }); }
+            if (trip.StartTime.ToLocalTime() < DateTime.Now) { return BadRequest(new { Error = "Trip is in the past and is therefore cancelled" }); }
 
             var bids = await _bidService.GetTripBidsAsync(addTripDriver.TripId);
             Bid bid = bids.FirstOrDefault(b => b.Id == addTripDriver.BidId);
@@ -342,7 +342,9 @@ namespace hagglehaul.Server.Controllers
             var driverEmail = trip.DriverEmail;
             if (string.IsNullOrEmpty(driverEmail)) { return BadRequest(new { Error = "Trip does not have a driver" }); }
 
-            if (trip.StartTime >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+            Console.WriteLine("Current time: " + DateTime.Now);
+            Console.WriteLine("Trip start time: " + trip.StartTime);
+            if (trip.StartTime.ToLocalTime() >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
 
             if (trip.DriverHasBeenRated) { return BadRequest(new { Error = "Driver has already been rated for this trip" }); }
 

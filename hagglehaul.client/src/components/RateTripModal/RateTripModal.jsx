@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
-import { Modal, Button } from 'react-bootstrap';
-import './RateTripModal.css'; // Ensure to create a corresponding CSS file
+import React, {useContext, useEffect, useState} from 'react';
+import {Modal, Button, Spinner} from 'react-bootstrap';
+import './RateTripModal.css';
+import {TokenContext} from "@/App.jsx"; // Ensure to create a corresponding CSS file
 
-const RateTripModal = ({ show, setShow, tripId }) => {
-    const [localRating, setLocalRating] = useState(0); // Local state to handle the rating within the modal
+const RateTripModal = ({ show, setShow, setError, tripId, rating, isRider }) => {
+    const [localRating, setLocalRating] = useState(5); // Local state to handle the rating within the modal
+    const [waiting, setWaiting] = useState(false); 
+    
+    const {token, role} = useContext(TokenContext);
 
     const handleStarClick = (ratingValue) => {
         setLocalRating(ratingValue);
     };
 
-    const submitRating = () => {
+    const submitRating = async () => {
         console.log('Submitting rating', localRating, 'for tripId', tripId);
-        // Implement the API call to submit the rating here
-        // After submitting, you can close the modal or show a success message
+        setWaiting(true);
+        await fetch(`/api/${isRider ? "Rider" : "Driver"}/rating`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({tripId: tripId, ratingGiven: localRating}),
+        }).then(async (response) => {
+            if (!response.ok) {
+                try {
+                    setError(JSON.parse(await response.text()).error ?? "Something went wrong during bid modification.");
+                } catch (err) {
+                    setError("Something went wrong during bid modification.");
+                }
+                return;
+            }
+            window.location.reload();
+        });
         setShow(false);
     };
+
+    useEffect(() => {
+        setLocalRating(rating);
+    }, [rating]);
 
     return (
         <Modal
@@ -41,9 +66,15 @@ const RateTripModal = ({ show, setShow, tripId }) => {
                     </div>
                 </div>
             </Modal.Body>
-            <Modal.Footer>
+            <Modal.Footer className="rate-trip-button">
                 <Button variant="secondary" onClick={() => setShow(false)}>No</Button>
-                <Button variant="primary" onClick={submitRating}>Yes</Button>
+                {waiting ?
+                    <Spinner animation="border" role="status" style={{color: "#D96C06"}}>
+                        <span className="visually-hidden">Loading...</span>
+                    </Spinner>
+                    :
+                    <Button variant="primary" onClick={submitRating}>Yes</Button>
+                }
             </Modal.Footer>
         </Modal>
     );

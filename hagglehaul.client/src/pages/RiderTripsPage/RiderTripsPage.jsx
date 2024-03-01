@@ -57,14 +57,11 @@ function RiderTripsPage() {
                 <Button style={{backgroundColor: "#D96C06"}} onClick={() => { window.location.reload()}}>Reload</Button>
             </Modal.Footer>
         </Modal>);
+    
     const [showRateTripModal, setShowRateTripModal] = useState(false);
     const [currentRating, setCurrentRating] = useState(0); // The rating to submit
     const [currentTripId, setCurrentTripId] = useState(null); // The ID of the trip being rated
-    const handleOpenRateTripModal = (tripId) => {
-        setCurrentTripId(tripId);
-        setCurrentRating(0); // Set this to the current rating if available
-        setShowRateTripModal(true);
-    };
+
     // Initial fetch
     useEffect(() => {
         fetch('/api/Rider/dashboard', {
@@ -114,20 +111,13 @@ function RiderTripsPage() {
 
     return (
         <>
-            {showInfoModal ? infoModal : null}
-            {showCancellationModal ? <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} /> : null}
-            {showSelectBidModal ? <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} /> : null}
-            {showMapModal ? <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} /> : null}
-                {showRateTripModal && (
-                    <RateTripModal
-                        show={showRateTripModal}
-                        setShow={setShowRateTripModal}
-                        rating={currentRating}
-                        tripId={currentTripId}
-                    />
-                )}
-            
+            {infoModal}
+            <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} />
+            <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} />
+            <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} />
+            <RateTripModal show={showRateTripModal} setShow={setShowRateTripModal} setError={setError} rating={currentRating} tripId={currentTripId} isRider={true} />
             <AddTripModal show={showAddTrip} setShow={setShowAddTrip} />
+            
             <div className="trips-page container mt-5">
                 <div className="trips-header mb-4">
                     <h2>Confirmed Trips</h2>
@@ -155,9 +145,6 @@ function RiderTripsPage() {
                                         }}>
                                             Cancel Trip
                                         </Dropdown.Item>
-                                        <Button style={{ marginLeft: "10px" }} onClick={() => handleOpenRateTripModal(trip.tripID)}>
-                                            Rate Trip
-                                        </Button>
                                         <Dropdown.Item onClick={() => {
                                             setInfoModalData([["Driver Email:", trip.driverEmail], ["Driver Phone:", trip.driverPhone],
                                             ["Driver Vehicle:", trip.driverCarModel], ["Pickup Address:", trip.pickupAddress],
@@ -174,7 +161,13 @@ function RiderTripsPage() {
                                         <Row>
                                             <Col style={{ display: 'flex', justifyContent: 'center', fontSize: "1.5em" }}>
                                                 Rate Driver: {Array(1,2,3,4,5).map((x) =>
-                                                <span style={{cursor: "pointer"}}>&#x2606;</span>
+                                                <span style={{cursor: "pointer"}} onClick={() => {
+                                                    setCurrentRating(x);
+                                                    setCurrentTripId(trip.tripID);
+                                                    setShowRateTripModal(true);
+                                                }}>
+                                                    &#x2606;
+                                                </span>
                                             )}
                                             </Col>
                                         </Row>] : []}
@@ -199,23 +192,12 @@ function RiderTripsPage() {
                                     image={"data:image/png;base64," + trip.thumbnail}
                                     onClickImg={() => { setMapGeoJSON(JSON.parse(trip.geoJson)); setShowMapModal(true);}}
                                     title={trip.tripName}
-                                    actionComponent={
-                                        <div className="trip-card-actions">
-                                            <Button
-                                                style={{ backgroundColor: "#D96C06", marginRight: "5px" }}
-                                                onClick={() => {
-                                                    setCancellationId(trip.tripID);
-                                                    setShowCancellationModal(true);
-                                                }}>
-                                                Cancel Trip
-                                            </Button>
-                                            <Button
-                                                style={{ backgroundColor: "#007bff" }}
-                                                onClick={() => handleOpenRateTripModal(trip.tripID)}>
-                                                Rate Trip
-                                            </Button>
-                                        </div>
-                                    }
+                                    actionComponent={<Button style={{ backgroundColor: "#D96C06" }} onClick={() => {
+                                        setCancellationId(trip.tripID);
+                                        setShowCancellationModal(true);
+                                    }}>
+                                        Cancel Trip
+                                    </Button>}
                                     attributes={[
                                         [CustomDateFormatter(trip.startTime), MetersToMiles(trip.distance) + " miles - " + SecondsToMinutes(trip.duration) + " minutes"],
                                         ["Pickup:", trip.pickupAddress],

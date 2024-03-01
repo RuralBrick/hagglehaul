@@ -60,7 +60,7 @@ namespace hagglehaul.Server.Controllers
                 //if trip date is in future, email !null, trip is confirmed
                 Trip trip = await _tripService.GetTripByIdAsync(bid.TripId);
                 TimeSpan day = new TimeSpan(24, 0, 0);
-                DateTime pastPlusOne = trip.StartTime.Add(day);
+                DateTime pastPlusOne = trip.StartTime.Add(day).ToLocalTime();
                 //archived Trips
                 GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
                 uint cost = bid.CentsAmount;
@@ -102,7 +102,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.RiderName = riderCore.Name;
                     confirmedTrip.RiderRating = rider.Rating;
                     confirmedTrip.RiderNumRating = rider.NumRatings;
-                    confirmedTrip.ShowRatingPrompt = trip.DriverHasBeenRated && DateTime.Now > trip.StartTime && DateTime.Now <= pastPlusOne;
+                    confirmedTrip.ShowRatingPrompt = !trip.RiderHasBeenRated && DateTime.Now > trip.StartTime.ToLocalTime() && DateTime.Now <= pastPlusOne;
                     confirmedTrip.RiderEmail = riderCore.Email;
                     confirmedTrip.RiderPhone = riderCore.Phone;
                     confirmedTrip.PickupAddress = trip.PickupAddress;
@@ -272,7 +272,7 @@ namespace hagglehaul.Server.Controllers
                 return BadRequest(new { Error = "Invalid tripId" });
             }
 
-            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime.ToLocalTime() < DateTime.Now)
             {
                 return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
@@ -322,7 +322,7 @@ namespace hagglehaul.Server.Controllers
                 return BadRequest(new { Error = "Invalid tripId" });
             }
 
-            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime.ToLocalTime() < DateTime.Now)
             {
                 return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
@@ -528,7 +528,7 @@ namespace hagglehaul.Server.Controllers
         private async Task<List<Trip>> GetEligibleMarketTrips()
         {
             var allTrips = await _tripService.GetAllTripsAsync();
-            return allTrips.Where(trip => String.IsNullOrEmpty(trip.DriverEmail) && trip.StartTime > DateTime.Now).ToList();
+            return allTrips.Where(trip => String.IsNullOrEmpty(trip.DriverEmail) && trip.StartTime.ToLocalTime() > DateTime.Now).ToList();
         }
 
         private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
@@ -684,7 +684,7 @@ namespace hagglehaul.Server.Controllers
             var riderEmail = trip.RiderEmail;
             if (string.IsNullOrEmpty(riderEmail)) { return BadRequest(new { Error = "Trip does not have a rider (somehow)" }); }
 
-            if (trip.StartTime >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+            if (trip.StartTime.ToLocalTime() >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
 
             if (trip.RiderHasBeenRated) { return BadRequest(new { Error = "Rider has already been rated for this trip" }); }
 

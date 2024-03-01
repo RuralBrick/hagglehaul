@@ -32,31 +32,3 @@
         transform: translateX(-100%);
     }
 }
-
-/* New styles for RateTripModal */
-.rate-trip-modal {
-    color: #333; /* Text color for the modal */
-}
-
-.rate-trip-modal .modal-header {
-    background-color: #f8f9fa; /* Slightly lighter than default to match theme */
-    border-bottom: 2px solid #dee2e6; /* Adds a bit of contrast */
-}
-
-.rate-trip-modal .modal-body {
-    background-color: #fff; /* Ensures the body is bright and clean */
-}
-
-.rate-trip-modal .modal-footer {
-    background-color: #f8f9fa; /* Matches the header */
-    border-top: 2px solid #dee2e6; /* Consistency with header border */
-}
-
-.rate-trip-modal button {
-    background-color: #007bff; /* Matches the .btn-add-trip button */
-    color: #fff; /* White text */
-}
-
-.rate-trip-modal button:hover {
-    background-color: #0056b3; /* Hover effect to match the .btn-add-trip button */
-}
