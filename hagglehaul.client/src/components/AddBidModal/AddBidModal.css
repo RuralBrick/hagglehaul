@@ -1,0 +1,9 @@
+.cents-input {
+    width: min(450px, 80vw);
+    padding: 10px;
+    margin-bottom: 1rem;
+    border: 2px solid #91B7C7;
+    background-color: #daf4f0;
+    color: #333;
+    border-radius: 5px;
+}

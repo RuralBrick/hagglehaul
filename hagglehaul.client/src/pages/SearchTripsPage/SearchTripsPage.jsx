@@ -1,14 +1,41 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SearchTripsPage.css';
-import {Button, ButtonGroup, Col, Dropdown, DropdownButton, Row} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Dropdown, DropdownButton, Modal, Row, Spinner} from "react-bootstrap";
 import TripCard from "@/components/TripCard/TripCard.jsx";
 import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx";
+import {TokenContext} from "@/App.jsx";
+import CustomDateFormatter from "@/utils/CustomDateFormatter.jsx";
+import MetersToMiles from "@/utils/MetersToMiles.jsx";
+import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
+import TripMapModal from "@/components/TripMapModal/TripMapModal.jsx";
+import AddBidModal from "@/components/AddBidModal/AddBidModal.jsx";
 
 function SearchTripsPage() {
     let navigate = useNavigate();
     const [current, setCurrent] = useState();
     const [target, setTarget] = useState();
+    const [data, setData] = useState(null);
+    const {token, role} = useContext(TokenContext);
+
+    const [error, setError] = useState();
+    const errorModal = (
+        <Modal show={true} onHide={() => { window.location.reload()}} centered>
+            <Modal.Header closeButton>Error</Modal.Header>
+            <Modal.Body>
+                An error occurred: <br />
+                {error}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button style={{backgroundColor: "#D96C06"}} onClick={() => { window.location.reload()}}>Reload</Button>
+            </Modal.Footer>
+        </Modal>);
+
+    const [showMapModal, setShowMapModal] = useState(false);
+    const [mapGeoJSON, setMapGeoJSON] = useState();
+    
+    const [showAddBidModal, setShowAddBidModal] = useState(false);
+    const [addBidTripId, setAddBidTripId] = useState();
     
     const filters = [
         {
@@ -83,9 +110,10 @@ function SearchTripsPage() {
 
     const goToTrips = () => {
         navigate('/trips');
-    };
+    }
     
     const searchTrips = async () => {
+        setData(null);
         filters.map((filter, index) => {
             let filterChecked = document.getElementById("filter-check-" + index).checked;
             let filterValue = document.getElementById("filter-val-" + index).value;
@@ -94,117 +122,143 @@ function SearchTripsPage() {
         
         console.log("Sort by: " + document.getElementById("sort-by").value);
         console.log("Then by: " + document.getElementById("then-by").value);
-    };
+        
+        fetch('/api/Driver/tripMarket', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify({})
+            }
+        ).then(async (response) => {
+            var data = await response.text();
+            try {
+                data = JSON.parse(data);
+            } catch (err) {
+                setError("Something went wrong (" + response.status + "). Please try again.");
+                return;
+            }
+            if (!response.ok) {
+                setError(data.error);
+            } else {
+                setData(data);
+            }
+        });
+    }
 
     useEffect(() => {
         searchTrips();
     }, []);
+
+    if (error) {
+        return errorModal;
+    }
     
     return (
-        <div className="search-page-container">
-            <h1>Search for Trips</h1>
-            <div className="search-bar-container">
-                {/* #1 current and target location */}
-                <label>
-                    <p>Please Enter Your Current Location: </p>
-                    <AddressSearchBar setCoordinates={setCurrent} />
-                </label>
-                <label>
-                    <p>Please Enter Your Target Location: </p>
-                    <AddressSearchBar setCoordinates={setTarget} />
-                </label>
-                {/* #2 filters */}
+        <>
+            <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON}/>
+            <AddBidModal show={showAddBidModal} setShow={setShowAddBidModal} tripId={addBidTripId}/>
+            <div className="search-page-container">
+                <h1>Search for Trips</h1>
+                <div className="search-bar-container">
+                    {/* #1 current and target location */}
+                    <label>
+                        <p>Please Enter Your Current Location: </p>
+                        <AddressSearchBar setCoordinates={setCurrent}/>
+                    </label>
+                    <label>
+                        <p>Please Enter Your Target Location: </p>
+                        <AddressSearchBar setCoordinates={setTarget}/>
+                    </label>
+                    {/* #2 filters */}
+                    {
+                        filters.map((filter, index) =>
+                            <p>
+                                <label htmlFor={"filter-check-" + index}>
+                                    <input type="checkbox" id={"filter-check-" + index}/>{filter.name}:
+                                </label>
+                                <input type="text" id={"filter-val-" + index} name={filter.requestAttribute}
+                                       inputMode="numeric"/>
+                            </p>
+                        )
+                    }
+
+                    {/* #3 sort by --> */}
+                    <label htmlFor="sort-by">Sort By:</label>
+
+                    <select name="sortBy" id="sort-by">
+                        <option></option>
+                        {sortMethods.map((method, index) => <option
+                            value={method.requestAttribute}>{method.name}</option>)}
+                    </select>
+
+                    <label htmlFor="then-by">Then By:</label>
+
+                    <select name="thenBy" id="then-by">
+                        <option></option>
+                        {sortMethods.map((method, index) => <option
+                            value={method.requestAttribute}>{method.name}</option>)}
+                    </select>
+
+                    <Button style={{backgroundColor: "#D96C06"}} onClick={searchTrips}>Search</Button>
+
+                </div>
                 {
-                    filters.map((filter, index) => 
-                        <p>
-                            <label htmlFor={"filter-check-" + index}>
-                                <input type="checkbox" id={"filter-check-" + index}/>{filter.name}:
-                            </label>
-                            <input type="text" id={"filter-val-" + index} name={filter.requestAttribute} inputmode="numeric" />
-                        </p>
-                    )
+                    Array.isArray(data) && data.length > 0 ?
+                        <div className="trips-page container mt-5">
+                            <Row xs={1} md={2} lg={1}>
+                                {data.map((trip) =>
+                                    <TripCard
+                                        image={"data:image/png;base64," + trip.thumbnail}
+                                        onClickImg={() => {
+                                            setMapGeoJSON(JSON.parse(trip.geoJson));
+                                            setShowMapModal(true);
+                                        }}
+                                        title={trip.tripName}
+                                        actionComponent={""}
+                                        attributes={[[CustomDateFormatter(trip.startTime), MetersToMiles(trip.distance) + " miles - " + SecondsToMinutes(trip.duration) + " minutes"],
+                                            ["Pickup Address:", trip.pickupAddress], ["Destination Address:", trip.destinationAddress]]}
+                                        bidComponents={[...trip.tripBids.map((bid) =>
+                                            <Row style={bid.yourBid ? {
+                                                backgroundColor: "#fef0e3",
+                                                borderRadius: "10px"
+                                            } : {}}>
+                                                <Col> {bid.driverName}
+                                                    <br/> {bid.driverRating?.toFixed(2) + "\u2605 (" + bid.driverNumRatings + ")"}
+                                                </Col>
+                                                <Col style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'right'
+                                                }}> {"$" + (bid.centsAmount / 100)?.toFixed(2)} </Col>
+                                            </Row>
+                                        ),
+                                            <Button style={{backgroundColor: "#D96C06"}} onClick={() => {
+                                                setAddBidTripId(trip.tripId);
+                                                setShowAddBidModal(true);
+                                            }}>
+                                                + Add Bid
+                                            </Button>
+                                        ]}
+                                    />
+                                )}
+                            </Row>
+                        </div>
+                        :
+                        <>{
+                            Array.isArray(data) ?
+                                <h5>We've searched far and wide, but we couldn't find any trips. Try another
+                                    search.</h5>
+                                :
+                                <Spinner animation="border" role="status"
+                                         style={{color: "#D96C06", textAlign: "center"}}>
+                                    <span className="visually-hidden">Loading...</span>
+                                </Spinner>
+                        }</>
                 }
-                
-                {/* #3 sort by --> */}
-                <label htmlFor="sort-by">Sort By:</label>
-
-                <select name="sortBy" id="sort-by">
-                    <option></option>
-                    {sortMethods.map((method, index) => <option value={method.requestAttribute}>{method.name}</option>)}
-                </select>
-                
-                <label htmlFor="then-by">Then By:</label>
-                
-                <select name="thenBy" id="then-by">
-                    <option></option>
-                    {sortMethods.map((method, index) => <option value={method.requestAttribute}>{method.name}</option>)}
-                </select>
-                
-                <Button style={{backgroundColor: "#D96C06"}} onClick={searchTrips}>Search</Button>
-
+                <button onClick={goToTrips} className="back-to-trips-btn">Back to Trips</button>
             </div>
-            <div className="trips-page container mt-5">
-                <Row xs={1} md={2} lg={1}>
-                    <TripCard
-                        image="https://placeholder.co/600x400.png"
-                        title="Disneyland Park"
-                    actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
-                    attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
-                    bidComponents={[
-                        <Row>
-                            <Col>Some left aligned components</Col>
-                            <Col className={"text-end"}>Some right aligned components</Col>
-                        </Row>,
-                        <Row>
-                            <Col>Some left aligned components</Col>
-                            <Col className={"text-end"}>Some right aligned components</Col>
-                        </Row>,
-                        <Button variant="light">+ Add Bid</Button>]}
-                />
-                <TripCard
-                    image="https://placeholder.co/600x400.png"
-                    title="Staples Center"
-                    actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
-                    attributes={[["Column 1", "Information 1"], ["Column 2", "Information 2"], ["Column 3", "Information 3"]]}
-                    bidComponents={[]}
-                />
-                <TripCard
-                    image="https://placeholder.co/600x400.png"
-                    title="UCLA Jules Stein Eye Institute"
-                    actionComponent={<DropdownButton as={ButtonGroup} title="Options" id="bg-nested-dropdown"
-                                                     variant="light">
-                        <Dropdown.Item>Cancel Trip</Dropdown.Item>
-                        <Dropdown.Item>Do Something</Dropdown.Item>
-                    </DropdownButton>}
-                    attributes={[["Column 1", "Information 1"], ["Column 2", "Information 2"], ["Column 3", "Information 3"]]}
-                    bidComponents={[]}
-                />
-            </Row>
-            <div className="trips-header mt-4 mb-4">
-
-                <h2>Trips in Bidding</h2>
-            </div>
-            <Row xs={1} md={2} lg={1}>
-                <TripCard
-                    image="https://placeholder.co/600x400.png"
-                    title="Disneyland Park"
-                    actionComponent={<Button style={{backgroundColor: "#D96C06"}}>Go somewhere</Button>}
-                    attributes={[["Column 1", "Some longer information is here :)"], ["Column 2", "Information 2"], ["$39.99", "10.2 miles"]]}
-                    bidComponents={[
-                        <Row>
-                            <Col>Some left aligned components</Col>
-                            <Col className={"text-end"}>Some right aligned components</Col>
-                        </Row>,
-                        <Row>
-                            <Col>Some left aligned components</Col>
-                            <Col className={"text-end"}>Some right aligned components</Col>
-                        </Row>,
-                        <Button variant="light">+ Add Bid</Button>]}
-                />
-            </Row>
-            </div>
-            <button onClick={goToTrips} className="back-to-trips-btn">Back to Trips</button>
-        </div>
+        </>
     );
 }
 
