@@ -76,3 +76,32 @@
     font-size: 16px; /* Adjust the font size as needed */
 }
 
+.filter-checkbox input{
+    margin: 10px;
+    padding: 10px;
+    border: 2px solid #126391;
+    color: #126391;
+    background-color: #91B7C7;
+    border-radius: 5px;
+}
+
+.filter-checkbox:before{
+    background-color: pink;
+}
+
+.filter-numeric {
+    width: 50px;
+    background-color: #E9EDED;
+    border: 2px solid #91B7C7;
+    border-radius: 5px;
+    color: #333;
+    margin: 0 15px 0 5px;
+}
+
+.sort-generic {
+    background-color: #E9EDED;
+    border: 2px solid #91B7C7;
+    border-radius: 5px;
+    color: #333;
+    margin: 0 15px 0 5px;
+}

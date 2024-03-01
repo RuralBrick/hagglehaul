@@ -18,6 +18,8 @@ function SearchTripsPage() {
     const [data, setData] = useState(null);
     const {token, role} = useContext(TokenContext);
 
+    const [accordionActiveKey, setAccordionActiveKey] = useState("");
+
     const [error, setError] = useState();
     const errorModal = (
         <Modal show={true} onHide={() => { window.location.reload()}} centered>
@@ -33,10 +35,10 @@ function SearchTripsPage() {
 
     const [showMapModal, setShowMapModal] = useState(false);
     const [mapGeoJSON, setMapGeoJSON] = useState();
-    
+
     const [showAddBidModal, setShowAddBidModal] = useState(false);
     const [addBidTripId, setAddBidTripId] = useState();
-    
+
     const filters = [
         {
             name: "Current Location Search Radius (mi)",
@@ -69,7 +71,7 @@ function SearchTripsPage() {
             conversionFactor: 100
         }
     ]
-    
+
     const sortMethods = [
         {
             name: "Euclidean Distance",
@@ -111,10 +113,11 @@ function SearchTripsPage() {
     const goToTrips = () => {
         navigate('/trips');
     }
-    
+
     const searchTrips = async () => {
         setData(null);
-        
+        setAccordionActiveKey("");
+
         const tripMarketRequest = {}
 
         var invalidFilter = false;
@@ -135,7 +138,7 @@ function SearchTripsPage() {
             }
         });
         if (invalidFilter) return;
-        
+
         if (current) {
             tripMarketRequest.currentLat = current[1];
             tripMarketRequest.currentLong = current[0];
@@ -144,7 +147,7 @@ function SearchTripsPage() {
             tripMarketRequest.targetLat = target[1];
             tripMarketRequest.targetLong = target[0];
         }
-        
+
         if (document.getElementById("sort-by").value) {
             if (document.getElementById("then-by").value) {
                 tripMarketRequest.sortMethods = [document.getElementById("sort-by").value, document.getElementById("then-by").value];
@@ -153,7 +156,7 @@ function SearchTripsPage() {
                 tripMarketRequest.sortMethods = [document.getElementById("sort-by").value];
             }
         }
-        
+
         fetch('/api/Driver/tripMarket', {
                 method: 'POST',
                 headers: {
@@ -185,54 +188,66 @@ function SearchTripsPage() {
     if (error) {
         return errorModal;
     }
-    
+
     return (
         <>
             <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON}/>
             <AddBidModal show={showAddBidModal} setShow={setShowAddBidModal} tripId={addBidTripId}/>
             <div className="search-page-container">
                 <h1>Search for Trips</h1>
-                <Accordion>
+                <Accordion activeKey={accordionActiveKey}>
                     <Accordion.Item eventKey="0">
-                        <Accordion.Header>Advanced Search</Accordion.Header>
+                        <Accordion.Header onClick={() => {if (accordionActiveKey) setAccordionActiveKey(""); else setAccordionActiveKey("0");}}>
+                            Advanced Search
+                        </Accordion.Header>
                         <Accordion.Body>
                             {/* #1 current and target location */}
-                            <label>
-                                <p>Your Current Location: </p>
-                                <AddressSearchBar setCoordinates={setCurrent} setAddressText={() => {}}/>
-                            </label>
-                            <label>
-                                <p>Your Target Location: </p>
-                                <AddressSearchBar setCoordinates={setTarget} setAddressText={() => {}}/>
-                            </label>
+                            <Row sm={1} md={1} lg={2}>
+                                <label>
+                                    <p>Your Current Location: </p>
+                                    <AddressSearchBar setCoordinates={setCurrent} setAddressText={() => {}}/>
+                                </label>
+                                <label>
+                                    <p>Your Target Location: </p>
+                                    <AddressSearchBar setCoordinates={setTarget} setAddressText={() => {}}/>
+                                </label>
+                            </Row>
                             {/* #2 filters */}
                             {
                                 filters.map((filter, index) =>
                                     <p>
-                                        <label htmlFor={"filter-check-" + index}>
+                                        <label className={"filter-checkbox"} htmlFor={"filter-check-" + index}>
                                             <input type="checkbox" id={"filter-check-" + index}/>{filter.name}:
                                         </label>
-                                        <input type="text" id={"filter-val-" + index} name={filter.requestAttribute}
+                                        <input className={"filter-numeric"} type="text" id={"filter-val-" + index} name={filter.requestAttribute}
                                                inputMode="numeric"/>
                                     </p>
                                 )
                             }
-
                             {/* #3 sort by --> */}
-                            <label htmlFor="sort-by">Sort By:</label>
-                            <select name="sortBy" id="sort-by">
-                                <option></option>
-                                {sortMethods.map((method, index) => <option
-                                    value={method.requestAttribute}>{method.name}</option>)}
-                            </select>
-
-                            <label htmlFor="then-by">Then By:</label>
-                            <select name="thenBy" id="then-by">
-                                <option></option>
-                                {sortMethods.map((method, index) => <option
-                                    value={method.requestAttribute}>{method.name}</option>)}
-                            </select>
-                            <Button style={{backgroundColor: "#D96C06"}} onClick={searchTrips}>Search</Button>
+                            <Row xs={1} md={2} lg={3}>
+                                <Col>
+                                    <label htmlFor="sort-by">Sort By:</label>
+                                    <select className={"sort-generic"} name="sortBy" id="sort-by">
+                                        <option></option>
+                                        {sortMethods.map((method, index) => <option
+                                            value={method.requestAttribute}>{method.name}</option>)}
+                                    </select>
+                                </Col>
+                                <Col>
+                                    <label htmlFor="then-by">Then By:</label>
+                                    <select className={"sort-generic"} name="thenBy" id="then-by">
+                                        <option></option>
+                                        {sortMethods.map((method, index) => <option
+                                            value={method.requestAttribute}>{method.name}</option>)}
+                                    </select>
+                                </Col>
+                            </Row>
+                            
+                            <Row lg={1} className="justify-content-center">
+                                <Button style={{backgroundColor: "#D96C06", marginTop: "15px", width: "80%"}}
+                                        onClick={searchTrips}>Search</Button>
+                            </Row>
                         </Accordion.Body>
                     </Accordion.Item>
                 </Accordion>
