@@ -1,0 +1,25 @@
+/* DriverSearchTrip.css */
+
+.search-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background-color: #007bff; /* Bootstrap primary color */
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.2); /* Optional: adds a subtle shadow */
+    margin-left: 1rem; /* To add spacing from the left element */
+}
+
+.search-button:hover {
+    background-color: #0056b3; /* A darker blue for hover effect */
+}
+
+.search-icon {
+    margin-right: 8px;
+}
