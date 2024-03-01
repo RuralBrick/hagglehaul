@@ -10,6 +10,8 @@ import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
 import CancellationModal from "@/components/CancellationModal/CancellationModal.jsx";
 import SelectBidModal from "@/components/SelectBidModal/SelectBidModal.jsx";
 import TripMapModal from "@/components/TripMapModal/TripMapModal.jsx";
+import RateTripModal from "@/components/RateTripModal/RateTripModal.jsx"; // Adjust the import path as necessary
+
 
 function RiderTripsPage() {
     const [showAddTrip, setShowAddTrip] = useState(false);
@@ -55,6 +57,10 @@ function RiderTripsPage() {
                 <Button style={{backgroundColor: "#D96C06"}} onClick={() => { window.location.reload()}}>Reload</Button>
             </Modal.Footer>
         </Modal>);
+    
+    const [showRateTripModal, setShowRateTripModal] = useState(false);
+    const [currentRating, setCurrentRating] = useState(0); // The rating to submit
+    const [currentTripId, setCurrentTripId] = useState(null); // The ID of the trip being rated
 
     // Initial fetch
     useEffect(() => {
@@ -105,12 +111,13 @@ function RiderTripsPage() {
 
     return (
         <>
-            {showInfoModal ? infoModal : null}
-            {showCancellationModal ? <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} /> : null}
-            {showSelectBidModal ? <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} /> : null}
+            {infoModal}
+            <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} />
+            <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} />
             {showMapModal ? <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} /> : null}
-            
+            <RateTripModal show={showRateTripModal} setShow={setShowRateTripModal} setError={setError} rating={currentRating} tripId={currentTripId} isRider={true} />
             <AddTripModal show={showAddTrip} setShow={setShowAddTrip} />
+            
             <div className="trips-page container mt-5">
                 <div className="trips-header mb-4">
                     <h2>Confirmed Trips</h2>
@@ -154,7 +161,13 @@ function RiderTripsPage() {
                                         <Row>
                                             <Col style={{ display: 'flex', justifyContent: 'center', fontSize: "1.5em" }}>
                                                 Rate Driver: {Array(1,2,3,4,5).map((x) =>
-                                                <span style={{cursor: "pointer"}}>&#x2606;</span>
+                                                <span style={{cursor: "pointer"}} onClick={() => {
+                                                    setCurrentRating(x);
+                                                    setCurrentTripId(trip.tripID);
+                                                    setShowRateTripModal(true);
+                                                }}>
+                                                    &#x2606;
+                                                </span>
                                             )}
                                             </Col>
                                         </Row>] : []}
@@ -173,8 +186,9 @@ function RiderTripsPage() {
                         </div>
                         :
                         <Row xs={1} md={2} lg={1}>
-                            {data.tripsInBidding.map((trip) =>
+                            {data.tripsInBidding.map((trip) => (
                                 <TripCard
+                                    key={trip.tripID}
                                     image={"data:image/png;base64," + trip.thumbnail}
                                     onClickImg={() => { setMapGeoJSON(JSON.parse(trip.geoJson)); setShowMapModal(true);}}
                                     title={trip.tripName}
@@ -184,14 +198,17 @@ function RiderTripsPage() {
                                     }}>
                                         Cancel Trip
                                     </Button>}
-                                    attributes={[[CustomDateFormatter(trip.startTime), MetersToMiles(trip.distance) + " miles - " + SecondsToMinutes(trip.duration) + " minutes"], 
-                                        ["Pickup:", trip.pickupAddress], ["Destination:", trip.destinationAddress]]}
+                                    attributes={[
+                                        [CustomDateFormatter(trip.startTime), MetersToMiles(trip.distance) + " miles - " + SecondsToMinutes(trip.duration) + " minutes"],
+                                        ["Pickup:", trip.pickupAddress],
+                                        ["Destination:", trip.destinationAddress]
+                                    ]}
                                     bidComponents={
-                                        trip.bids.length === 0 ? 
+                                        trip.bids.length === 0 ?
                                             [<p style={{ display: 'flex', justifyContent: 'center'}}>No bids yet, hang tight!</p>]
-                                        :
+                                            :
                                             trip.bids.map((bid) =>
-                                                <Row>
+                                                <Row key={bid.bidId}>
                                                     <Col> {bid.driverName} <br /> {bid.driverRating?.toFixed(2) + "\u2605 (" + bid.driverNumRating + ")"} </Col>
                                                     <Col> <Button className="btn-add-trip" onClick={() => {
                                                         setSelectBidData({tripId: trip.tripID, bidId: bid.bidId});
@@ -203,7 +220,7 @@ function RiderTripsPage() {
                                             )
                                     }
                                 />
-                            )}
+                            ))}
                         </Row>
                 }
 
