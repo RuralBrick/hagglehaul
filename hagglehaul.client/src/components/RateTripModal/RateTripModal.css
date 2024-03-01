@@ -1,0 +1,51 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* shadow effect */
+    text-align: center;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.button-container {
+    margin-top: 20px;
+}
+
+button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff; /* blue color */
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3; /* darker blue color on hover */
+}
+
+.rate-trip-modal .star {
+    cursor: pointer;
+    font-size: 24px;
+    color: gray; /* Color of non-selected stars */
+}
+
+.rate-trip-modal .star.filled {
+    color: gold; /* Color of selected stars */
+}

@@ -10,6 +10,8 @@ import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
 import CancellationModal from "@/components/CancellationModal/CancellationModal.jsx";
 import SelectBidModal from "@/components/SelectBidModal/SelectBidModal.jsx";
 import TripMapModal from "@/components/TripMapModal/TripMapModal.jsx";
+import RateTripModal from "@/components/RateTripModal/RateTripModal.jsx"; // Adjust the import path as necessary
+
 
 function RiderTripsPage() {
     const [showAddTrip, setShowAddTrip] = useState(false);
@@ -55,7 +57,14 @@ function RiderTripsPage() {
                 <Button style={{backgroundColor: "#D96C06"}} onClick={() => { window.location.reload()}}>Reload</Button>
             </Modal.Footer>
         </Modal>);
-
+    const [showRateTripModal, setShowRateTripModal] = useState(false);
+    const [currentRating, setCurrentRating] = useState(0); // The rating to submit
+    const [currentTripId, setCurrentTripId] = useState(null); // The ID of the trip being rated
+    const handleOpenRateTripModal = (tripId) => {
+        setCurrentTripId(tripId);
+        setCurrentRating(0); // Set this to the current rating if available
+        setShowRateTripModal(true);
+    };
     // Initial fetch
     useEffect(() => {
         fetch('/api/Rider/dashboard', {
@@ -109,6 +118,14 @@ function RiderTripsPage() {
             {showCancellationModal ? <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} /> : null}
             {showSelectBidModal ? <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} /> : null}
             {showMapModal ? <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} /> : null}
+                {showRateTripModal && (
+                    <RateTripModal
+                        show={showRateTripModal}
+                        setShow={setShowRateTripModal}
+                        rating={currentRating}
+                        tripId={currentTripId}
+                    />
+                )}
             
             <AddTripModal show={showAddTrip} setShow={setShowAddTrip} />
             <div className="trips-page container mt-5">
@@ -138,6 +155,9 @@ function RiderTripsPage() {
                                         }}>
                                             Cancel Trip
                                         </Dropdown.Item>
+                                        <Button style={{ marginLeft: "10px" }} onClick={() => handleOpenRateTripModal(trip.tripID)}>
+                                            Rate Trip
+                                        </Button>
                                         <Dropdown.Item onClick={() => {
                                             setInfoModalData([["Driver Email:", trip.driverEmail], ["Driver Phone:", trip.driverPhone],
                                             ["Driver Vehicle:", trip.driverCarModel], ["Pickup Address:", trip.pickupAddress],
@@ -173,25 +193,40 @@ function RiderTripsPage() {
                         </div>
                         :
                         <Row xs={1} md={2} lg={1}>
-                            {data.tripsInBidding.map((trip) =>
+                            {data.tripsInBidding.map((trip) => (
                                 <TripCard
+                                    key={trip.tripID}
                                     image={"data:image/png;base64," + trip.thumbnail}
                                     onClickImg={() => { setMapGeoJSON(JSON.parse(trip.geoJson)); setShowMapModal(true);}}
                                     title={trip.tripName}
-                                    actionComponent={<Button style={{ backgroundColor: "#D96C06" }} onClick={() => {
-                                        setCancellationId(trip.tripID);
-                                        setShowCancellationModal(true);
-                                    }}>
-                                        Cancel Trip
-                                    </Button>}
-                                    attributes={[[CustomDateFormatter(trip.startTime), MetersToMiles(trip.distance) + " miles - " + SecondsToMinutes(trip.duration) + " minutes"], 
-                                        ["Pickup:", trip.pickupAddress], ["Destination:", trip.destinationAddress]]}
+                                    actionComponent={
+                                        <div className="trip-card-actions">
+                                            <Button
+                                                style={{ backgroundColor: "#D96C06", marginRight: "5px" }}
+                                                onClick={() => {
+                                                    setCancellationId(trip.tripID);
+                                                    setShowCancellationModal(true);
+                                                }}>
+                                                Cancel Trip
+                                            </Button>
+                                            <Button
+                                                style={{ backgroundColor: "#007bff" }}
+                                                onClick={() => handleOpenRateTripModal(trip.tripID)}>
+                                                Rate Trip
+                                            </Button>
+                                        </div>
+                                    }
+                                    attributes={[
+                                        [CustomDateFormatter(trip.startTime), MetersToMiles(trip.distance) + " miles - " + SecondsToMinutes(trip.duration) + " minutes"],
+                                        ["Pickup:", trip.pickupAddress],
+                                        ["Destination:", trip.destinationAddress]
+                                    ]}
                                     bidComponents={
-                                        trip.bids.length === 0 ? 
+                                        trip.bids.length === 0 ?
                                             [<p style={{ display: 'flex', justifyContent: 'center'}}>No bids yet, hang tight!</p>]
-                                        :
+                                            :
                                             trip.bids.map((bid) =>
-                                                <Row>
+                                                <Row key={bid.bidId}>
                                                     <Col> {bid.driverName} <br /> {bid.driverRating?.toFixed(2) + "\u2605 (" + bid.driverNumRating + ")"} </Col>
                                                     <Col> <Button className="btn-add-trip" onClick={() => {
                                                         setSelectBidData({tripId: trip.tripID, bidId: bid.bidId});
@@ -203,7 +238,7 @@ function RiderTripsPage() {
                                             )
                                     }
                                 />
-                            )}
+                            ))}
                         </Row>
                 }
 
