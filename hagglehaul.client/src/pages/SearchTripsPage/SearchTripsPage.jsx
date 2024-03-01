@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SearchTripsPage.css';
 import {Button, ButtonGroup, Col, Dropdown, DropdownButton, Row} from "react-bootstrap";
@@ -7,17 +7,99 @@ import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx
 
 function SearchTripsPage() {
     let navigate = useNavigate();
+    const [current, setCurrent] = useState();
+    const [target, setTarget] = useState();
+    
+    const filters = [
+        {
+            name: "Current Location Search Radius (mi)",
+            requestAttribute: "maxCurrentToStartDistance",
+            requisites: [current],
+            conversionFactor: 1/70 // approx WGS84 factor for Southern California
+        },
+        {
+            name: "Target Location Search Radius (mi)",
+            requestAttribute: "maxEndToTargetDistance",
+            requisites: [target],
+            conversionFactor: 1/70
+        },
+        {
+            name: "Max Euclidean Distance (mi)",
+            requestAttribute: "maxEuclideanDistance",
+            requisites: [],
+            conversionFactor: 1/70
+        },
+        {
+            name: "Max Route Distance (mi)",
+            requestAttribute: "maxRouteDistance",
+            requisites: [],
+            conversionFactor: 1609.34
+        },
+        {
+            name: "Min Lowest Bid ($)",
+            requestAttribute: "minCurrentMinBid",
+            requisites: [],
+            conversionFactor: 100
+        }
+    ]
+    
+    const sortMethods = [
+        {
+            name: "Euclidean Distance",
+            requestAttribute: "euclideanDistance",
+            requisites: []
+        },
+        {
+            name: "Route Distance",
+            requestAttribute: "routeDistance",
+            requisites: []
+        },
+        {
+            name: "Driving Time",
+            requestAttribute: "routeDuration",
+            requisites: []
+        },
+        {
+            name: "Closest to Current",
+            requestAttribute: "currentToStartDistance",
+            requisites: [current]
+        },
+        {
+            name: "Closest to Target",
+            requestAttribute: "endToTargetDistance",
+            requisites: [target]
+        },
+        {
+            name: "Lowest Bid",
+            requestAttribute: "currentMinBid",
+            requisites: []
+        },
+        {
+            name: "Earliest Start Time",
+            requestAttribute: "startTime",
+            requisites: []
+        }
+    ]
 
     const goToTrips = () => {
         navigate('/trips');
     };
     
-    const setCurrentCoords = (coords) => {
-    }
-    
-    const setTargetCoords = (coords) => {
-    }
+    const searchTrips = async () => {
+        filters.map((filter, index) => {
+            let filterChecked = document.getElementById("filter-check-" + index).checked;
+            let filterValue = document.getElementById("filter-val-" + index).value;
+            console.log("Filter " + filter.requestAttribute + " checked: " + filterChecked + ", value: " + filterValue);
+        });
+        
+        console.log("Sort by: " + document.getElementById("sort-by").value);
+        console.log("Then by: " + document.getElementById("then-by").value);
+    };
 
+    useEffect(() => {
+        searchTrips();
+    }, []);
+    
     return (
         <div className="search-page-container">
             <h1>Search for Trips</h1>
@@ -25,25 +107,40 @@ function SearchTripsPage() {
                 {/* #1 current and target location */}
                 <label>
                     <p>Please Enter Your Current Location: </p>
-                    <AddressSearchBar setCoordinates={setCurrentCoords} />
+                    <AddressSearchBar setCoordinates={setCurrent} />
                 </label>
                 <label>
                     <p>Please Enter Your Target Location: </p>
-                    <AddressSearchBar setCoordinates={setTargetCoords} />
+                    <AddressSearchBar setCoordinates={setTarget} />
                 </label>
-                {/* #2 max current-to-start distance */}
-                <label htmlFor="quantity">Max Current-To-Pickup Distance:</label>
-                <input type="number" id="quantity" name="quantity" min="1" max="5"/>
+                {/* #2 filters */}
+                {
+                    filters.map((filter, index) => 
+                        <p>
+                            <label htmlFor={"filter-check-" + index}>
+                                <input type="checkbox" id={"filter-check-" + index}/>{filter.name}:
+                            </label>
+                            <input type="text" id={"filter-val-" + index} name={filter.requestAttribute} inputmode="numeric" />
+                        </p>
+                    )
+                }
+                
+                {/* #3 sort by --> */}
+                <label htmlFor="sort-by">Sort By:</label>
 
-                {/* #3 sort by dropdown --> */}
-                <label htmlFor="sort_by">Sort By:</label>
-
-                <select name="sort_by" id="sort_by">
-                    <option value="#">sort option</option>
-                    <option value="#">sort option</option>
-                    <option value="#">sort option</option>
-                    <option value="#">sort option</option>
+                <select name="sortBy" id="sort-by">
+                    <option></option>
+                    {sortMethods.map((method, index) => <option value={method.requestAttribute}>{method.name}</option>)}
                 </select>
+                
+                <label htmlFor="then-by">Then By:</label>
+                
+                <select name="thenBy" id="then-by">
+                    <option></option>
+                    {sortMethods.map((method, index) => <option value={method.requestAttribute}>{method.name}</option>)}
+                </select>
+                
+                <Button style={{backgroundColor: "#D96C06"}} onClick={searchTrips}>Search</Button>
 
             </div>
             <div className="trips-page container mt-5">
