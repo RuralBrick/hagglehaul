@@ -11,6 +11,7 @@ import WalletPage from './pages/ProfilePage/WalletPage/WalletPage';
 import MessagesPage from './pages/ProfilePage/MessagesPage/MessagesPage';
 import SettingsPage from './pages/ProfilePage/SettingsPage/SettingsPage';
 import RiderAddTrip from './components/RiderAddTrip/RiderAddTrip';
+import SearchTripsPage from './pages/SearchTripsPage/SearchTripsPage';
 import './App.css';
 
 export const TokenContext = React.createContext({token: null, role: null});
@@ -74,6 +75,7 @@ function App() {
                         <Routes>
                             <Route path="/" element={role === "rider" ? <RiderTripsPage /> : <DriverTripsPage />} />
                             <Route path="/trips" element={role === "rider" ? <RiderTripsPage /> : <DriverTripsPage />} />
+                            <Route path="/search-trips" element={<SearchTripsPage />} />
                             <Route path="/rider-add-trip" element={<RiderAddTrip />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/profile/activity" element={<ActivityPage />} />

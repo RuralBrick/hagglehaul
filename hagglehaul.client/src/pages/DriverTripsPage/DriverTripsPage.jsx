@@ -11,6 +11,7 @@ import SecondsToMinutes from "@/utils/SecondsToMinutes.jsx";
 import ModifyBidModal from "@/components/ModifyBidModal/ModifyBidModal.jsx";
 import WithdrawBidModal from "@/components/WithdrawBidModal/WithdrawBidModal.jsx";
 import DriverLaunchModal from "@/components/DriverLaunchModal/DriverLaunchModal.jsx";
+import DriverSearchTrip from "@/components/DriverSearchTrip/DriverSearchTrip.jsx";
 
 function DriverTripsPage() {
     const [data, setData] = useState();
@@ -116,8 +117,12 @@ function DriverTripsPage() {
 
             <div className="trips-page container mt-5">
                 <br/>
-                <div className="trips-header mb-4">
-                    <h2>Confirmed Trips</h2>
+                <div className="trips-header d-flex justify-content-between align-items-center mb-4">
+                    <div style={{flex: 1}}></div>
+                    <h2 style={{flex: 1, textAlign: 'center'}}>Confirmed Trips</h2>
+                    <div style={{flex: 1, textAlign: 'right'}}>
+                        <DriverSearchTrip/>
+                    </div>
                 </div>
                 <br/>
                 {

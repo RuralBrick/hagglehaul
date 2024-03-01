@@ -2,6 +2,18 @@
     width: 80vw;
 }
 
+.trips-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+}
+
+/* Add this if you want the h2 to take up the remaining space and be centered */
+.trips-header h2 {
+    flex-grow: 1;
+}
+
 .btn-add-trip {
     background-color: #007bff; /* Button color */
     color: #fff; /* Icon color */
@@ -25,3 +37,11 @@
         }
 
 }
+
+.driver-search-container {
+    display: flex;       /* Use flexbox to center the child elements */
+    justify-content: center; /* Center the search bar horizontally */
+    margin-top: 20px;    /* Provide some spacing from the top */
+    margin-bottom: 20px; /* Provide some spacing from the bottom */
+}
+
