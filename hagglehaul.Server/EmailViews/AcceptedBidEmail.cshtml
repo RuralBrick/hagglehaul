@@ -37,24 +37,28 @@
 </head>
 <body>
     <div class="container">
+      
         <h1>Accepted Bid Notification</h1>
-        <p>Dear @Model.DriverName,</p>
-        <p>Your bid has been accepted. Please review the details below:</p>
-        <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here to manage your trips</a>
-        
-        <p><strong>pickup time:</strong> @Model.pickupTime</p>
-        <p><strong>rider email:</strong> @Model.RiderEmail</p>
-        <p><strong>rider phone:</strong> @Model.RiderPhone</p>
-        <p><strong>rider name:</strong> @Model.RiderName</p>
-        <p><strong>start at:</strong> @Model.pickupLocation</p>
-        <p><strong>end at:</strong> @Model.destinationLocation</p>
+                <p>Dear @Model.DriverName,</p>
+                <p>Your bid has been accepted. </p>
+        <p><strong>Pickup Time:</strong> @Model.PickupTime</p>
+        <p><strong>Rider Email:</strong> @Model.RiderEmail</p>
+        <p><strong>Rider Phone:</strong> @Model.RiderPhone</p>
+        <p><strong>Rider Name:</strong> @Model.RiderName</p>
+        <p><strong>Pickup Location :</strong> @Model.PickupLocation</p>
+        <p><strong>Destination Location:</strong> @Model.DestinationLocation</p>
         
         
-        <p><strong>Your bid price is :</strong> @Model.Price</p>
+        <p><strong>Bid Price :</strong> @Model.Price</p>
+        <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here for more details</a>
 
         <div class="footer">
+        
+
+
             <p>This is an automated email, please do not reply.</p>
-            <p><strong>This email is send to :</strong> @Model.DriverEmail</p>
+                                <p><strong>This email is send to :</strong> @Model.DriverEmail</p>
+
 
         </div>
     </div>
