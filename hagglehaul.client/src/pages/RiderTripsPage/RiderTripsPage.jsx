@@ -114,7 +114,7 @@ function RiderTripsPage() {
             {infoModal}
             <CancellationModal show={showCancellationModal} setShow={setShowCancellationModal} cancellationId={cancellationId} setError={setError} />
             <SelectBidModal show={showSelectBidModal} setShow={setShowSelectBidModal} setError={setError} selectBidData={selectBidData} />
-            <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} />
+            {showMapModal ? <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} /> : null}
             <RateTripModal show={showRateTripModal} setShow={setShowRateTripModal} setError={setError} rating={currentRating} tripId={currentTripId} isRider={true} />
             <AddTripModal show={showAddTrip} setShow={setShowAddTrip} />
             

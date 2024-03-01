@@ -12,6 +12,7 @@ import ModifyBidModal from "@/components/ModifyBidModal/ModifyBidModal.jsx";
 import WithdrawBidModal from "@/components/WithdrawBidModal/WithdrawBidModal.jsx";
 import DriverLaunchModal from "@/components/DriverLaunchModal/DriverLaunchModal.jsx";
 import DriverSearchTrip from "@/components/DriverSearchTrip/DriverSearchTrip.jsx";
+import RateTripModal from "@/components/RateTripModal/RateTripModal.jsx";
 
 function DriverTripsPage() {
     const [data, setData] = useState();
@@ -59,6 +60,10 @@ function DriverTripsPage() {
                 <Button style={{backgroundColor: "#D96C06"}} onClick={() => { window.location.reload()}}>Reload</Button>
             </Modal.Footer>
         </Modal>);
+
+    const [showRateTripModal, setShowRateTripModal] = useState(false);
+    const [currentRating, setCurrentRating] = useState(0); // The rating to submit
+    const [currentTripId, setCurrentTripId] = useState(null); // The ID of the trip being rated
     
     // Initial fetch
     useEffect(() => {
@@ -110,10 +115,11 @@ function DriverTripsPage() {
     return (
         <>
             {showMapModal ? <TripMapModal show={showMapModal} setShow={setShowMapModal} mapGeoJSON={mapGeoJSON} /> : null}
-            {showInfoModal ? infoModal : null}
-            {showModifyBidModal ? <ModifyBidModal show={showModifyBidModal} setShow={setShowModifyBidModal} setError={setError} tripId={modifyBidTripId} /> : null}
-            {showWithdrawBidModal ? <WithdrawBidModal show={showWithdrawBidModal} setShow={setShowWithdrawBidModal} setError={setError} tripId={withdrawBidTripId} /> : null}
+            {infoModal}
+            <ModifyBidModal show={showModifyBidModal} setShow={setShowModifyBidModal} setError={setError} tripId={modifyBidTripId} />
+            <WithdrawBidModal show={showWithdrawBidModal} setShow={setShowWithdrawBidModal} setError={setError} tripId={withdrawBidTripId} />
             {showDriverLaunchModal ? <DriverLaunchModal show={showDriverLaunchModal} setShow={setShowDriverLaunchModal} {...driverLaunchModalData} /> : null}
+            <RateTripModal show={showRateTripModal} setShow={setShowRateTripModal} setError={setError} rating={currentRating} tripId={currentTripId} isRider={false} />
 
             <div className="trips-page container mt-5">
                 <br/>
@@ -134,6 +140,7 @@ function DriverTripsPage() {
                         <Row xs={1} md={2} lg={1}>
                             {data.confirmedTrips.map((trip) =>
                                 <TripCard
+                                    key={trip.tripID}
                                     image={"data:image/png;base64," + trip.thumbnail}
                                     onClickImg={() => {
                                         setMapGeoJSON(JSON.parse(trip.geoJson));
@@ -154,7 +161,13 @@ function DriverTripsPage() {
                                         <Row>
                                             <Col style={{display: 'flex', justifyContent: 'center', fontSize: "1.5em"}}>
                                                 Rate Rider: {Array(1, 2, 3, 4, 5).map((x) =>
-                                                <span style={{cursor: "pointer"}}>&#x2606;</span>
+                                                <span style={{cursor: "pointer"}} onClick={() => { 
+                                                    setCurrentRating(x);
+                                                    setCurrentTripId(trip.tripID);
+                                                    setShowRateTripModal(true);
+                                                }}>
+                                                    &#x2606;
+                                                </span>
                                             )}
                                             </Col>
                                         </Row>] : [
