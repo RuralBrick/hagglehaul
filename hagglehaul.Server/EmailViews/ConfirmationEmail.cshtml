@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ride Confirmation</title>
+    <title>Trip Confirmation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,8 +58,9 @@
     <p>Your trip has been confirmed. </p>
     <p><strong>Driver Email:</strong> @Model.DriverEmail</p>
     <p><strong>Driver Phone:</strong> @Model.DriverPhone</p>
-    <p><strong>Driver Name:</strong> @Model.DriverName</p>
+    <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐) </p>
     <p><strong>Pickup Location:</strong> @Model.PickupLocation</p>
+    <p><strong>Pickup Time:</strong> @Model.PickupTime</p>
     <p><strong>Destination Location:</strong> @Model.DestinationLocation</p>
     <p><strong>Price:</strong> @Model.Price</p>
 

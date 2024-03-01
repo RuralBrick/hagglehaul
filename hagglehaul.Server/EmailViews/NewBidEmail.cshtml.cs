@@ -7,6 +7,7 @@ namespace hagglehaul.Server.EmailViews
     {
         public string RiderName { get; set; }
         public string RiderEmail { get; set; }
+        public string StartTime { get; set; }
         
         public double DriverRating { get; set; }
         
