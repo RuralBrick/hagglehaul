@@ -1,18 +1,21 @@
 @model hagglehaul.Server.EmailViews.NewBidEmail
 
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Bid Notification</title>
+    <title>Hagglehaul Rider Notification: New Bid</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             padding: 20px;
+            background: linear-gradient(90deg, #f4f4f4 0%, #ffcc00 100%);
+            background-size: 200% 200%;
+            animation: gradientBackground 5s ease 1;
         }
+
         .container {
             background-color: #fff;
             border-radius: 8px;
@@ -20,40 +23,53 @@
             padding: 20px;
             margin: 20px auto;
             max-width: 600px;
+            text-align: center;
         }
+
         h1 {
             color: #333;
             text-align: center;
         }
+
         p {
             color: #666;
             line-height: 1.6;
         }
+
         .footer {
             margin-top: 20px;
             text-align: center;
             color: #999;
         }
+
+        .confirmed-text {
+            font-size: 50px;
+            margin-bottom: 30px;
+            animation: pulse 1.5s infinite alternate;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>New Bid Notification</h1>
-        <p>Dear @Model.RiderName,</p>
-        <p>A new bid has been placed for the trip. </p>
-        <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐) </p>
-        <p><strong>Driver Email:</strong> @Model.DriverEmail </p>
-        <p><strong>Driver Phone:</strong> @Model.DriverPhone</p>
-        <p><strong>Start Time:</strong> @Model.StartTime</p>
-        <p><strong>Price:$</strong> @Model.Price</p>
+        <h1>Hagglehaul Rider Notification</h1>
+        <div class="confirmed-text">New Bid</div>
 
-        <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here for more details</a>
+        <p>Dear <strong>@Model.RiderName</strong>,</p>
+        <p>A new bid has been placed on your trip <strong>@Model.TripName</strong>.</p>
+        <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐)</p>
+        <p><strong>Price:</strong> $@Model.Price</p>
+        <p><strong>Pickup Time:</strong> @Model.StartTime.ToString("MM/dd/yyyy") at @Model.StartTime.ToString("h:mm tt")</p>
+        <p><strong>Pickup Location:</strong> @Model.PickupAddress</p>
+        <p><strong>Destination:</strong> @Model.DestinationAddress</p>
+
+        <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here to review trip details</a>
 
         <div class="footer">
+            <p>This email was sent to: <strong>@Model.RiderEmail</strong>.</p>
             <p>This is an automated email, please do not reply.</p>
-            <p><strong>This email was sent to:</strong> @Model.RiderEmail</p>
-
         </div>
     </div>
 </body>
+
 </html>

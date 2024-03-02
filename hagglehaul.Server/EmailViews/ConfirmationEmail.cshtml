@@ -1,9 +1,12 @@
+@model hagglehaul.Server.EmailViews.ConfirmationEmail
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Confirmation</title>
+    <title>Hagglehaul Rider Notification: Trip Confirmed</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,8 +15,6 @@
             background-size: 200% 200%;
             animation: gradientBackground 5s ease 1;
         }
-
-
 
         .container {
             background-color: #fff;
@@ -46,30 +47,31 @@
             margin-bottom: 30px;
             animation: pulse 1.5s infinite alternate;
         }
-
-
     </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="confirmed-text">Confirmed</div>
-    <h1>Trip Confirmation</h1>
-    <p>Dear @Model.RiderName,</p>
-    <p>Your trip has been confirmed. </p>
-    <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐) </p>
-    <p><strong>Driver Email:</strong> @Model.DriverEmail</p>
-    <p><strong>Driver Phone:</strong> @Model.DriverPhone</p>
-    <p><strong>Pickup Location:</strong> @Model.PickupLocation</p>
-    <p><strong>Pickup Time:</strong> @Model.PickupTime</p>
-    <p><strong>Destination Location:</strong> @Model.DestinationLocation</p>
-    <p><strong>Price:$</strong> @Model.Price</p>
+    <div class="container">
+        <h1>Hagglehaul Rider Notification</h1>
+        <div class="confirmed-text">Ready to Roll!</div>
 
-    <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here for more details</a>
+        <p>Dear <strong>@Model.RiderName</strong>,</p>
+        <p>Your trip <strong>@Model.TripName</strong> has been confirmed.</p>
+        <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐)</p>
+        <p><strong>Price:</strong> $@Model.Price</p>
+        <p><strong>Driver Phone:</strong> @Model.DriverPhone</p>
+        <p><strong>Driver Email:</strong> @Model.DriverEmail</p>
+        <p><strong>Pickup Time:</strong> @Model.StartTime.ToString("MM/dd/yyyy") at @Model.StartTime.ToString("h:mm tt")</p>
+        <p><strong>Pickup Location:</strong> @Model.PickupAddress</p>
+        <p><strong>Destination:</strong> @Model.DestinationAddress</p>
 
-    <div class="footer">
-        <p>This is an automated email, please do not reply.</p>
-        <p><strong>This email was sent to:</strong> @Model.RiderEmail</p>
+        <a href="https://hagglehaul.azurewebsites.net" target="_blank">Click here to review trip details</a>
+
+        <div class="footer">
+            <p>This email was sent to: <strong>@Model.RiderEmail</strong>.</p>
+            <p>This is an automated email, please do not reply.</p>
+        </div>
     </div>
-</div>
 </body>
+
 </html>
