@@ -34,6 +34,10 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("dashboard")]
         [ProducesResponseType(typeof(DriverDashboard), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Succesfully returned the dashboard.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid User or Authentication")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> GetDashboard()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -164,12 +168,21 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("about")]
         [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get the basic info of the current driver.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Got the driver's basic info.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> Get()
         {
             ClaimsPrincipal currentUser = this.User;
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
             }
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
@@ -185,6 +198,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
+        [SwaggerOperation(Summary = "Modify account details, including password.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully updated the account details.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or error with updating password.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> ModifyAccountDetails([FromBody] DriverUpdate driverUpdate)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -192,6 +209,11 @@ namespace hagglehaul.Server.Controllers
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
             }
             bool changingPassword = !String.IsNullOrEmpty(driverUpdate.NewPassword);
             if (String.IsNullOrEmpty(driverUpdate.CurrentPassword) && changingPassword)
@@ -216,7 +238,6 @@ namespace hagglehaul.Server.Controllers
 
             if (changingPassword)
             {
-                Console.WriteLine("changing pass");
                 _userCoreService.CreatePasswordHash(driverUpdate.NewPassword, out var newHash, out var newSalt);
                 userCore.PasswordHash = newHash;
                 userCore.Salt = newSalt;

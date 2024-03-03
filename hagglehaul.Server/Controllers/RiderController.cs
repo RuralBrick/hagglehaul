@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -32,6 +33,10 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("about")]
         [ProducesResponseType(typeof(RiderBasicInfo), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get the basic info of the current rider.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Got the rider's basic info.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> Get()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -51,6 +56,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpGet]
         [Route("dashboard")]
+        [SwaggerOperation(Summary = "Gets the necessary info for a rider dashboard. Shows confirmed trips, trips in bidding, and past trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Succesfully returned the dashboard.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid User or Authentication")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         [ProducesResponseType(typeof(RiderDashboard), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDashboard()
         {
@@ -182,6 +191,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
+        [SwaggerOperation(Summary = "Modify account details, including password.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully updated the account details.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or error with updating password.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> ModifyAccountDetails([FromBody] RiderUpdate riderUpdate )
         {
             ClaimsPrincipal currentUser = this.User;
@@ -199,6 +212,10 @@ namespace hagglehaul.Server.Controllers
             //check role for error
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
+            }
             UserCore userCore = await _userCoreService.GetAsync(email);
 
             if (changingPassword)
