@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Controllers/DriverController.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System.Security.Claims;
+using hagglehaul.Server.Models;
+using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+
+namespace hagglehaul.Server.Controllers
+{
+    [Route(&quot;api/[controller]&quot;)]
+    [ApiController]
+    public class DriverController : ControllerBase
+    {
+        private readonly IDriverProfileService _driverProfileService;
+        private readonly IRiderProfileService _riderProfileService;
+        private readonly IUserCoreService _userCoreService;
+        private readonly ITripService _tripService;
+        private readonly IBidService _bidService;
+        private readonly IGeographicRouteService _geographicRouteService;
+
+        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
+        {
+            _driverProfileService = driverProfileService;
+            _riderProfileService = riderProfileService;
+            _userCoreService = userCoreService;
+            _tripService = tripService;
+            _bidService = bidService;
+            _geographicRouteService = geographicRouteService;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route(&quot;dashboard&quot;)]
+        [ProducesResponseType(typeof(DriverDashboard), StatusCodes.Status200OK)]
+        public async Task&lt;IActionResult&gt; GetDashboard()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != &quot;driver&quot;)
+            {
+                return Unauthorized();
+            }
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverDashboard driverDashboard = new DriverDashboard();
+            List&lt;ConfirmedDriverTrip&gt; confirmedTrips = new List&lt;ConfirmedDriverTrip&gt;();
+            List&lt;UnconfirmedDriverTrip&gt; unconfirmedTrips = new List&lt;UnconfirmedDriverTrip&gt;();
+            List&lt;ArchivedDriverTrip&gt; archivedTrips = new List&lt;ArchivedDriverTrip&gt;();
+            List&lt;Bid&gt; allBids = await _bidService.GetDriverBidsAsync(email);
+            foreach (Bid bid in allBids)
+            {
+                //if trip date is in past, trip is archived
+                //if trip date is in future, email null, trip is in bidding
+                //if trip date is in future, email !null, trip is confirmed
+                Trip trip = await _tripService.GetTripByIdAsync(bid.TripId);
+                TimeSpan day = new TimeSpan(24, 0, 0);
+                DateTime pastPlusOne = trip.StartTime.Add(day).ToLocalTime();
+                //archived Trips
+                GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
+                uint cost = bid.CentsAmount;
+                bool hasDriver = !String.IsNullOrEmpty(trip.DriverEmail);
+                if (DateTime.Now &gt; pastPlusOne || (hasDriver &amp;&amp; trip.DriverEmail != email))
+                {
+                    ArchivedDriverTrip archive = new ArchivedDriverTrip();
+                    archive.TripId = trip.Id;
+                    archive.TripName = trip.Name;
+                    archive.StartTime = trip.StartTime;
+                    archive.Thumbnail = geographicRoute.Image;
+                    archive.GeoJson = geographicRoute.GeoJson;
+                    archive.Distance = geographicRoute.Distance;
+                    archive.Duration = geographicRoute.Duration;
+                    archive.Cost = cost;
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
+                    UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
+                    archive.RiderName = riderCore.Name;
+                    archive.RiderNumRating = rider.NumRatings;
+                    archive.RiderRating = rider.Rating;
+                    archive.PickupAddress = trip.PickupAddress;
+                    archive.DestinationAddress = trip.DestinationAddress;
+                    archivedTrips.Add(archive);
+                }
+                else if (hasDriver &amp;&amp; trip.DriverEmail == email)
+                {
+                    //confirmed trip
+                    ConfirmedDriverTrip confirmedTrip = new ConfirmedDriverTrip();
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
+                    UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
+                    confirmedTrip.TripID = trip.Id;
+                    confirmedTrip.TripName = trip.Name;
+                    confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.GeoJson = geographicRoute.GeoJson;
+                    confirmedTrip.StartTime = trip.StartTime;
+                    confirmedTrip.Distance = geographicRoute.Distance;
+                    confirmedTrip.Duration = geographicRoute.Duration;
+                    confirmedTrip.Cost = cost;
+                    confirmedTrip.RiderName = riderCore.Name;
+                    confirmedTrip.RiderRating = rider.Rating;
+                    confirmedTrip.RiderNumRating = rider.NumRatings;
+                    confirmedTrip.ShowRatingPrompt = !trip.RiderHasBeenRated &amp;&amp; DateTime.Now &gt; trip.StartTime.ToLocalTime() &amp;&amp; DateTime.Now &lt;= pastPlusOne;
+                    confirmedTrip.RiderEmail = riderCore.Email;
+                    confirmedTrip.RiderPhone = riderCore.Phone;
+                    confirmedTrip.PickupAddress = trip.PickupAddress;
+                    confirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    confirmedTrips.Add(confirmedTrip);
+                }
+                else
+                {
+                    //unconfirmed trip
+                    UnconfirmedDriverTrip unconfirmedTrip = new UnconfirmedDriverTrip();
+                    UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
+                    unconfirmedTrip.TripID = trip.Id;
+                    unconfirmedTrip.TripName = trip.Name;
+                    unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.GeoJson = geographicRoute.GeoJson;
+                    unconfirmedTrip.StartTime = trip.StartTime;
+                    unconfirmedTrip.Distance = geographicRoute.Distance;
+                    unconfirmedTrip.Duration = geographicRoute.Duration;
+                    unconfirmedTrip.RiderName = riderCore.Name;
+                    unconfirmedTrip.RiderRating = rider.Rating;
+                    unconfirmedTrip.RiderNumRating = rider.NumRatings;
+                    List&lt;Bid&gt; tripBids = await _bidService.GetTripBidsAsync(trip.Id);
+                    unconfirmedTrip.Bids = new List&lt;BidUserView&gt;();
+                    foreach (Bid tripBid in tripBids)
+                    {
+                        BidUserView bidUserView = new BidUserView();
+                        UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
+                        DriverProfile driver = await _driverProfileService.GetAsync(tripBid.DriverEmail);
+                        bidUserView.BidId = tripBid.Id;
+                        bidUserView.DriverName = driverCore.Name;
+                        bidUserView.DriverRating = driver.Rating;
+                        bidUserView.DriverNumRating = driver.NumRatings;
+                        bidUserView.Cost = tripBid.CentsAmount;
+                        if (tripBid.DriverEmail == email)
+                        {
+                            bidUserView.YourBid = true;
+                            unconfirmedTrip.Bids.Insert(0, bidUserView);
+                        }
+                        else
+                        {
+                            bidUserView.YourBid = false;
+                            unconfirmedTrip.Bids.Add(bidUserView);
+                        }
+                    }
+                    unconfirmedTrip.PickupAddress = trip.PickupAddress;
+                    unconfirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    unconfirmedTrips.Add(unconfirmedTrip);
+                }
+            }
+            driverDashboard.ConfirmedTrips = confirmedTrips;
+            driverDashboard.TripsInBidding = unconfirmedTrips;
+            driverDashboard.ArchivedTrips = archivedTrips;
+            return Ok(driverDashboard);
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route(&quot;about&quot;)]
+        [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        public async Task&lt;IActionResult&gt; Get()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(email);
+            DriverBasicInfo driverBasicInfo = new DriverBasicInfo();
+            driverBasicInfo.Name = userCore.Name;
+            driverBasicInfo.Email = email;
+            driverBasicInfo.Phone = userCore.Phone;
+            driverBasicInfo.CarDescription = driverProfile.CarDescription;
+            return Ok(driverBasicInfo);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route(&quot;modifyAcc&quot;)]
+        public async Task&lt;IActionResult&gt; ModifyAccountDetails([FromBody] DriverUpdate driverUpdate)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            bool changingPassword = !String.IsNullOrEmpty(driverUpdate.NewPassword);
+            if (String.IsNullOrEmpty(driverUpdate.CurrentPassword) &amp;&amp; changingPassword)
+            {
+                return BadRequest(new { Error = &quot;Can&#39;t make a new password&quot; });
+            }
+
+            //check role for error
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(email);
+            if (changingPassword)
+            {
+
+                if (!_userCoreService.ComparePasswordToHash(driverUpdate.CurrentPassword, userCore.PasswordHash, userCore.Salt))
+                {
+                    return BadRequest(new { Error = &quot;Current Password is invalid&quot; });
+                }
+
+            }
+
+            if (changingPassword)
+            {
+                Console.WriteLine(&quot;changing pass&quot;);
+                _userCoreService.CreatePasswordHash(driverUpdate.NewPassword, out var newHash, out var newSalt);
+                userCore.PasswordHash = newHash;
+                userCore.Salt = newSalt;
+            }
+            if (!String.IsNullOrEmpty(driverUpdate.Name))
+            {
+                userCore.Name = driverUpdate.Name;
+            }
+            if (!String.IsNullOrEmpty(driverUpdate.Phone))
+            {
+                userCore.Phone = driverUpdate.Phone;
+            }
+            if (!String.IsNullOrEmpty(driverUpdate.CarDescription))
+            {
+                driverProfile.CarDescription = driverUpdate.CarDescription;
+            }
+            await _userCoreService.UpdateAsync(email, userCore);
+            await _driverProfileService.UpdateAsync(email, driverProfile);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route(&quot;bid&quot;)]
+        public async Task&lt;IActionResult&gt; GetDriverBids()
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+
+            var bids = await _bidService.GetDriverBidsAsync(email);
+            return Ok(bids);
+        }
+
+        [HttpPost]
+        [HttpPatch]
+        [Route(&quot;bid&quot;)]
+        [Authorize]
+        public async Task&lt;IActionResult&gt; CreateOrUpdateBid([FromBody] CreateOrUpdateBid request)
+        {
+            ClaimsPrincipal currentUser = this.User;
+            var username = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != &quot;driver&quot;)
+            {
+                return Unauthorized();
+            }
+
+            Trip trip = await _tripService.GetTripByIdAsync(request.TripId);
+            if (String.IsNullOrEmpty(request.TripId) || trip == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid tripId&quot; });
+            }
+
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime.ToLocalTime() &lt; DateTime.Now)
+            {
+                return BadRequest(new { Error = &quot;The trip is either confirmed or in the past&quot; });
+            }
+
+            if (request.CentsAmount &lt;= 0)
+            {
+                return BadRequest(new { Error = &quot;Invalid centsAmount for trip&quot; });
+            }
+
+            Bid existingBid = (await _bidService.GetDriverBidsAsync(username)).FirstOrDefault(bid =&gt; bid.TripId == request.TripId);
+            if (existingBid != null)
+            {
+                // Create bid
+                existingBid.CentsAmount = request.CentsAmount;
+                await _bidService.UpdateAsync(existingBid.Id, existingBid);
+            }
+            else
+            {
+                // Update bid
+                await _bidService.CreateAsync(new Bid
+                {
+                    DriverEmail = username,
+                    TripId = request.TripId,
+                    CentsAmount = request.CentsAmount
+                });
+            }
+
+            return Ok();
+        }
+
+        [HttpDelete]
+        [Route(&quot;bid&quot;)]
+        [Authorize]
+        public async Task&lt;IActionResult&gt; DeleteBid([FromQuery] string tripId)
+        {
+            ClaimsPrincipal currentUser = this.User;
+            var username = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != &quot;driver&quot;)
+            {
+                return Unauthorized();
+            }
+
+            Trip trip = await _tripService.GetTripByIdAsync(tripId);
+            if (String.IsNullOrEmpty(tripId) || trip == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid tripId&quot; });
+            }
+
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime.ToLocalTime() &lt; DateTime.Now)
+            {
+                return BadRequest(new { Error = &quot;The trip is either confirmed or in the past&quot; });
+            }
+
+            Bid existingBid = (await _bidService.GetDriverBidsAsync(username)).FirstOrDefault(bid =&gt; bid.TripId == tripId);
+            if (existingBid != null)
+            {
+                await _bidService.DeleteAsync(existingBid.Id);
+            }
+            else
+            {
+                return BadRequest(new { Error = &quot;No bid found for this trip&quot; });
+            }
+
+            return Ok();
+        }
+
+        private async Task&lt;Dictionary&lt;string, GeographicRoute&gt;&gt; GetTripIdToRouteMap(
+            IEnumerable&lt;Trip&gt; trips,
+            Dictionary&lt;string, GeographicRoute&gt;? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var tripRoutes = new Dictionary&lt;string, GeographicRoute&gt;();
+            await Task.WhenAll(trips.Select(async trip =&gt;
+            {
+                var route = await _geographicRouteService.GetGeographicRoute(
+                    trip.PickupLong,
+                    trip.PickupLat,
+                    trip.DestinationLong,
+                    trip.DestinationLat
+                );
+                tripRoutes.Add(trip.Id, route);
+            }));
+            return tripRoutes;
+        }
+
+        private async Task&lt;Dictionary&lt;string, List&lt;Bid&gt;&gt;&gt; GetTripIdToBidMap(
+            IEnumerable&lt;Trip&gt; trips,
+            Dictionary&lt;string, List&lt;Bid&gt;&gt;? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var tripBids = new Dictionary&lt;string, List&lt;Bid&gt;&gt;();
+            await Task.WhenAll(trips.Select(async trip =&gt;
+            {
+                var bids = await _bidService.GetTripBidsAsync(trip.Id);
+                tripBids.Add(trip.Id, bids);
+            }));
+            return tripBids;
+        }
+
+        private async Task&lt;Dictionary&lt;string, uint?&gt;&gt; GetTripIdToMinBidAmountMap(
+            IEnumerable&lt;Trip&gt; trips,
+            Dictionary&lt;string, uint?&gt;? cache,
+            Dictionary&lt;string, List&lt;Bid&gt;&gt;? bidCache
+        )
+        {
+            if (cache != null)
+                return cache;
+            bidCache = await GetTripIdToBidMap(trips, bidCache);
+            var tripMinBidAmounts = new Dictionary&lt;string, uint?&gt;();
+            foreach (var trip in trips)
+            {
+                tripMinBidAmounts.Add(
+                    trip.Id,
+                    bidCache[trip.Id].Select(bid =&gt; bid.CentsAmount).DefaultIfEmpty().Min()
+                );
+            }
+            return tripMinBidAmounts;
+        }
+
+        private async Task&lt;Dictionary&lt;string, DriverProfile&gt;&gt; GetBidIdToDriverMap(
+            IEnumerable&lt;Bid&gt; bids,
+            Dictionary&lt;string, DriverProfile&gt;? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var bidDrivers = new Dictionary&lt;string, DriverProfile&gt;();
+            await Task.WhenAll(bids.Select(async bid =&gt;
+            {
+                if (!bidDrivers.ContainsKey(bid.Id))
+                {
+                    var driver = await _driverProfileService.GetAsync(bid.DriverEmail);
+                    bidDrivers.Add(bid.Id, driver);
+                }
+            }));
+            return bidDrivers;
+        }
+
+        private async Task&lt;Dictionary&lt;string, UserCore&gt;&gt; GetBidIdToUserMap(
+            IEnumerable&lt;Bid&gt; bids,
+            Dictionary&lt;string, UserCore&gt;? cache
+        )
+        {
+            if (cache != null)
+                return cache;
+            var bidUsers = new Dictionary&lt;string, UserCore&gt;();
+            await Task.WhenAll(bids.Select(async bid =&gt;
+            {
+                if (!bidUsers.ContainsKey(bid.Id))
+                {
+                    var user = await _userCoreService.GetAsync(bid.DriverEmail);
+                    bidUsers.Add(bid.Id, user);
+                }
+            }));
+            return bidUsers;
+        }
+
+        private async Task&lt;List&lt;SearchedTrip&gt;&gt; TripsToSearchedTrips(List&lt;Trip&gt; trips)
+        {
+            var tripRoutes = await GetTripIdToRouteMap(trips, null);
+            var tripBids = await GetTripIdToBidMap(trips, null);
+            var tripMinBids = await GetTripIdToMinBidAmountMap(trips, null, tripBids);
+            var bidDrivers = await GetBidIdToDriverMap(tripBids.Values.SelectMany(x =&gt; x), null);
+            var bidUsers = await GetBidIdToUserMap(tripBids.Values.SelectMany(x =&gt; x), null);
+
+            var searchedTrips = trips.Select(trip =&gt; new SearchedTrip
+            {
+                TripId = trip.Id,
+                TripName = trip.Name,
+                Thumbnail = tripRoutes[trip.Id].Image,
+                GeoJson = tripRoutes[trip.Id].GeoJson,
+                StartTime = trip.StartTime,
+                Distance = tripRoutes[trip.Id].Distance,
+                Duration = tripRoutes[trip.Id].Duration,
+                PickupAddress = trip.PickupAddress,
+                DestinationAddress = trip.DestinationAddress,
+                CurrentMinBidCentsAmount = tripMinBids[trip.Id],
+                TripBids = tripBids[trip.Id].Select(bid =&gt; new SearchedBid
+                {
+                    DriverName = bidUsers[bid.Id].Name,
+                    DriverRating = bidDrivers[bid.Id].Rating,
+                    DriverNumRatings = bidDrivers[bid.Id].NumRatings,
+                    CentsAmount = bid.CentsAmount
+                }).ToList(),
+            }).ToList();
+
+            return searchedTrips;
+        }
+
+        [HttpGet]
+        [Route(&quot;allTrips&quot;)]
+        [ProducesResponseType(typeof(List&lt;SearchedTrip&gt;), StatusCodes.Status200OK)]
+        public async Task&lt;IActionResult&gt; GetAllAvailableTrips()
+        {
+            var allTrips = await _tripService.GetAllTripsAsync();
+            var availableTrips = allTrips.Where(trip =&gt; trip.DriverEmail == null).ToList();
+            var searchedTrips = await TripsToSearchedTrips(availableTrips);
+            return Ok(searchedTrips);
+        }
+
+        private double EuclideanDistance(double lat1, double long1, double lat2, double long2)
+        {
+            double dLat = lat2 - lat1;
+            double dLong = long2 - long1;
+            return Math.Sqrt(dLat * dLat + dLong * dLong);
+        }
+
+        private double TripEuclideanDistance(Trip trip)
+        {
+            return EuclideanDistance(
+                trip.PickupLat,
+                trip.PickupLong,
+                trip.DestinationLat,
+                trip.DestinationLong
+            );
+        }
+
+        private double TripCurrentToStartDistance(Trip trip, TripMarketOptions options)
+        {
+            return EuclideanDistance(
+                (double)options.CurrentLat,
+                (double)options.CurrentLong,
+                trip.PickupLat,
+                trip.PickupLong
+            );
+        }
+
+        private double TripEndToTargetDistance(Trip trip, TripMarketOptions options)
+        {
+            return EuclideanDistance(
+                trip.DestinationLat,
+                trip.DestinationLong,
+                (double)options.TargetLat,
+                (double)options.TargetLong
+            );
+        }
+
+        private bool TripPassesMaxCurrentToStartDistance(Trip trip, TripMarketOptions options)
+        {
+            return TripCurrentToStartDistance(trip, options) &lt;= options.MaxCurrentToStartDistance;
+        }
+
+        private bool TripPassesMaxEndToTargetDistance(Trip trip, TripMarketOptions options)
+        {
+            return TripEndToTargetDistance(trip, options) &lt;= options.MaxEndToTargetDistance;
+        }
+
+        private async Task&lt;List&lt;Trip&gt;&gt; GetEligibleMarketTrips()
+        {
+            var allTrips = await _tripService.GetAllTripsAsync();
+            return allTrips.Where(trip =&gt; String.IsNullOrEmpty(trip.DriverEmail) &amp;&amp; trip.StartTime.ToLocalTime() &gt; DateTime.Now).ToList();
+        }
+
+        private async Task&lt;List&lt;Trip&gt;&gt; GetFilteredAndSortedTrips(TripMarketOptions options)
+        {
+            var allTrips = await GetEligibleMarketTrips();
+            Dictionary&lt;string, GeographicRoute&gt;? tripRoutes = null;
+            Dictionary&lt;string, uint?&gt;? tripMinBidAmounts = null;
+
+            IEnumerable&lt;Trip&gt; someTrips = allTrips;
+
+            if (options.MaxCurrentToStartDistance != null)
+            {
+                if (options.CurrentLat == null || options.CurrentLong == null)
+                    throw new ArgumentException(&quot;Must include current coordinates&quot;);
+                someTrips = someTrips.Where(trip =&gt; TripPassesMaxCurrentToStartDistance(trip, options));
+            }
+
+            if (options.MaxEndToTargetDistance != null)
+            {
+                if (options.TargetLat == null || options.TargetLong == null)
+                    throw new ArgumentException(&quot;Must include target coordinates&quot;);
+                someTrips = someTrips.Where(trip =&gt; TripPassesMaxEndToTargetDistance(trip, options));
+            }
+
+            if (options.MaxEuclideanDistance != null)
+            {
+                someTrips = someTrips.Where(trip =&gt; TripEuclideanDistance(trip) &lt;= options.MaxEuclideanDistance);
+            }
+
+            if (options.MaxRouteDistance != null)
+            {
+                tripRoutes = await GetTripIdToRouteMap(allTrips, tripRoutes);
+                someTrips = someTrips.Where(trip =&gt; tripRoutes[trip.Id].Distance &lt;= options.MaxRouteDistance);
+            }
+
+            if (options.MinCurrentMinBid != null)
+            {
+                tripMinBidAmounts = await GetTripIdToMinBidAmountMap(allTrips, tripMinBidAmounts, null);
+                someTrips = someTrips.Where(trip =&gt; tripMinBidAmounts[trip.Id] &gt;= options.MinCurrentMinBid);
+            }
+
+            var filteredTrips = someTrips.ToList();
+
+            IOrderedEnumerable&lt;Trip&gt; sortedTrips = null!;
+            foreach (var sortMethod in options.SortMethods)
+            {
+                switch (sortMethod)
+                {
+                    case &quot;euclideanDistance&quot;:
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(TripEuclideanDistance);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(TripEuclideanDistance);
+                        break;
+                    case &quot;routeDistance&quot;:
+                        tripRoutes = await GetTripIdToRouteMap(filteredTrips, tripRoutes);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip =&gt; tripRoutes[trip.Id].Distance);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip =&gt; tripRoutes[trip.Id].Distance);
+                        break;
+                    case &quot;routeDuration&quot;:
+                        tripRoutes = await GetTripIdToRouteMap(filteredTrips, tripRoutes);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip =&gt; tripRoutes[trip.Id].Duration);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip =&gt; tripRoutes[trip.Id].Duration);
+                        break;
+                    case &quot;currentToStartDistance&quot;:
+                        if (options.CurrentLat == null || options.CurrentLong == null)
+                            throw new ArgumentException(&quot;Must include current coordinates&quot;);
+                        if (options.TargetLat == null || options.TargetLong == null)
+                            throw new ArgumentException(&quot;Must include target coordinates&quot;);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip =&gt; TripCurrentToStartDistance(trip, options));
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip =&gt; TripCurrentToStartDistance(trip, options));
+                        break;
+                    case &quot;endToTargetDistance&quot;:
+                        if (options.TargetLat == null || options.TargetLong == null)
+                            throw new ArgumentException(&quot;Must include target coordinates&quot;);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip =&gt; TripEndToTargetDistance(trip, options));
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip =&gt; TripEndToTargetDistance(trip, options));
+                        break;
+                    case &quot;currentMinBid&quot;:
+                        tripMinBidAmounts = await GetTripIdToMinBidAmountMap(filteredTrips, tripMinBidAmounts, null);
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip =&gt; tripMinBidAmounts[trip.Id]);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip =&gt; tripMinBidAmounts[trip.Id]);
+                        break;
+                    case &quot;startTime&quot;:
+                        if (sortedTrips == null)
+                            sortedTrips = filteredTrips.OrderBy(trip =&gt; trip.StartTime);
+                        else
+                            sortedTrips = sortedTrips.ThenBy(trip =&gt; trip.StartTime);
+                        break;
+                    default:
+                        throw new ArgumentException(&quot;Invalid sort method&quot;);
+                }
+            }
+
+            List&lt;Trip&gt; finalTrips;
+            if (sortedTrips != null)
+                finalTrips = sortedTrips.ToList();
+            else
+                finalTrips = filteredTrips;
+
+            return finalTrips;
+        }
+
+
+        [HttpGet]
+        [HttpPost]
+        [Route(&quot;tripMarket&quot;)]
+        [ProducesResponseType(typeof(List&lt;SearchedTrip&gt;), StatusCodes.Status200OK)]
+        public async Task&lt;IActionResult&gt; GetAllAvailableTrips([FromBody] TripMarketOptions options)
+        {
+            List&lt;Trip&gt; trips;
+            try
+            {
+                trips = await GetFilteredAndSortedTrips(options);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+            var searchedTrips = await TripsToSearchedTrips(trips);
+            return Ok(searchedTrips);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route(&quot;rating&quot;)]
+        public async Task&lt;IActionResult&gt; RateRider([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != &quot;driver&quot;) { return Unauthorized(); }
+
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = &quot;Trip does not exist&quot; }); }
+
+            var driverEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (driverEmail != trip.DriverEmail) { return Unauthorized(); }
+
+            var riderEmail = trip.RiderEmail;
+            if (string.IsNullOrEmpty(riderEmail)) { return BadRequest(new { Error = &quot;Trip does not have a rider (somehow)&quot; }); }
+
+            if (trip.StartTime.ToLocalTime() &gt;= DateTime.Now) { return BadRequest(new { Error = &quot;Trip has not been taken yet&quot; }); }
+
+            if (trip.RiderHasBeenRated) { return BadRequest(new { Error = &quot;Rider has already been rated for this trip&quot; }); }
+
+            var rider = await _riderProfileService.GetAsync(riderEmail);
+            if (rider == null) { return BadRequest(new { Error = &quot;Rider does not exist&quot; }); }
+
+            if (rider.Rating == null)
+                rider.Rating = 0;
+            if (rider.NumRatings == null)
+                rider.NumRatings = 0;
+
+            var totalRatings = rider.Rating * (double)rider.NumRatings;
+
+            rider.NumRatings++;
+
+            rider.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)rider.NumRatings;
+
+            await _riderProfileService.UpdateAsync(rider.Email, rider);
+
+            trip.RiderHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
+            return Ok();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,9,22,250,1],[23,9,23,10,1],[24,13,24,58,1],[25,13,25,56,1],[26,13,26,48,1],[27,13,27,40,1],[28,13,28,38,1],[29,13,29,62,1],[30,9,30,10,1],[37,9,37,10,0],[38,13,38,53,0],[39,13,39,37,0],[40,13,40,14,0],[41,17,41,72,0],[43,13,43,68,0],[44,13,44,34,0],[45,13,45,14,0],[46,17,46,39,0],[49,13,49,69,0],[50,13,50,72,0],[51,13,51,69,0],[52,13,52,88,0],[53,13,53,94,0],[54,13,54,85,0],[55,13,55,77,0],[56,13,56,20,0],[56,22,56,29,0],[56,30,56,32,0],[56,33,56,40,0],[57,13,57,14,0],[61,17,61,77,0],[62,17,62,55,0],[63,17,63,78,0],[65,17,65,176,0],[66,17,66,45,0],[67,17,67,74,0],[68,17,68,92,0],[69,17,69,18,0],[70,21,70,75,0],[71,21,71,46,0],[72,21,72,50,0],[73,21,73,56,0],[74,21,74,63,0],[75,21,75,63,0],[76,21,76,65,0],[77,21,77,65,0],[78,21,78,41,0],[79,21,79,95,0],[80,21,80,91,0],[81,21,81,56,0],[82,21,82,63,0],[83,21,83,56,0],[84,21,84,64,0],[85,21,85,74,0],[86,21,86,48,0],[87,17,87,18,0],[88,22,88,65,0],[89,17,89,18,0],[91,21,91,83,0],[92,21,92,95,0],[93,21,93,91,0],[94,21,94,52,0],[95,21,95,56,0],[96,21,96,69,0],[97,21,97,69,0],[98,21,98,62,0],[99,21,99,71,0],[100,21,100,71,0],[101,21,101,47,0],[102,21,102,62,0],[103,21,103,62,0],[104,21,104,69,0],[105,21,105,156,0],[106,21,106,64,0],[107,21,107,64,0],[108,21,108,70,0],[109,21,109,80,0],[110,21,110,55,0],[111,17,111,18,0],[113,17,113,18,0],[115,21,115,89,0],[116,21,116,91,0],[117,21,117,95,0],[118,21,118,54,0],[119,21,119,58,0],[120,21,120,71,0],[121,21,121,71,0],[122,21,122,64,0],[123,21,123,73,0],[124,21,124,73,0],[125,21,125,64,0],[126,21,126,64,0],[127,21,127,71,0],[128,21,128,86,0],[129,21,129,68,0],[130,21,130,28,0],[130,30,130,41,0],[130,42,130,44,0],[130,45,130,53,0],[131,21,131,22,0],[132,25,132,69,0],[133,25,133,100,0],[134,25,134,106,0],[135,25,135,56,0],[136,25,136,66,0],[137,25,137,66,0],[138,25,138,73,0],[139,25,139,64,0],[140,25,140,58,0],[141,25,141,26,0],[142,29,142,56,0],[143,29,143,73,0],[144,25,144,26,0],[146,25,146,26,0],[147,29,147,57,0],[148,29,148,67,0],[149,25,149,26,0],[150,21,150,22,0],[151,21,151,72,0],[152,21,152,82,0],[153,21,153,59,0],[154,17,154,18,0],[155,13,155,14,0],[156,13,156,61,0],[157,13,157,63,0],[158,13,158,59,0],[159,13,159,40,0],[160,9,160,10,0],[167,9,167,10,0],[168,13,168,53,0],[169,13,169,37,0],[170,13,170,14,0],[171,17,171,72,0],[173,13,173,69,0],[174,13,174,72,0],[175,13,175,87,0],[176,13,176,69,0],[177,13,177,50,0],[178,13,178,43,0],[179,13,179,52,0],[180,13,180,75,0],[181,13,181,40,0],[182,9,182,10,0],[188,9,188,10,1],[189,13,189,53,1],[191,13,191,37,1],[192,13,192,14,0],[193,17,193,72,0],[195,13,195,85,1],[196,13,196,88,1],[197,13,197,14,0],[198,17,198,80,0],[202,13,202,69,1],[204,13,204,72,1],[205,13,205,87,1],[206,13,206,34,1],[207,13,207,14,1],[209,17,209,129,1],[210,17,210,18,0],[211,21,211,86,0],[214,13,214,14,1],[216,13,216,34,1],[217,13,217,14,1],[218,17,218,52,1],[219,17,219,113,1],[220,17,220,49,1],[221,17,221,41,1],[222,13,222,14,1],[223,13,223,58,1],[224,13,224,14,0],[225,17,225,51,0],[226,13,226,14,0],[227,13,227,59,1],[228,13,228,14,0],[229,17,229,53,0],[230,13,230,14,0],[231,13,231,68,1],[232,13,232,14,0],[233,17,233,76,0],[234,13,234,14,0],[235,13,235,65,1],[236,13,236,75,1],[237,13,237,25,1],[238,9,238,10,1],[244,9,244,10,1],[245,13,245,53,1],[247,13,247,37,1],[247,38,247,39,0],[247,40,247,95,0],[247,97,247,98,1],[249,13,249,69,1],[251,13,251,68,1],[252,13,252,29,1],[253,9,253,10,1],[260,9,260,10,1],[261,13,261,53,1],[262,13,262,72,1],[263,13,263,68,1],[264,13,264,34,1],[265,13,265,14,1],[266,17,266,39,1],[269,13,269,77,1],[270,13,270,70,1],[271,13,271,14,1],[272,17,272,69,1],[275,13,275,104,1],[276,13,276,14,1],[277,17,277,98,1],[280,13,280,42,1],[281,13,281,14,1],[282,17,282,83,1],[285,13,285,102,1],[285,102,285,130,1],[285,130,285,132,1],[286,13,286,37,1],[287,13,287,14,1],[289,17,289,63,1],[290,17,290,76,1],[291,13,291,14,1],[293,13,293,14,1],[295,17,300,20,1],[301,13,301,14,1],[303,13,303,25,1],[304,9,304,10,1],[310,9,310,10,1],[311,13,311,53,1],[312,13,312,72,1],[313,13,313,68,1],[314,13,314,34,1],[315,13,315,14,0],[316,17,316,39,0],[319,13,319,69,1],[320,13,320,62,1],[321,13,321,14,0],[322,17,322,69,0],[325,13,325,104,1],[326,13,326,14,1],[327,17,327,98,1],[330,13,330,102,1],[330,102,330,122,1],[330,122,330,124,1],[331,13,331,37,1],[332,13,332,14,1],[333,17,333,63,1],[334,13,334,14,1],[336,13,336,14,1],[337,17,337,81,1],[340,13,340,25,1],[341,9,341,10,1],[347,9,347,10,1],[348,13,348,31,1],[349,17,349,30,0],[350,13,350,72,1],[351,13,352,13,1],[352,13,352,14,1],[352,14,353,17,1],[353,17,358,19,1],[358,19,359,17,1],[359,17,359,48,1],[359,48,360,13,1],[360,13,360,14,1],[360,14,360,17,1],[361,13,361,31,1],[362,9,362,10,1],[368,9,368,10,1],[369,13,369,31,1],[370,17,370,30,1],[371,13,371,64,1],[372,13,373,13,1],[373,13,373,14,1],[373,14,374,17,1],[374,17,374,72,1],[374,72,375,17,1],[375,17,375,45,1],[375,45,376,13,1],[376,13,376,14,1],[376,14,376,17,1],[377,13,377,29,1],[378,9,378,10,1],[385,9,385,10,1],[386,13,386,31,1],[387,17,387,30,1],[388,13,388,65,1],[389,13,389,69,1],[390,13,390,20,1],[390,22,390,30,1],[390,31,390,33,1],[390,34,390,39,1],[391,13,391,14,1],[392,17,394,53,1],[394,53,394,68,1],[394,68,395,19,1],[396,13,396,14,1],[397,13,397,38,1],[398,9,398,10,1],[404,9,404,10,1],[405,13,405,31,1],[406,17,406,30,0],[407,13,407,70,1],[408,13,409,13,1],[409,13,409,14,1],[409,14,410,17,1],[410,17,410,53,1],[410,53,411,17,1],[411,17,411,18,1],[411,18,412,21,1],[412,21,412,88,1],[412,88,413,21,1],[413,21,413,52,1],[413,52,414,17,1],[414,17,414,18,1],[414,18,415,13,1],[415,13,415,14,1],[415,14,415,17,1],[416,13,416,31,1],[417,9,417,10,1],[423,9,423,10,1],[424,13,424,31,1],[425,17,425,30,0],[426,13,426,63,1],[427,13,428,13,1],[428,13,428,14,1],[428,14,429,17,1],[429,17,429,51,1],[429,51,430,17,1],[430,17,430,18,1],[430,18,431,21,1],[431,21,431,81,1],[431,81,432,21,1],[432,21,432,48,1],[432,48,433,17,1],[433,17,433,18,1],[433,18,434,13,1],[434,13,434,14,1],[434,14,434,17,1],[435,13,435,29,1],[436,9,436,10,1],[439,9,439,10,1],[440,13,440,69,1],[441,13,441,65,1],[442,13,442,87,1],[443,13,443,88,1],[443,88,443,89,1],[443,89,443,98,1],[444,13,444,84,1],[444,84,444,85,1],[444,85,444,94,1],[446,13,446,54,1],[446,54,458,60,1],[458,60,464,18,1],[464,18,465,14,1],[465,14,465,25,1],[467,13,467,34,1],[468,9,468,10,1],[474,9,474,10,0],[475,13,475,66,0],[476,13,476,57,0],[476,57,476,81,0],[476,81,476,92,0],[477,13,477,76,0],[478,13,478,38,0],[479,9,479,10,0],[482,9,482,10,1],[483,13,483,39,1],[484,13,484,42,1],[485,13,485,59,1],[486,9,486,10,1],[489,9,489,10,1],[490,13,495,15,1],[496,9,496,10,1],[499,9,499,10,0],[500,13,505,15,0],[506,9,506,10,0],[509,9,509,10,1],[510,13,515,15,1],[516,9,516,10,1],[519,9,519,10,0],[520,13,520,99,0],[521,9,521,10,0],[524,9,524,10,1],[525,13,525,93,1],[526,9,526,10,1],[529,9,529,10,1],[530,13,530,66,1],[531,13,531,43,1],[531,43,531,128,1],[531,128,531,139,1],[532,9,532,10,1],[535,9,535,10,1],[536,13,536,59,1],[537,13,537,68,1],[538,13,538,65,1],[540,13,540,52,1],[542,13,542,59,1],[543,13,543,14,0],[544,17,544,79,0],[545,21,545,85,0],[546,17,546,53,0],[546,53,546,103,0],[546,103,546,105,0],[547,13,547,14,0],[549,13,549,56,1],[550,13,550,14,1],[551,17,551,77,1],[552,21,552,84,0],[553,17,553,53,1],[553,53,553,100,1],[553,100,553,102,1],[554,13,554,14,1],[556,13,556,54,1],[557,13,557,14,1],[558,17,558,53,1],[558,53,558,112,1],[558,112,558,114,1],[559,13,559,14,1],[561,13,561,50,1],[562,13,562,14,0],[563,17,563,78,0],[564,17,564,53,0],[564,53,564,109,0],[564,109,564,111,0],[565,13,565,14,0],[567,13,567,50,1],[568,13,568,14,1],[569,17,569,105,1],[570,17,570,53,1],[570,53,570,107,1],[570,107,570,109,1],[571,13,571,14,1],[573,13,573,52,1],[575,13,575,58,1],[576,13,576,20,1],[576,22,576,36,1],[576,37,576,39,1],[576,40,576,59,1],[577,13,577,14,1],[578,17,578,36,1],[581,25,581,49,0],[582,29,582,88,0],[584,29,584,85,0],[585,25,585,31,0],[587,25,587,91,1],[588,25,588,49,1],[589,29,589,73,1],[589,73,589,101,1],[589,101,589,103,1],[591,29,591,70,0],[591,70,591,98,0],[591,98,591,100,0],[592,25,592,31,1],[594,25,594,91,0],[595,25,595,49,0],[596,29,596,73,0],[596,73,596,101,0],[596,101,596,103,0],[598,29,598,70,0],[598,70,598,98,0],[598,98,598,100,0],[599,25,599,31,0],[601,25,601,87,0],[602,29,602,93,0],[603,25,603,85,0],[604,29,604,92,0],[605,25,605,49,0],[606,29,606,73,0],[606,73,606,114,0],[606,114,606,116,0],[608,29,608,70,0],[608,70,608,111,0],[608,111,608,113,0],[609,25,609,31,0],[611,25,611,85,1],[612,29,612,92,0],[613,25,613,49,1],[614,29,614,73,0],[614,73,614,111,0],[614,111,614,113,0],[616,29,616,70,1],[616,70,616,108,0],[616,108,616,110,1],[617,25,617,31,1],[619,25,619,118,1],[620,25,620,49,1],[621,29,621,73,1],[621,73,621,99,1],[621,99,621,101,1],[623,29,623,70,0],[623,70,623,96,0],[623,96,623,98,0],[624,25,624,31,1],[626,25,626,49,0],[627,29,627,73,0],[627,73,627,87,0],[627,87,627,89,0],[629,29,629,70,0],[629,70,629,84,0],[629,84,629,86,0],[630,25,630,31,0],[632,25,632,76,0],[634,13,634,14,1],[637,13,637,37,1],[638,17,638,51,1],[640,17,640,44,1],[642,13,642,31,1],[643,9,643,10,1],[651,9,651,10,1],[654,13,654,14,1],[655,17,655,66,1],[656,13,656,14,1],[657,13,657,41,0],[658,13,658,14,0],[659,17,659,63,0],[661,13,661,67,1],[662,13,662,38,1],[663,9,663,10,1],[669,9,669,10,1],[670,13,670,53,1],[672,13,672,37,1],[672,38,672,39,0],[672,40,672,95,0],[672,97,672,98,1],[674,13,674,68,1],[676,13,676,34,1],[676,35,676,36,0],[676,37,676,59,0],[678,13,678,79,1],[679,13,679,30,1],[679,31,679,32,0],[679,33,679,90,0],[681,13,681,75,1],[682,13,682,49,1],[682,50,682,51,0],[682,52,682,74,0],[684,13,684,46,1],[685,13,685,50,1],[685,51,685,52,0],[685,53,685,127,0],[687,13,687,62,1],[687,63,687,64,0],[687,65,687,130,0],[689,13,689,40,1],[689,41,689,42,0],[689,43,689,123,0],[691,13,691,73,1],[692,13,692,31,1],[692,32,692,33,0],[692,34,692,92,0],[694,13,694,38,1],[695,17,695,34,0],[696,13,696,42,1],[697,17,697,38,0],[699,13,699,72,1],[701,13,701,32,1],[703,13,703,103,1],[705,13,705,72,1],[707,13,707,43,1],[709,13,709,69,1],[710,13,710,25,1],[711,9,711,10,1]]);
+    </script>
+  </body>
+</html>

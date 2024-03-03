@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Services/UserCoreService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using MongoDB.Driver;
+using System.Security.Cryptography;
+
+namespace hagglehaul.Server.Services
+{
+    public interface IUserCoreService
+    {
+        Task&lt;List&lt;UserCore&gt;&gt; GetAsync();
+        Task&lt;UserCore&gt; GetAsync(string email);
+        Task&lt;UserCore&gt; CreateAsync(UserCore userCore);
+        Task UpdateAsync(string email, UserCore userCoreIn);
+        Task RemoveAsync(string email);
+        void CreatePasswordHash(string password, out string hash, out string salt);
+        bool ComparePasswordToHash(string password, string hash, string salt);
+    }
+    
+    public class UserCoreService : IUserCoreService
+    {
+        private readonly IMongoCollection&lt;UserCore&gt; _userCoreCollection;
+        public void CreatePasswordHash(string password, out string hash, out string salt)
+        {
+            byte[] saltBytes = RandomNumberGenerator.GetBytes(128 / 8);
+            salt = Convert.ToBase64String(saltBytes);
+            hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password!,
+                salt: saltBytes,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 256 / 8));
+        }
+
+        public bool ComparePasswordToHash(string password, string hash, string salt)
+        {
+            string newHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password!,
+                salt: Convert.FromBase64String(salt),
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 256 / 8));
+            return newHash == hash;
+        }
+
+        public UserCoreService(IMongoDatabase database)
+        {
+            _userCoreCollection = database.GetCollection&lt;UserCore&gt;(&quot;UserCore&quot;);
+        }
+
+        public async Task&lt;List&lt;UserCore&gt;&gt; GetAsync() =&gt;
+            await _userCoreCollection.Find(_ =&gt; true).ToListAsync();
+
+        public async Task&lt;UserCore&gt; GetAsync(string email) =&gt;
+            await _userCoreCollection.Find(userCore =&gt; userCore.Email == email).FirstOrDefaultAsync();
+
+        public async Task&lt;UserCore&gt; CreateAsync(UserCore userCore)
+        {
+            await _userCoreCollection.InsertOneAsync(userCore);
+            return userCore;
+        }
+        
+        public async Task UpdateAsync(string email, UserCore userCoreIn) =&gt;
+            await _userCoreCollection.ReplaceOneAsync(userCore =&gt; userCore.Email == email, userCoreIn);
+
+        public async Task RemoveAsync(string email) =&gt;
+            await _userCoreCollection.DeleteOneAsync(userCore =&gt; userCore.Email == email);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,10,0],[24,13,24,72,0],[25,13,25,54,0],[26,13,31,46,0],[32,9,32,10,0],[35,9,35,10,0],[36,13,41,46,0],[42,13,42,36,0],[43,9,43,10,0],[45,9,45,56,0],[46,9,46,10,0],[47,13,47,80,0],[48,9,48,10,0],[51,13,51,68,0],[54,13,54,102,0],[57,9,57,10,0],[58,13,58,64,0],[59,13,59,29,0],[60,9,60,10,0],[63,13,63,103,0],[66,13,66,90,0]]);
+    </script>
+  </body>
+</html>

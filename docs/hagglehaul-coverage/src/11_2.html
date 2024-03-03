@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Models/ArchivedRiderTrip.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+namespace hagglehaul.Server.Models
+{
+    public class ArchivedRiderTrip
+    {
+        public string TripId { get; set; } = null!;
+        public string TripName { get; set; } = null!;
+        public byte[] Thumbnail { get; set; } = null!;
+        public string GeoJson { get; set; } = null!;
+        public DateTime StartTime { get; set; }
+        public double? Distance { get; set; } //distance in meters
+        public double? Duration { get; set; } //duration in seconds
+        public bool HasDriver { get; set; } //below data invalid if False
+        public uint Cost { get; set; }
+        public string DriverName { get; set; } = null!;
+        public double? DriverRating { get; set; }
+        public uint? DriverNumRating { get; set; }
+        public string PickupAddress { get; set; } = null!;
+        public string DestinationAddress { get; set; } = null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[5,32,5,36,0],[5,37,5,41,0],[5,46,5,51,0],[6,34,6,38,0],[6,39,6,43,0],[6,48,6,53,0],[7,35,7,39,0],[7,40,7,44,0],[7,49,7,54,0],[8,33,8,37,0],[8,38,8,42,0],[8,47,8,52,0],[9,37,9,41,0],[9,42,9,46,0],[10,35,10,39,0],[10,40,10,44,0],[11,35,11,39,0],[11,40,11,44,0],[12,33,12,37,0],[12,38,12,42,0],[13,28,13,32,0],[13,33,13,37,0],[14,36,14,40,0],[14,41,14,45,0],[14,50,14,55,0],[15,39,15,43,0],[15,44,15,48,0],[16,40,16,44,0],[16,45,16,49,0],[17,39,17,43,0],[17,44,17,48,0],[17,53,17,58,0],[18,44,18,48,0],[18,49,18,53,0],[18,58,18,63,0]]);
+    </script>
+  </body>
+</html>
