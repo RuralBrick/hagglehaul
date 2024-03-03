@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Services/MongoTestService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using MongoDB.Driver;
+
+namespace hagglehaul.Server.Services;
+
+public interface IMongoTestService
+{
+    Task&lt;List&lt;MongoTest&gt;&gt; GetAsync();
+    Task&lt;MongoTest&gt; GetAsync(string id);
+    Task UpdateAsync(string id, MongoTest mongoTestIn);
+    Task RemoveAsync(string id);
+}
+
+public class MongoTestService : IMongoTestService
+{
+    private readonly IMongoCollection&lt;MongoTest&gt; _mongoTestCollection;
+    
+    public MongoTestService(IMongoDatabase database)
+    {
+        _mongoTestCollection = database.GetCollection&lt;MongoTest&gt;(&quot;MongoTest&quot;);
+    }
+    
+    public async Task&lt;List&lt;MongoTest&gt;&gt; GetAsync() =&gt;
+        await _mongoTestCollection.Find(_ =&gt; true).ToListAsync();
+    
+    public async Task&lt;MongoTest&gt; GetAsync(string id) =&gt;
+        await _mongoTestCollection.Find(mongoTest =&gt; mongoTest.Id == id).FirstOrDefaultAsync();
+    
+    public async Task CreateAsync(MongoTest mongoTest) =&gt;
+        await _mongoTestCollection.InsertOneAsync(mongoTest);
+    
+    public async Task UpdateAsync(string id, MongoTest mongoTestIn) =&gt;
+        await _mongoTestCollection.ReplaceOneAsync(mongoTest =&gt; mongoTest.Id == id, mongoTestIn);
+    
+    public async Task RemoveAsync(string id) =&gt;
+        await _mongoTestCollection.DeleteOneAsync(mongoTest =&gt; mongoTest.Id == id);
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,5,18,53,1],[19,5,19,6,1],[20,9,20,79,1],[21,5,21,6,1],[24,9,24,65,1],[27,9,27,95,0],[30,9,30,61,1],[33,9,33,97,0],[36,9,36,83,0]]);
+    </script>
+  </body>
+</html>

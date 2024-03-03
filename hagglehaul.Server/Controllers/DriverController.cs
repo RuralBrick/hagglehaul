@@ -46,7 +46,7 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-            
+
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             DriverDashboard driverDashboard = new DriverDashboard();
@@ -61,7 +61,7 @@ namespace hagglehaul.Server.Controllers
                 //if trip date is in future, email !null, trip is confirmed
                 Trip trip = await _tripService.GetTripByIdAsync(bid.TripId);
                 TimeSpan day = new TimeSpan(24, 0, 0);
-                DateTime pastPlusOne = trip.StartTime.Add(day);
+                DateTime pastPlusOne = trip.StartTime.Add(day).ToLocalTime();
                 //archived Trips
                 GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
                 uint cost = bid.CentsAmount;
@@ -73,10 +73,11 @@ namespace hagglehaul.Server.Controllers
                     archive.TripName = trip.Name;
                     archive.StartTime = trip.StartTime;
                     archive.Thumbnail = geographicRoute.Image;
+                    archive.GeoJson = geographicRoute.GeoJson;
                     archive.Distance = geographicRoute.Distance;
                     archive.Duration = geographicRoute.Duration;
                     archive.Cost = cost;
-                    DriverProfile rider = await _driverProfileService.GetAsync(trip.RiderEmail);
+                    RiderProfile rider = await _riderProfileService.GetAsync(trip.RiderEmail);
                     UserCore riderCore = await _userCoreService.GetAsync(trip.RiderEmail);
                     archive.RiderName = riderCore.Name;
                     archive.RiderNumRating = rider.NumRatings;
@@ -94,6 +95,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.TripID = trip.Id;
                     confirmedTrip.TripName = trip.Name;
                     confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.GeoJson = geographicRoute.GeoJson;
                     confirmedTrip.StartTime = trip.StartTime;
                     confirmedTrip.Distance = geographicRoute.Distance;
                     confirmedTrip.Duration = geographicRoute.Duration;
@@ -101,7 +103,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.RiderName = riderCore.Name;
                     confirmedTrip.RiderRating = rider.Rating;
                     confirmedTrip.RiderNumRating = rider.NumRatings;
-                    confirmedTrip.ShowRatingPrompt = trip.DriverHasBeenRated && DateTime.Now > trip.StartTime && DateTime.Now <= pastPlusOne;
+                    confirmedTrip.ShowRatingPrompt = !trip.RiderHasBeenRated && DateTime.Now > trip.StartTime.ToLocalTime() && DateTime.Now <= pastPlusOne;
                     confirmedTrip.RiderEmail = riderCore.Email;
                     confirmedTrip.RiderPhone = riderCore.Phone;
                     confirmedTrip.PickupAddress = trip.PickupAddress;
@@ -117,6 +119,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.TripID = trip.Id;
                     unconfirmedTrip.TripName = trip.Name;
                     unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.GeoJson = geographicRoute.GeoJson;
                     unconfirmedTrip.StartTime = trip.StartTime;
                     unconfirmedTrip.Distance = geographicRoute.Distance;
                     unconfirmedTrip.Duration = geographicRoute.Duration;
@@ -274,7 +277,7 @@ namespace hagglehaul.Server.Controllers
                 return BadRequest(new { Error = "Invalid tripId" });
             }
 
-            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime.ToLocalTime() < DateTime.Now)
             {
                 return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
@@ -328,7 +331,7 @@ namespace hagglehaul.Server.Controllers
                 return BadRequest(new { Error = "Invalid tripId" });
             }
 
-            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime < DateTime.Now)
+            if (!String.IsNullOrEmpty(trip.DriverEmail) || trip.StartTime.ToLocalTime() < DateTime.Now)
             {
                 return BadRequest(new { Error = "The trip is either confirmed or in the past" });
             }
@@ -454,6 +457,7 @@ namespace hagglehaul.Server.Controllers
                 TripId = trip.Id,
                 TripName = trip.Name,
                 Thumbnail = tripRoutes[trip.Id].Image,
+                GeoJson = tripRoutes[trip.Id].GeoJson,
                 StartTime = trip.StartTime,
                 Distance = tripRoutes[trip.Id].Distance,
                 Duration = tripRoutes[trip.Id].Duration,
@@ -530,9 +534,15 @@ namespace hagglehaul.Server.Controllers
             return TripEndToTargetDistance(trip, options) <= options.MaxEndToTargetDistance;
         }
 
-        private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
+        private async Task<List<Trip>> GetEligibleMarketTrips()
         {
             var allTrips = await _tripService.GetAllTripsAsync();
+            return allTrips.Where(trip => String.IsNullOrEmpty(trip.DriverEmail) && trip.StartTime.ToLocalTime() > DateTime.Now).ToList();
+        }
+
+        private async Task<List<Trip>> GetFilteredAndSortedTrips(TripMarketOptions options)
+        {
+            var allTrips = await GetEligibleMarketTrips();
             Dictionary<string, GeographicRoute>? tripRoutes = null;
             Dictionary<string, uint?>? tripMinBidAmounts = null;
 
@@ -659,6 +669,54 @@ namespace hagglehaul.Server.Controllers
             }
             var searchedTrips = await TripsToSearchedTrips(trips);
             return Ok(searchedTrips);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("rating")]
+        public async Task<IActionResult> RateRider([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "driver") { return Unauthorized(); }
+
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+
+            var driverEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (driverEmail != trip.DriverEmail) { return Unauthorized(); }
+
+            var riderEmail = trip.RiderEmail;
+            if (string.IsNullOrEmpty(riderEmail)) { return BadRequest(new { Error = "Trip does not have a rider (somehow)" }); }
+
+            if (trip.StartTime.ToLocalTime() >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+
+            if (trip.RiderHasBeenRated) { return BadRequest(new { Error = "Rider has already been rated for this trip" }); }
+
+            var rider = await _riderProfileService.GetAsync(riderEmail);
+            if (rider == null) { return BadRequest(new { Error = "Rider does not exist" }); }
+
+            if (rider.Rating == null)
+                rider.Rating = 0;
+            if (rider.NumRatings == null)
+                rider.NumRatings = 0;
+
+            var totalRatings = rider.Rating * (double)rider.NumRatings;
+
+            rider.NumRatings++;
+
+            rider.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)rider.NumRatings;
+
+            await _riderProfileService.UpdateAsync(rider.Email, rider);
+
+            trip.RiderHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
+            return Ok();
         }
     }
 }

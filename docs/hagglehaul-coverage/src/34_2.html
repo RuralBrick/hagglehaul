@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Models/RiderProfile.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+
+namespace hagglehaul.Server.Models
+{
+    [BsonIgnoreExtraElements]
+    public class RiderProfile
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+
+        [BsonElement(&quot;email&quot;)]
+        public string Email { get; set; } = null!;
+
+        [BsonElement(&quot;rating&quot;)]
+        public double? Rating { get; set; } = null!;
+        
+        [BsonElement(&quot;numRatings&quot;)]
+        public uint? NumRatings { get; set; } = null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,29,11,33,1],[11,34,11,38,1],[14,31,14,35,1],[14,36,14,40,1],[14,45,14,50,1],[17,33,17,37,1],[17,38,17,42,1],[17,47,17,52,1],[20,35,20,39,1],[20,40,20,44,1],[20,49,20,54,1]]);
+    </script>
+  </body>
+</html>

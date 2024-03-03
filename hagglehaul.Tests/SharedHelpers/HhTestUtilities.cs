@@ -85,7 +85,7 @@ public class HhTestUtilities
         return result;
     }
 
-    public static List<Bid> GetBidData(int count = 2)
+    public static List<Bid> GetBidData(int count = 2, bool sameTrip = false)
     {
         var result = new List<Bid>(count);
         for (var i = 1; i <= count; i++)
@@ -94,7 +94,7 @@ public class HhTestUtilities
             {
                 Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
                 DriverEmail = "driver@example.com",
-                TripId = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                TripId = new StringBuilder().Insert(0, (sameTrip? 1 : i).ToString(), 24).ToString(),
                 CentsAmount = 100
             });
         }

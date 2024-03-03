@@ -64,7 +64,7 @@ namespace hagglehaul.Server.Controllers
             {
                 return Unauthorized();
             }
-            
+
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
             RiderDashboard riderDashboard = new RiderDashboard();
@@ -78,7 +78,7 @@ namespace hagglehaul.Server.Controllers
                 //if trip date is in future, email null, trip is in bidding
                 //if trip date is in future, email !null, trip is confirmed
                 TimeSpan day = new TimeSpan(24, 0, 0);
-                DateTime pastPlusOne = trip.StartTime.Add(day);
+                DateTime pastPlusOne = trip.StartTime.ToLocalTime().Add(day);
                 //archived Trips
                 GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
                 uint cost = 0;
@@ -101,6 +101,7 @@ namespace hagglehaul.Server.Controllers
                     archive.TripName = trip.Name;
                     archive.StartTime = trip.StartTime;
                     archive.Thumbnail = geographicRoute.Image;
+                    archive.GeoJson = geographicRoute.GeoJson;
                     archive.Distance = geographicRoute.Distance;
                     archive.Duration = geographicRoute.Duration;
                     archive.HasDriver = hasDriver;
@@ -125,6 +126,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.TripID = trip.Id;
                     confirmedTrip.TripName = trip.Name;
                     confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.GeoJson = geographicRoute.GeoJson;
                     confirmedTrip.StartTime = trip.StartTime;
                     confirmedTrip.Distance = geographicRoute.Distance;
                     confirmedTrip.Duration = geographicRoute.Duration;
@@ -132,7 +134,7 @@ namespace hagglehaul.Server.Controllers
                     confirmedTrip.DriverName = driverCore.Name;
                     confirmedTrip.DriverRating = driver.Rating;
                     confirmedTrip.DriverNumRating = driver.NumRatings;
-                    confirmedTrip.ShowRatingPrompt = trip.DriverHasBeenRated && DateTime.Now > trip.StartTime && DateTime.Now <= pastPlusOne;
+                    confirmedTrip.ShowRatingPrompt = !trip.DriverHasBeenRated && DateTime.Now > trip.StartTime.ToLocalTime() && DateTime.Now <= pastPlusOne;
                     confirmedTrip.DriverEmail = driverCore.Email;
                     confirmedTrip.DriverPhone = driverCore.Phone;
                     confirmedTrip.DriverCarModel = driver.CarDescription;
@@ -147,6 +149,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.TripID = trip.Id;
                     unconfirmedTrip.TripName = trip.Name;
                     unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.GeoJson = geographicRoute.GeoJson;
                     unconfirmedTrip.StartTime = trip.StartTime;
                     unconfirmedTrip.Distance = geographicRoute.Distance;
                     unconfirmedTrip.Duration = geographicRoute.Duration;
@@ -182,7 +185,7 @@ namespace hagglehaul.Server.Controllers
         public async Task<IActionResult> ModifyAccountDetails([FromBody] RiderUpdate riderUpdate )
         {
             ClaimsPrincipal currentUser = this.User;
-  
+
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
@@ -192,12 +195,12 @@ namespace hagglehaul.Server.Controllers
             {
                 return BadRequest(new { Error = "Can't make a new password" });
             }
-            
+
             //check role for error
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
             UserCore userCore = await _userCoreService.GetAsync(email);
-            
+
             if (changingPassword)
             {
 
@@ -205,9 +208,9 @@ namespace hagglehaul.Server.Controllers
                 {
                     return BadRequest(new { Error = "Current Password is invalid" });
                 }
-                
+
             }
-            
+
             if (changingPassword) {
                 Console.WriteLine("changing pass");
                 _userCoreService.CreatePasswordHash(riderUpdate.NewPassword, out var newHash, out var newSalt);
@@ -239,9 +242,9 @@ namespace hagglehaul.Server.Controllers
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
 
             if (role != "rider") { return Unauthorized(); };
-            
-            if (tripDetails.StartTime < DateTime.Now) { return BadRequest(new { Error = "Start time is in the past" }); };
-            
+
+            if (tripDetails.StartTime.ToLocalTime() < DateTime.Now) { return BadRequest(new { Error = "Start time is in the past" }); };
+
             if (tripDetails.PartySize is <= 0 or > 10) { return BadRequest(new { Error = "Invalid party size" }); };
 
             Trip trip = new Trip
@@ -261,6 +264,109 @@ namespace hagglehaul.Server.Controllers
             };
 
             await _tripService.CreateAsync(trip);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route("trip")]
+        public async Task<IActionResult> DeleteRiderTrip([FromQuery] string tripId)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); }
+
+            Trip trip = await _tripService.GetTripByIdAsync(tripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+            if (trip.RiderEmail != email) { return Unauthorized(); }
+            if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = "Trip has a driver" }); }
+            if (trip.StartTime.ToLocalTime() < DateTime.Now) { return BadRequest(new { Error = "Trip has already started" }); }
+
+            await _tripService.DeleteAsync(tripId);
+            await _bidService.DeleteByTripIdAsync(tripId);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("tripDriver")]
+        public async Task<IActionResult> ConfirmDriver([FromBody] AddTripDriver addTripDriver)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); }
+
+            Trip trip = await _tripService.GetTripByIdAsync(addTripDriver.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+            if (trip.RiderEmail != email) { return Unauthorized(); }
+            if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = "Trip already has a driver" }); }
+            if (trip.StartTime.ToLocalTime() < DateTime.Now) { return BadRequest(new { Error = "Trip is in the past and is therefore cancelled" }); }
+
+            var bids = await _bidService.GetTripBidsAsync(addTripDriver.TripId);
+            Bid bid = bids.FirstOrDefault(b => b.Id == addTripDriver.BidId);
+            if (bid == null) { return BadRequest(new { Error = "Bid does not exist" }); }
+            trip.DriverEmail = bid.DriverEmail;
+            await _tripService.UpdateAsync(addTripDriver.TripId, trip);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("rating")]
+        public async Task<IActionResult> RateDriver([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "rider") { return Unauthorized(); }
+
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = "Trip does not exist" }); }
+
+            var riderEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (riderEmail != trip.RiderEmail) { return Unauthorized(); }
+
+            var driverEmail = trip.DriverEmail;
+            if (string.IsNullOrEmpty(driverEmail)) { return BadRequest(new { Error = "Trip does not have a driver" }); }
+
+            Console.WriteLine("Current time: " + DateTime.Now);
+            Console.WriteLine("Trip start time: " + trip.StartTime);
+            if (trip.StartTime.ToLocalTime() >= DateTime.Now) { return BadRequest(new { Error = "Trip has not been taken yet" }); }
+
+            if (trip.DriverHasBeenRated) { return BadRequest(new { Error = "Driver has already been rated for this trip" }); }
+
+            var driver = await _driverProfileService.GetAsync(driverEmail);
+            if (driver == null) { return BadRequest(new { Error = "Driver does not exist" }); }
+
+            if (driver.Rating == null)
+                driver.Rating = 0;
+            if (driver.NumRatings == null)
+                driver.NumRatings = 0;
+
+            var totalRatings = driver.Rating * (double)driver.NumRatings;
+
+            driver.NumRatings++;
+
+            driver.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)driver.NumRatings;
+
+            await _driverProfileService.UpdateAsync(driver.Email, driver);
+
+            trip.DriverHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
             return Ok();
         }
     }

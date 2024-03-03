@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Services/TripService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using MongoDB.Driver;
+
+namespace hagglehaul.Server.Services
+{
+    public interface ITripService
+    {
+        Task&lt;List&lt;Trip&gt;&gt; GetAllTripsAsync();
+        Task&lt;List&lt;Trip&gt;&gt; GetRiderTripsAsync(string email);
+        Task&lt;List&lt;Trip&gt;&gt; GetDriverTripsAsync(string email);
+        Task&lt;Trip&gt; GetTripByIdAsync(string id);
+        Task&lt;Trip&gt; CreateAsync(Trip trip);
+        Task DeleteAsync(string id);
+        Task UpdateAsync(string id, Trip tripIn);
+    }
+
+    public class TripService : ITripService
+    {
+        public readonly IMongoCollection&lt;Trip&gt; _tripCollection;
+
+        public TripService(IMongoDatabase database)
+        {
+            _tripCollection = database.GetCollection&lt;Trip&gt;(&quot;Trip&quot;);
+        }
+
+        public async Task&lt;List&lt;Trip&gt;&gt; GetAllTripsAsync()
+        {
+            var allTrips = await _tripCollection.Find(_ =&gt; true).ToListAsync();
+            return allTrips;
+        }
+
+        public async Task&lt;List&lt;Trip&gt;&gt; GetRiderTripsAsync(string email)
+        {
+            var riderTrips = await _tripCollection.Find(trip =&gt; trip.RiderEmail == email).ToListAsync();
+            return riderTrips;
+        }
+
+        public async Task&lt;List&lt;Trip&gt;&gt; GetDriverTripsAsync(string email)
+        {
+            var riderTrips = await _tripCollection.Find(trip =&gt; trip.DriverEmail == email).ToListAsync();
+            return riderTrips;
+        }
+        
+        public async Task&lt;Trip&gt; GetTripByIdAsync(string id)
+        {
+            var trip = await _tripCollection.Find(trip =&gt; trip.Id == id).FirstOrDefaultAsync();
+            return trip;
+        }
+
+        public async Task&lt;Trip&gt; CreateAsync(Trip trip)
+        {
+            await _tripCollection.InsertOneAsync(trip);
+            return trip;
+        }
+        
+        public async Task DeleteAsync(string id)
+        {
+            await _tripCollection.DeleteOneAsync(trip =&gt; trip.Id == id);
+        }
+        
+        public async Task UpdateAsync(string id, Trip tripIn)
+        {
+            await _tripCollection.ReplaceOneAsync(trip =&gt; trip.Id == id, tripIn);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[21,9,21,52,0],[22,9,22,10,0],[23,13,23,68,0],[24,9,24,10,0],[27,9,27,10,0],[28,13,28,80,0],[29,13,29,29,0],[30,9,30,10,0],[33,9,33,10,0],[34,13,34,105,0],[35,13,35,31,0],[36,9,36,10,0],[39,9,39,10,0],[40,13,40,106,0],[41,13,41,31,0],[42,9,42,10,0],[45,9,45,10,0],[46,13,46,96,0],[47,13,47,25,0],[48,9,48,10,0],[51,9,51,10,0],[52,13,52,56,0],[53,13,53,25,0],[54,9,54,10,0],[57,9,57,10,0],[58,13,58,73,0],[59,9,59,10,0],[62,9,62,10,0],[63,13,63,82,0],[64,9,64,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Services/GeographicRouteService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Microsoft.AspNetCore.WebUtilities;
+using MongoDB.Bson;
+
+namespace hagglehaul.Server.Services;
+
+public interface IGeographicRouteService
+{
+    Task&lt;GeographicRoute&gt; GetGeographicRoute(double startLong, double startLat, double endLong, double endLat);
+    Task&lt;string&gt; GeocodingLookup(string query);
+}
+
+public class GeographicRouteService : IGeographicRouteService
+{
+    private readonly IMongoCollection&lt;GeographicRoute&gt; _geographicRouteCollection;
+    private readonly IMongoCollection&lt;GeocodingResult&gt; _geocodingCollection;
+    private readonly MapboxSettings _mapboxSettings;
+    
+    public GeographicRouteService(IMongoDatabase database, IOptions&lt;MapboxSettings&gt; mapboxSettings)
+    {
+        _geographicRouteCollection = database.GetCollection&lt;GeographicRoute&gt;(&quot;RouteInfoCache&quot;);
+        _geocodingCollection = database.GetCollection&lt;GeocodingResult&gt;(&quot;GeocodingCache&quot;);
+        _mapboxSettings = mapboxSettings.Value;
+    }
+    
+    protected const string ACCENT_COLOR = &quot;#D96C06&quot;;
+    protected const string MAP_STYLE = &quot;light-v11&quot;;
+    protected const string IMAGE_WIDTH = &quot;600&quot;;
+    protected const string IMAGE_HEIGHT = &quot;400&quot;;
+    protected const string SERVICE_COUNTRY = &quot;us&quot;;
+    
+    protected static string CreateGeoJsonPoint(double longitude, double latitude, string name, string color) =&gt;
+        $&quot;{{\&quot;type\&quot;:\&quot;Feature\&quot;,\&quot;geometry\&quot;:{{\&quot;type\&quot;:\&quot;Point\&quot;,\&quot;coordinates\&quot;:[{longitude},{latitude}]}},\&quot;properties\&quot;:{{\&quot;name\&quot;:\&quot;{name}\&quot;,\&quot;marker-color\&quot;:\&quot;{color}\&quot;}}}}&quot;;
+    
+    protected static string CreateGeoJsonRouteObject(string point1, string point2, string routeGeometry, string routeColor) =&gt;
+        $&quot;{{\&quot;type\&quot;:\&quot;FeatureCollection\&quot;,\&quot;features\&quot;:[{point1},{point2},{{\&quot;type\&quot;:\&quot;Feature\&quot;,\&quot;geometry\&quot;:{routeGeometry},\&quot;properties\&quot;:{{\&quot;stroke\&quot;:\&quot;{routeColor}\&quot;,\&quot;name\&quot;:\&quot;Route\&quot;}}}}]}}&quot;;
+    
+    public async Task&lt;GeographicRoute&gt; GetGeographicRoute(double startLong, double startLat, double endLong, double endLat)
+    {
+        string startLongString = startLong.ToString(&quot;0.0000&quot;);
+        string startLatString = startLat.ToString(&quot;0.0000&quot;);
+        string endLongString = endLong.ToString(&quot;0.0000&quot;);
+        string endLatString = endLat.ToString(&quot;0.0000&quot;);
+        
+        string routeDescriptor = $&quot;{startLongString},{startLatString};{endLongString},{endLatString}&quot;;
+        var route = await _geographicRouteCollection.Find(route =&gt; route.RouteDescriptor == routeDescriptor).FirstOrDefaultAsync();
+        if (route == null)
+        {
+            route = new GeographicRoute
+            {
+                Id = ObjectId.GenerateNewId().ToString(),
+                RouteDescriptor = routeDescriptor
+            };
+            // Call Mapbox API to get route information
+            using (HttpClient client = new HttpClient())
+            {
+                // Part 1: Get navigation from navigation API
+                string encodedRouteDescriptor = UrlEncoder.Default.Encode(routeDescriptor);
+                string navigationUrl = $&quot;https://api.mapbox.com/directions/v5/mapbox/driving/{encodedRouteDescriptor}&quot;;
+                var navigationParameters = new Dictionary&lt;string, string?&gt;
+                {
+                    { &quot;alternatives&quot;, &quot;false&quot; },
+                    { &quot;geometries&quot;, &quot;geojson&quot; },
+                    { &quot;overview&quot;, &quot;simplified&quot; },
+                    { &quot;steps&quot;, &quot;false&quot; },
+                    { &quot;access_token&quot;, _mapboxSettings.AccessToken }
+                };
+                navigationUrl = QueryHelpers.AddQueryString(navigationUrl, navigationParameters);
+                Console.WriteLine($&quot;GET {navigationUrl}&quot;);
+                string tripGeometry = String.Empty;
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(navigationUrl);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        JsonDocument jsonResponse = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                        if (jsonResponse.RootElement.TryGetProperty(&quot;routes&quot;, out JsonElement routesElement))
+                        {
+                            JsonElement routeElement = routesElement.EnumerateArray().FirstOrDefault();
+                            if (routeElement.TryGetProperty(&quot;geometry&quot;, out JsonElement geometryElement) &amp;&amp;
+                                routeElement.TryGetProperty(&quot;distance&quot;, out JsonElement distanceElement) &amp;&amp;
+                                routeElement.TryGetProperty(&quot;duration&quot;, out JsonElement durationElement))
+                            {
+                                tripGeometry = geometryElement.ToString()!;
+                                route.Distance = distanceElement.GetDouble();
+                                route.Duration = durationElement.GetDouble();
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine(&quot;Mapbox navigation response is missing required attributes&quot;);
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($&quot;Mapbox navigation call returned error, status code: {response.StatusCode}&quot;);
+                        return null;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    Console.WriteLine($&quot;Mapbox navigation call failed, message: {e.Message} &quot;);
+                    return null;
+                }
+
+                // Part 2: Get static map image
+                string point1 = CreateGeoJsonPoint(startLong, startLat, &quot;P&quot;, ACCENT_COLOR);
+                string point2 = CreateGeoJsonPoint(endLong, endLat, &quot;D&quot;, ACCENT_COLOR);
+                string inputGeoJson = CreateGeoJsonRouteObject(point1, point2, tripGeometry, ACCENT_COLOR);
+                route.GeoJson = inputGeoJson;
+                string encodedInputGeoJson = UrlEncoder.Default.Encode(inputGeoJson);
+                string imageUrl = $&quot;https://api.mapbox.com/styles/v1/mapbox/{MAP_STYLE}/static/geojson({encodedInputGeoJson})/auto/{IMAGE_WIDTH}x{IMAGE_HEIGHT}&quot;;
+                var imageParameters = new Dictionary&lt;string, string?&gt;
+                {
+                    { &quot;access_token&quot;, _mapboxSettings.AccessToken }
+                };
+                imageUrl = QueryHelpers.AddQueryString(imageUrl, imageParameters);
+                Console.WriteLine($&quot;GET {imageUrl}&quot;);
+                
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(imageUrl);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        route.Image = await response.Content.ReadAsByteArrayAsync();
+                    }
+                    else
+                    {
+                        Console.WriteLine($&quot;Mapbox static map call returned error, status code: {response.StatusCode}&quot;);
+                        return null;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    Console.WriteLine($&quot;Mapbox static map call failed, message: {e.Message} &quot;);
+                    return null;
+                }
+            }
+
+            // Save route information to database
+            await _geographicRouteCollection.InsertOneAsync(route);
+        }
+        return route;
+    }
+
+    public async Task&lt;string&gt; GeocodingLookup(string query)
+    {
+        query = query.ToLowerInvariant();
+        
+        var geocoding = await _geocodingCollection.Find(geocoding =&gt; geocoding.Query == query).FirstOrDefaultAsync();
+        if (geocoding != null)
+        {
+            return geocoding.Features;
+        }
+
+        using (HttpClient client = new HttpClient())
+        {
+            string encodedQuery = UrlEncoder.Default.Encode(query);
+            string geocodingUrl = $&quot;https://api.mapbox.com/geocoding/v5/mapbox.places/{encodedQuery}.json&quot;;
+            var geocodingParameters = new Dictionary&lt;string, string?&gt;
+            {
+                { &quot;country&quot;, SERVICE_COUNTRY },
+                { &quot;fuzzyMatch&quot;, &quot;true&quot; },
+                { &quot;autocomplete&quot;, &quot;true&quot; },
+                { &quot;access_token&quot;, _mapboxSettings.AccessToken }
+            };
+            geocodingUrl = QueryHelpers.AddQueryString(geocodingUrl, geocodingParameters);
+            Console.WriteLine($&quot;GET {geocodingUrl}&quot;);
+            try
+            {
+                HttpResponseMessage response = await client.GetAsync(geocodingUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    JsonDocument jsonResponse = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                    if (jsonResponse.RootElement.TryGetProperty(&quot;features&quot;, out JsonElement featuresElement))
+                    {
+                        string features = featuresElement.ToString()!;
+                        geocoding = new GeocodingResult
+                        {
+                            Id = ObjectId.GenerateNewId().ToString(),
+                            Query = query,
+                            Features = features
+                        };
+                        await _geocodingCollection.InsertOneAsync(geocoding);
+                        return features;
+                    }
+
+                    Console.WriteLine(&quot;Mapbox geocoding response is missing required attributes&quot;);
+                    return String.Empty;
+                }
+
+                Console.WriteLine($&quot;Mapbox geocoding call returned error, status code: {response.StatusCode}&quot;);
+                return String.Empty;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($&quot;Mapbox geocoding call failed, message: {e.Message} &quot;);
+                return String.Empty;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,5,23,100,0],[24,5,24,6,0],[25,9,25,96,0],[26,9,26,90,0],[27,9,27,48,0],[28,5,28,6,0],[37,9,37,181,0],[40,9,40,199,0],[43,5,43,6,0],[44,9,44,63,0],[45,9,45,61,0],[46,9,46,59,0],[47,9,47,57,0],[49,9,49,103,0],[50,9,50,132,0],[51,9,51,27,0],[52,9,52,10,0],[53,13,57,15,0],[59,20,59,56,0],[60,13,60,14,0],[62,17,62,92,0],[63,17,63,120,0],[64,17,71,19,0],[72,17,72,98,0],[73,17,73,59,0],[74,17,74,52,0],[76,17,76,18,0],[77,21,77,89,0],[78,21,78,54,0],[79,21,79,22,0],[80,25,80,116,0],[81,25,81,110,0],[82,25,82,26,0],[83,29,83,104,0],[84,29,86,106,0],[87,29,87,30,0],[88,33,88,76,0],[89,33,89,78,0],[90,33,90,78,0],[91,29,91,30,0],[92,25,92,26,0],[94,25,94,26,0],[95,29,95,108,0],[96,29,96,41,0],[98,21,98,22,0],[100,21,100,22,0],[101,25,101,121,0],[102,25,102,37,0],[104,17,104,18,0],[105,17,105,47,0],[106,17,106,18,0],[107,21,107,96,0],[108,21,108,33,0],[112,17,112,92,0],[113,17,113,88,0],[114,17,114,108,0],[115,17,115,46,0],[116,17,116,86,0],[117,17,117,162,0],[118,17,121,19,0],[122,17,122,83,0],[123,17,123,54,0],[126,17,126,18,0],[127,21,127,84,0],[128,21,128,54,0],[129,21,129,22,0],[130,25,130,85,0],[131,21,131,22,0],[133,21,133,22,0],[134,25,134,121,0],[135,25,135,37,0],[137,17,137,18,0],[138,17,138,47,0],[139,17,139,18,0],[140,21,140,96,0],[141,21,141,33,0],[143,13,143,14,0],[146,13,146,68,0],[147,9,147,10,0],[148,9,148,22,0],[149,5,149,6,0],[152,5,152,6,0],[153,9,153,42,0],[155,9,155,118,0],[156,9,156,31,0],[157,9,157,10,0],[158,13,158,39,0],[161,16,161,52,0],[162,9,162,10,0],[163,13,163,68,0],[164,13,164,108,0],[165,13,171,15,0],[172,13,172,91,0],[173,13,173,54,0],[175,13,175,14,0],[176,17,176,84,0],[177,17,177,50,0],[178,17,178,18,0],[179,21,179,112,0],[180,21,180,110,0],[181,21,181,22,0],[182,25,182,71,0],[183,25,188,27,0],[189,25,189,78,0],[190,25,190,41,0],[193,21,193,99,0],[194,21,194,41,0],[197,17,197,112,0],[198,17,198,37,0],[200,13,200,43,0],[201,13,201,14,0],[202,17,202,91,0],[203,17,203,37,0],[206,5,206,6,0]]);
+    </script>
+  </body>
+</html>

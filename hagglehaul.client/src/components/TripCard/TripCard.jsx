@@ -1,11 +1,11 @@
 import {Card, Button, Row, Col, ListGroup} from 'react-bootstrap';
 import './TripCard.css';
 
-function TripCard({ image, title, attributes, actionComponent, bidComponents }) {
+function TripCard({ image, title, attributes, actionComponent, bidComponents, onClickImg }) {
     return (
         <>
             <Card className="small-medium-card">
-                <Card.Img variant="top" src={image} />
+                <Card.Img onClick={onClickImg} className="map-thumbnail" variant="top" src={image} />
                 <Card.Body>
                     <Card.Title>{title}</Card.Title>
                     <Card.Text>
@@ -46,7 +46,7 @@ function TripCard({ image, title, attributes, actionComponent, bidComponents }) 
                 <Card.Body>
                     <Row>
                         <Col md={3}>
-                                <img src={image} style={{height: '8rem', borderRadius: '10px'}}/>
+                                <img onClick={onClickImg} className="map-thumbnail" src={image} style={{height: '8rem', borderRadius: '10px'}}/>
                         </Col>
                         <Col md={9}>
                             <Row>

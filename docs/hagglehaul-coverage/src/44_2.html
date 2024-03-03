@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Services/BidService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using MongoDB.Driver;
+
+namespace hagglehaul.Server.Services
+{
+    public interface IBidService
+    {
+        Task&lt;List&lt;Bid&gt;&gt; GetDriverBidsAsync(string email);
+        Task&lt;List&lt;Bid&gt;&gt; GetTripBidsAsync(string tripId);
+        Task&lt;Bid&gt; CreateAsync(Bid bid);
+        Task UpdateAsync(string id, Bid bidIn);
+        Task DeleteAsync(string id);
+        Task DeleteByTripIdAsync(string tripId);
+    }
+
+    public class BidService : IBidService
+    {
+        public readonly IMongoCollection&lt;Bid&gt; _bidCollection;
+
+        public BidService(IMongoDatabase database)
+        {
+            _bidCollection = database.GetCollection&lt;Bid&gt;(&quot;Bid&quot;);
+        }
+
+        public async Task&lt;List&lt;Bid&gt;&gt; GetDriverBidsAsync(string email)
+        {
+            var driverBids = await _bidCollection.Find(bid =&gt; bid.DriverEmail == email).ToListAsync();
+            return driverBids;
+        }
+
+        public async Task&lt;List&lt;Bid&gt;&gt; GetTripBidsAsync(string tripId)
+        {
+            var tripBids = await _bidCollection.Find(bid =&gt; bid.TripId == tripId).ToListAsync();
+            return tripBids;
+        }
+
+        public async Task&lt;Bid&gt; CreateAsync(Bid bid)
+        {
+            await _bidCollection.InsertOneAsync(bid);
+            return bid;
+        }
+        
+        public async Task UpdateAsync(string id, Bid bidIn) =&gt;
+            await _bidCollection.ReplaceOneAsync(bid =&gt; bid.Id == id, bidIn);
+        
+        public async Task DeleteAsync(string id) =&gt;
+            await _bidCollection.DeleteOneAsync(bid =&gt; bid.Id == id);
+        
+        public async Task DeleteByTripIdAsync(string tripId) =&gt;
+            await _bidCollection.DeleteManyAsync(bid =&gt; bid.TripId == tripId);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,9,20,51,0],[21,9,21,10,0],[22,13,22,65,0],[23,9,23,10,0],[26,9,26,10,0],[27,13,27,103,0],[28,13,28,31,0],[29,9,29,10,0],[32,9,32,10,0],[33,13,33,97,0],[34,13,34,29,0],[35,9,35,10,0],[38,9,38,10,0],[39,13,39,54,0],[40,13,40,24,0],[41,9,41,10,0],[44,13,44,77,0],[47,13,47,69,0],[50,13,50,78,0]]);
+    </script>
+  </body>
+</html>

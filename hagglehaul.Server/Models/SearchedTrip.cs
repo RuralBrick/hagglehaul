@@ -5,6 +5,7 @@
         public string TripId { get; set; }
         public string TripName { get; set; }
         public byte[] Thumbnail { get; set; }
+        public string GeoJson { get; set; }
         public DateTime StartTime { get; set; }
         public double? Distance { get; set; }
         public double? Duration { get; set; }

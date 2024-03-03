@@ -145,5 +145,432 @@ namespace hagglehaul.Tests.ControllerTests
             Assert.That(await _controller.PostRiderTrip(request), Is.InstanceOf<BadRequestObjectResult>());
             _mockTripService.Verify(x => x.CreateAsync(It.IsAny<Trip>()), Times.Never);
         }
+
+        [Test]
+        public async Task RiderDeleteTripTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) => 
+                HhTestUtilities.GetTripData(1, false, false).FirstOrDefault());
+            
+            _mockTripService.Setup(
+                x => x.DeleteAsync(It.IsAny<String>())
+            )!.Callback((string s) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+            });
+            
+            _mockBidService.Setup(
+                x => x.DeleteByTripIdAsync(It.IsAny<String>())
+            )!.Callback((string s) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+            });
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            
+            Assert.That(await _controller.DeleteRiderTrip(new StringBuilder().Insert(0, "1", 24).ToString()), Is.InstanceOf<OkResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Once());
+            _mockBidService.Verify(x => x.DeleteByTripIdAsync(It.IsAny<String>()), Times.Once());
+        }
+
+        [Test]
+        public async Task DeleteTripWrongUserTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetTripData(1, false, false).FirstOrDefault());
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "imposter@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.DeleteRiderTrip(new StringBuilder().Insert(0, "1", 24).ToString()),
+                Is.InstanceOf<UnauthorizedResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
+            _mockBidService.Verify(x => x.DeleteByTripIdAsync(It.IsAny<String>()), Times.Never());
+        }
+
+        [Test]
+        public async Task DeleteTripUnauthorizedTest()
+        {
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "driver@example.com"),
+                new Claim(ClaimTypes.Role, "driver")
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            
+            Assert.That(await _controller.DeleteRiderTrip(new StringBuilder().Insert(0, "1", 24).ToString()),
+                Is.InstanceOf<UnauthorizedResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Never());
+            _mockTripService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
+            _mockBidService.Verify(x => x.DeleteByTripIdAsync(It.IsAny<String>()), Times.Never());
+        }
+
+        [Test]
+        public async Task CannotDeletePastOrConfirmedTripTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) => 
+                HhTestUtilities.GetTripData(1, true, false).FirstOrDefault());
+            
+            _mockTripService.Setup(
+                x => x.DeleteAsync(It.IsAny<String>())
+            )!.Callback((string s) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+            });
+            
+            _mockBidService.Setup(
+                x => x.DeleteByTripIdAsync(It.IsAny<String>())
+            )!.Callback((string s) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+            });
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            
+            Assert.That(await _controller.DeleteRiderTrip(new StringBuilder().Insert(0, "1", 24).ToString()), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
+            _mockBidService.Verify(x => x.DeleteByTripIdAsync(It.IsAny<String>()), Times.Never());
+            
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) => 
+                HhTestUtilities.GetTripData(1, false, true).FirstOrDefault());
+            
+            Assert.That(await _controller.DeleteRiderTrip(new StringBuilder().Insert(0, "1", 24).ToString()), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Exactly(2));
+            _mockTripService.Verify(x => x.DeleteAsync(It.IsAny<String>()), Times.Never());
+            _mockBidService.Verify(x => x.DeleteByTripIdAsync(It.IsAny<String>()), Times.Never());
+        }
+
+        [Test]
+        public async Task RiderConfirmDriverTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetTripData(1, false, false).FirstOrDefault());
+
+            _mockTripService.Setup(
+                x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>())
+            )!.Callback((string s, Trip t) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+                Assert.That(t.DriverEmail, Is.EqualTo("driver@example.com"));
+            });
+
+            _mockBidService.Setup(
+                x => x.GetTripBidsAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetBidData(2, false).ToList()
+            );
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.ConfirmDriver(new AddTripDriver
+            {
+                TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+                BidId = new StringBuilder().Insert(0, "2", 24).ToString()
+            }), Is.InstanceOf<OkResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Once());
+            _mockBidService.Verify(x => x.GetTripBidsAsync(It.IsAny<String>()), Times.Once());
+        }
+        
+        [Test]
+        public async Task RiderWrongUserConfirmDriverTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetTripData(1, false, false).FirstOrDefault());
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "imposter@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.ConfirmDriver(new AddTripDriver
+            {
+                TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+                BidId = new StringBuilder().Insert(0, "2", 24).ToString()
+            }), Is.InstanceOf<UnauthorizedResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
+            _mockBidService.Verify(x => x.GetTripBidsAsync(It.IsAny<String>()), Times.Never());
+        }
+        
+        [Test]
+        public async Task RiderUnauthorizedConfirmDriverTest()
+        {
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "driver@example.com"),
+                new Claim(ClaimTypes.Role, "driver")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.ConfirmDriver(new AddTripDriver
+            {
+                TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+                BidId = new StringBuilder().Insert(0, "2", 24).ToString()
+            }), Is.InstanceOf<UnauthorizedResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Never());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
+            _mockBidService.Verify(x => x.GetTripBidsAsync(It.IsAny<String>()), Times.Never());
+        }
+        
+        [Test]
+        public async Task RiderConfirmDriverTestNonExistentTrip()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                null);
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.ConfirmDriver(new AddTripDriver
+            {
+                TripId = new StringBuilder().Insert(0, "3", 24).ToString(),
+                BidId = new StringBuilder().Insert(0, "2", 24).ToString()
+            }), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
+            _mockBidService.Verify(x => x.GetTripBidsAsync(It.IsAny<String>()), Times.Never());
+        }
+        
+        [Test]
+        public async Task RiderConfirmDriverTestNonExistentBid()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetTripData(1, false, false).FirstOrDefault());
+
+            _mockTripService.Setup(
+                x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>())
+            )!.Callback((string s, Trip t) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+                Assert.That(t.DriverEmail, Is.EqualTo("driver@example.com"));
+            });
+
+            _mockBidService.Setup(
+                x => x.GetTripBidsAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetBidData(2, false).ToList()
+            );
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.ConfirmDriver(new AddTripDriver
+            {
+                TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+                BidId = new StringBuilder().Insert(0, "3", 24).ToString()
+            }), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
+            _mockBidService.Verify(x => x.GetTripBidsAsync(It.IsAny<String>()), Times.Once());
+        }
+        
+        [Test]
+        public async Task RiderConfirmDriverPastOrConfirmedTripTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetTripData(1, true, false).FirstOrDefault());
+
+            _mockTripService.Setup(
+                x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>())
+            )!.Callback((string s, Trip t) =>
+            {
+                Assert.That(s, Is.EqualTo(new StringBuilder().Insert(0, "1", 24).ToString()));
+                Assert.That(t.DriverEmail, Is.EqualTo("driver@example.com"));
+            });
+
+            _mockBidService.Setup(
+                x => x.GetTripBidsAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetBidData(2, false).ToList()
+            );
+            
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.ConfirmDriver(new AddTripDriver
+            {
+                TripId = new StringBuilder().Insert(0, "1", 24).ToString(),
+                BidId = new StringBuilder().Insert(0, "2", 24).ToString()
+            }), Is.InstanceOf<BadRequestObjectResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
+            
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<String>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetTripData(1, false, true).FirstOrDefault());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Never());
+        }
+
+        [Test]
+        public async Task RiderPostRating()
+        {
+            _mockTripService.Setup(
+                x => x.GetTripByIdAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) => new Trip
+                {
+                    Id = "testTrip",
+                    RiderEmail = "rider@example.com",
+                    DriverEmail = "driver@example.com",
+                    StartTime = DateTime.Now.AddHours(-12),
+                    RiderHasBeenRated = false,
+                    DriverHasBeenRated = false,
+                }
+            );
+
+            Trip saveTrip = new Trip();
+            _mockTripService.Setup(
+                x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<Trip>())
+            )!.Callback(
+                (string s, Trip t) =>
+                {
+                    saveTrip = t;
+                }
+            );
+
+            _mockDriverProfileService.Setup(
+                x => x.GetAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) => new DriverProfile
+                {
+                    Email = "driver@example.com",
+                    Rating = 4.0,
+                    NumRatings = 9,
+                }
+            );
+
+            DriverProfile saveProfile = new DriverProfile();
+            _mockDriverProfileService.Setup(
+                x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<DriverProfile>())
+            )!.Callback(
+                (string s, DriverProfile dp) =>
+                {
+                    saveProfile = dp;
+                }
+            );
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "rider@example.com"),
+                new Claim(ClaimTypes.Role, "rider")
+            }, "mock"));
+            
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            Assert.That(await _controller.RateDriver(new GiveRating
+            {
+                TripId = "testTrip",
+                RatingGiven = 5,
+            }), Is.InstanceOf<OkResult>());
+            _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<string>()), Times.Once());
+            _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
+            _mockDriverProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<DriverProfile>()), Times.Once());
+            _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<Trip>()), Times.Once());
+
+            Assert.That(saveProfile.Rating, Is.EqualTo(4.1));
+            Assert.That(saveProfile.NumRatings, Is.EqualTo(10));
+
+            Assert.That(saveTrip.DriverHasBeenRated, Is.EqualTo(true));
+        }
     }
 }

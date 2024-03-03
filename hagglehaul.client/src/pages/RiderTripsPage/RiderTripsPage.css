@@ -1,3 +1,4 @@
+/* Existing styles */
 .trips-page {
     width: 80vw;
 }
@@ -7,9 +8,9 @@
     color: #fff; /* Icon color */
 }
 
-    .btn-add-trip:hover {
-        background-color: #0056b3; /* Darkens the button on hover */
-    }
+.btn-add-trip:hover {
+    background-color: #0056b3; /* Darkens the button on hover */
+}
 
 @media only screen and (min-width: 728px) {
     .trips-header {
@@ -18,11 +19,11 @@
         align-items: center;
     }
 
-        .trips-header h2 {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+    .trips-header h2 {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 
     .btn-add-trip {
         display: inline-block;
