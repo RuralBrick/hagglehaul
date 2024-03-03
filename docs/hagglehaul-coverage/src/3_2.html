@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Controllers/MongoTestController.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver.Core.Authentication;
+using System.Security.Claims;
+
+namespace hagglehaul.Server.Controllers
+{
+    [ApiController]
+    [Route(&quot;api/[controller]&quot;)]
+    public class MongoTestController : ControllerBase
+    {
+        private readonly IMongoTestService _mongoTestService;
+
+        public MongoTestController(IMongoTestService mongoTestService)
+        {
+            _mongoTestService = mongoTestService;
+        }
+
+        [HttpGet]
+        [Route(&quot;insecure&quot;)]
+        public async Task&lt;List&lt;MongoTest&gt;&gt; Get()
+        {
+            return await _mongoTestService.GetAsync();
+        }
+
+        [HttpGet]
+        [Route(&quot;secure&quot;)]
+        [Authorize]
+        public async Task&lt;List&lt;MongoTest&gt;&gt; GetSecure()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            var username = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            var results = await _mongoTestService.GetAsync();
+            foreach (var result in results)
+            {
+                result.Test = $&quot;{result.Test} Username: {username} Role: {role}&quot;;
+            }
+
+            return results;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,9,16,71,1],[17,9,17,10,1],[18,13,18,50,1],[19,9,19,10,1],[24,9,24,10,1],[25,13,25,55,1],[26,9,26,10,1],[32,9,32,10,1],[33,13,33,53,1],[34,13,34,72,1],[35,13,35,68,1],[37,13,37,62,1],[38,13,38,20,1],[38,22,38,32,1],[38,33,38,35,1],[38,36,38,43,1],[39,13,39,14,1],[40,17,40,82,1],[41,13,41,14,1],[43,13,43,28,1],[44,9,44,10,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Controllers/PlaceLookupController.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace hagglehaul.Server.Controllers;
+
+[ApiController]
+[Route(&quot;api/[controller]&quot;)]
+public class PlaceLookupController : ControllerBase
+{
+    private readonly IGeographicRouteService _geographicRouteService;
+    
+    public PlaceLookupController(IGeographicRouteService geographicRouteService)
+    {
+        _geographicRouteService = geographicRouteService;
+    }
+    
+    [Authorize]
+    [HttpGet(Name = &quot;GetPlaceLookup&quot;)]
+    public async Task&lt;IActionResult&gt; Get([FromQuery] string placeName)
+    {
+        if (String.IsNullOrEmpty(placeName))
+            return BadRequest(&quot;Request has empty place name&quot;);
+        
+        var features = await _geographicRouteService.GeocodingLookup(placeName);
+        if (String.IsNullOrEmpty(features))
+            return StatusCode(500);
+
+        return this.Content(features, &quot;application/json&quot;);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[13,5,13,81,0],[14,5,14,6,0],[15,9,15,58,0],[16,5,16,6,0],[21,5,21,6,0],[22,9,22,45,0],[23,13,23,63,0],[25,9,25,81,0],[26,9,26,44,0],[27,13,27,36,0],[29,9,29,59,0],[30,5,30,6,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Models/GeocodingResult.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace hagglehaul.Server.Models;
+
+[BsonIgnoreExtraElements]
+public class GeocodingResult
+{
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? Id { get; set; }
+    
+    [BsonElement(&quot;query&quot;)]
+    public string Query { get; set; } = null!;
+    
+    [BsonElement(&quot;features&quot;)]
+    public string Features { get; set; } = null!;
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,25,11,29,0],[11,30,11,34,0],[14,27,14,31,0],[14,32,14,36,0],[14,41,14,46,0],[17,30,17,34,0],[17,35,17,39,0],[17,44,17,49,0]]);
+    </script>
+  </body>
+</html>

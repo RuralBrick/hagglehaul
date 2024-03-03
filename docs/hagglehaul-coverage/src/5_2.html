@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Controllers/RiderController.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using hagglehaul.Server.Models;
+
+namespace hagglehaul.Server.Controllers
+{
+    [Route(&quot;api/[controller]&quot;)]
+    [ApiController]
+    public class RiderController : ControllerBase
+    {
+        private readonly IRiderProfileService _riderProfileService;
+        private readonly IDriverProfileService _driverProfileService;
+        private readonly IUserCoreService _userCoreService;
+        private readonly ITripService _tripService;
+        private readonly IBidService _bidService;
+        private readonly IGeographicRouteService _geographicRouteService;
+
+        public RiderController(IRiderProfileService riderProfileService, IDriverProfileService driverProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
+        {
+            _riderProfileService = riderProfileService;
+            _driverProfileService = driverProfileService;
+            _userCoreService = userCoreService;
+            _tripService = tripService;
+            _bidService = bidService;
+            _geographicRouteService = geographicRouteService;
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route(&quot;about&quot;)]
+        [ProducesResponseType(typeof(RiderBasicInfo), StatusCodes.Status200OK)]
+        public async Task&lt;IActionResult&gt; Get()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            RiderBasicInfo riderBasicInfo = new RiderBasicInfo();
+            riderBasicInfo.Name = userCore.Name;
+            riderBasicInfo.Email = email;
+            riderBasicInfo.Phone = userCore.Phone;
+            return Ok(riderBasicInfo);
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route(&quot;dashboard&quot;)]
+        [ProducesResponseType(typeof(RiderDashboard), StatusCodes.Status200OK)]
+        public async Task&lt;IActionResult&gt; GetDashboard()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != &quot;rider&quot;)
+            {
+                return Unauthorized();
+            }
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            UserCore userCore = await _userCoreService.GetAsync(email);
+            RiderDashboard riderDashboard = new RiderDashboard();
+            List&lt;ConfirmedRiderTrip&gt; confirmedTrips = new List&lt;ConfirmedRiderTrip&gt;();
+            List&lt;UnconfirmedRiderTrip&gt; unconfirmedTrips = new List&lt;UnconfirmedRiderTrip&gt;();
+            List&lt;ArchivedRiderTrip&gt; archivedTrips = new List&lt;ArchivedRiderTrip&gt;();
+            List&lt;Trip&gt; allTrips = await _tripService.GetRiderTripsAsync(email);
+            foreach (Trip trip in allTrips)
+            {
+                //if trip date is in past, trip is archived
+                //if trip date is in future, email null, trip is in bidding
+                //if trip date is in future, email !null, trip is confirmed
+                TimeSpan day = new TimeSpan(24, 0, 0);
+                DateTime pastPlusOne = trip.StartTime.ToLocalTime().Add(day);
+                //archived Trips
+                GeographicRoute geographicRoute = await _geographicRouteService.GetGeographicRoute(trip.PickupLong, trip.PickupLat, trip.DestinationLong, trip.DestinationLat);
+                uint cost = 0;
+                if (trip.DriverEmail != null )
+                {
+                    List&lt;Bid&gt; bids = await _bidService.GetDriverBidsAsync(trip.DriverEmail);
+                    foreach (Bid bid in bids)
+                    {
+                        if (bid.TripId == trip.Id)
+                        {
+                            cost = bid.CentsAmount; break;
+                        }
+                    }
+                }
+                bool hasDriver = !String.IsNullOrEmpty(trip.DriverEmail);
+                if ( DateTime.Now &gt; pastPlusOne )
+                {
+                    ArchivedRiderTrip archive = new ArchivedRiderTrip();
+                    archive.TripId = trip.Id;
+                    archive.TripName = trip.Name;
+                    archive.StartTime = trip.StartTime;
+                    archive.Thumbnail = geographicRoute.Image;
+                    archive.GeoJson = geographicRoute.GeoJson;
+                    archive.Distance = geographicRoute.Distance;
+                    archive.Duration = geographicRoute.Duration;
+                    archive.HasDriver = hasDriver;
+                    if (archive.HasDriver)
+                    {
+                        archive.Cost = cost;
+                        DriverProfile driver = await _driverProfileService.GetAsync(trip.DriverEmail);
+                        UserCore driverCore = await _userCoreService.GetAsync(trip.DriverEmail);
+                        archive.DriverName = driverCore.Name;
+                        archive.DriverNumRating = driver.NumRatings;
+                        archive.DriverRating = driver.Rating;
+                    }
+                    archive.PickupAddress = trip.PickupAddress;
+                    archive.DestinationAddress = trip.DestinationAddress;
+                    archivedTrips.Add(archive);
+                } else if (hasDriver)
+                {
+                    //confirmed trip
+                    ConfirmedRiderTrip confirmedTrip = new ConfirmedRiderTrip();
+                    DriverProfile driver = await _driverProfileService.GetAsync(trip.DriverEmail);
+                    UserCore driverCore = await _userCoreService.GetAsync(trip.DriverEmail);
+                    confirmedTrip.TripID = trip.Id;
+                    confirmedTrip.TripName = trip.Name;
+                    confirmedTrip.Thumbnail = geographicRoute.Image;
+                    confirmedTrip.GeoJson = geographicRoute.GeoJson;
+                    confirmedTrip.StartTime = trip.StartTime;
+                    confirmedTrip.Distance = geographicRoute.Distance;
+                    confirmedTrip.Duration = geographicRoute.Duration;
+                    confirmedTrip.Cost = cost;
+                    confirmedTrip.DriverName = driverCore.Name;
+                    confirmedTrip.DriverRating = driver.Rating;
+                    confirmedTrip.DriverNumRating = driver.NumRatings;
+                    confirmedTrip.ShowRatingPrompt = !trip.DriverHasBeenRated &amp;&amp; DateTime.Now &gt; trip.StartTime.ToLocalTime() &amp;&amp; DateTime.Now &lt;= pastPlusOne;
+                    confirmedTrip.DriverEmail = driverCore.Email;
+                    confirmedTrip.DriverPhone = driverCore.Phone;
+                    confirmedTrip.DriverCarModel = driver.CarDescription;
+                    confirmedTrip.PickupAddress = trip.PickupAddress;
+                    confirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    confirmedTrips.Add(confirmedTrip);
+                }
+                else
+                {
+                    //unconfirmed trip
+                    UnconfirmedRiderTrip unconfirmedTrip = new UnconfirmedRiderTrip();
+                    unconfirmedTrip.TripID = trip.Id;
+                    unconfirmedTrip.TripName = trip.Name;
+                    unconfirmedTrip.Thumbnail = geographicRoute.Image;
+                    unconfirmedTrip.GeoJson = geographicRoute.GeoJson;
+                    unconfirmedTrip.StartTime = trip.StartTime;
+                    unconfirmedTrip.Distance = geographicRoute.Distance;
+                    unconfirmedTrip.Duration = geographicRoute.Duration;
+                    unconfirmedTrip.Bids = new List&lt;BidUserView&gt;();
+                    List&lt;Bid&gt; tripBids = await _bidService.GetTripBidsAsync(trip.Id);
+                    foreach (Bid tripBid in tripBids)
+                    {
+                        BidUserView bidUserView = new BidUserView();
+                        UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
+                        DriverProfile driver = await _driverProfileService.GetAsync(tripBid.DriverEmail);
+                        bidUserView.BidId = tripBid.Id;
+                        bidUserView.YourBid = false;
+                        bidUserView.DriverName = driverCore.Name;
+                        bidUserView.DriverRating = driver.Rating;
+                        bidUserView.DriverNumRating = driver.NumRatings;
+                        bidUserView.Cost = tripBid.CentsAmount;
+                        unconfirmedTrip.Bids.Add(bidUserView);
+                    }
+                    unconfirmedTrip.PickupAddress = trip.PickupAddress;
+                    unconfirmedTrip.DestinationAddress = trip.DestinationAddress;
+                    unconfirmedTrips.Add(unconfirmedTrip);
+                }
+            }
+            riderDashboard.ConfirmedTrips = confirmedTrips;
+            riderDashboard.TripsInBidding = unconfirmedTrips;
+            riderDashboard.ArchivedTrips = archivedTrips;
+            return Ok(riderDashboard);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route(&quot;modifyAcc&quot;)]
+        public async Task&lt;IActionResult&gt; ModifyAccountDetails([FromBody] RiderUpdate riderUpdate )
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null)
+            {
+                return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            bool changingPassword = !String.IsNullOrEmpty(riderUpdate.NewPassword);
+            if (String.IsNullOrEmpty(riderUpdate.CurrentPassword) &amp;&amp; changingPassword)
+            {
+                return BadRequest(new { Error = &quot;Can&#39;t make a new password&quot; });
+            }
+
+            //check role for error
+            var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            UserCore userCore = await _userCoreService.GetAsync(email);
+
+            if (changingPassword)
+            {
+
+                if (!_userCoreService.ComparePasswordToHash(riderUpdate.CurrentPassword, userCore.PasswordHash,userCore.Salt))
+                {
+                    return BadRequest(new { Error = &quot;Current Password is invalid&quot; });
+                }
+
+            }
+
+            if (changingPassword) {
+                Console.WriteLine(&quot;changing pass&quot;);
+                _userCoreService.CreatePasswordHash(riderUpdate.NewPassword, out var newHash, out var newSalt);
+                userCore.PasswordHash = newHash;
+                userCore.Salt = newSalt;
+            }
+            if (!String.IsNullOrEmpty(riderUpdate.Name))
+            {
+                userCore.Name = riderUpdate.Name;
+            }
+            if (!String.IsNullOrEmpty(riderUpdate.Phone))
+            {
+                userCore.Phone = riderUpdate.Phone;
+            }
+            await _userCoreService.UpdateAsync(email, userCore);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route(&quot;trip&quot;)]
+        public async Task&lt;IActionResult&gt; PostRiderTrip([FromBody] CreateTrip tripDetails)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != &quot;rider&quot;) { return Unauthorized(); };
+
+            if (tripDetails.StartTime.ToLocalTime() &lt; DateTime.Now) { return BadRequest(new { Error = &quot;Start time is in the past&quot; }); };
+
+            if (tripDetails.PartySize is &lt;= 0 or &gt; 10) { return BadRequest(new { Error = &quot;Invalid party size&quot; }); };
+
+            Trip trip = new Trip
+            {
+                RiderEmail = email,
+                Name = tripDetails.Name,
+                StartTime = tripDetails.StartTime,
+                PickupLong = tripDetails.PickupLong,
+                PickupLat = tripDetails.PickupLat,
+                DestinationLong = tripDetails.DestinationLong,
+                DestinationLat = tripDetails.DestinationLat,
+                PickupAddress = tripDetails.PickupAddress,
+                DestinationAddress = tripDetails.DestinationAddress,
+                PartySize = tripDetails.PartySize,
+                RiderHasBeenRated = false,
+                DriverHasBeenRated = false,
+            };
+
+            await _tripService.CreateAsync(trip);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route(&quot;trip&quot;)]
+        public async Task&lt;IActionResult&gt; DeleteRiderTrip([FromQuery] string tripId)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != &quot;rider&quot;) { return Unauthorized(); }
+
+            Trip trip = await _tripService.GetTripByIdAsync(tripId);
+            if (trip == null) { return BadRequest(new { Error = &quot;Trip does not exist&quot; }); }
+            if (trip.RiderEmail != email) { return Unauthorized(); }
+            if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = &quot;Trip has a driver&quot; }); }
+            if (trip.StartTime.ToLocalTime() &lt; DateTime.Now) { return BadRequest(new { Error = &quot;Trip has already started&quot; }); }
+
+            await _tripService.DeleteAsync(tripId);
+            await _bidService.DeleteByTripIdAsync(tripId);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route(&quot;tripDriver&quot;)]
+        public async Task&lt;IActionResult&gt; ConfirmDriver([FromBody] AddTripDriver addTripDriver)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
+
+            var email = currentUser.FindFirstValue(ClaimTypes.Name);
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != &quot;rider&quot;) { return Unauthorized(); }
+
+            Trip trip = await _tripService.GetTripByIdAsync(addTripDriver.TripId);
+            if (trip == null) { return BadRequest(new { Error = &quot;Trip does not exist&quot; }); }
+            if (trip.RiderEmail != email) { return Unauthorized(); }
+            if (!string.IsNullOrEmpty(trip.DriverEmail)) { return BadRequest(new { Error = &quot;Trip already has a driver&quot; }); }
+            if (trip.StartTime.ToLocalTime() &lt; DateTime.Now) { return BadRequest(new { Error = &quot;Trip is in the past and is therefore cancelled&quot; }); }
+
+            var bids = await _bidService.GetTripBidsAsync(addTripDriver.TripId);
+            Bid bid = bids.FirstOrDefault(b =&gt; b.Id == addTripDriver.BidId);
+            if (bid == null) { return BadRequest(new { Error = &quot;Bid does not exist&quot; }); }
+            trip.DriverEmail = bid.DriverEmail;
+            await _tripService.UpdateAsync(addTripDriver.TripId, trip);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route(&quot;rating&quot;)]
+        public async Task&lt;IActionResult&gt; RateDriver([FromBody] GiveRating giveRating)
+        {
+            ClaimsPrincipal currentUser = this.User;
+
+            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
+
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+
+            if (role != &quot;rider&quot;) { return Unauthorized(); }
+
+            var trip = await _tripService.GetTripByIdAsync(giveRating.TripId);
+            if (trip == null) { return BadRequest(new { Error = &quot;Trip does not exist&quot; }); }
+
+            var riderEmail = currentUser.FindFirstValue(ClaimTypes.Name);
+            if (riderEmail != trip.RiderEmail) { return Unauthorized(); }
+
+            var driverEmail = trip.DriverEmail;
+            if (string.IsNullOrEmpty(driverEmail)) { return BadRequest(new { Error = &quot;Trip does not have a driver&quot; }); }
+
+            Console.WriteLine(&quot;Current time: &quot; + DateTime.Now);
+            Console.WriteLine(&quot;Trip start time: &quot; + trip.StartTime);
+            if (trip.StartTime.ToLocalTime() &gt;= DateTime.Now) { return BadRequest(new { Error = &quot;Trip has not been taken yet&quot; }); }
+
+            if (trip.DriverHasBeenRated) { return BadRequest(new { Error = &quot;Driver has already been rated for this trip&quot; }); }
+
+            var driver = await _driverProfileService.GetAsync(driverEmail);
+            if (driver == null) { return BadRequest(new { Error = &quot;Driver does not exist&quot; }); }
+
+            if (driver.Rating == null)
+                driver.Rating = 0;
+            if (driver.NumRatings == null)
+                driver.NumRatings = 0;
+
+            var totalRatings = driver.Rating * (double)driver.NumRatings;
+
+            driver.NumRatings++;
+
+            driver.Rating = (totalRatings + (double)giveRating.RatingGiven) / (double)driver.NumRatings;
+
+            await _driverProfileService.UpdateAsync(driver.Email, driver);
+
+            trip.DriverHasBeenRated = true;
+
+            await _tripService.UpdateAsync(giveRating.TripId, trip);
+            return Ok();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[21,9,21,249,1],[22,9,22,10,1],[23,13,23,56,1],[24,13,24,58,1],[25,13,25,48,1],[26,13,26,40,1],[27,13,27,38,1],[28,13,28,62,1],[29,9,29,10,1],[36,9,36,10,0],[37,13,37,53,0],[38,13,38,37,0],[39,13,39,14,0],[40,17,40,72,0],[42,13,42,69,0],[43,13,43,72,0],[44,13,44,66,0],[45,13,45,49,0],[46,13,46,42,0],[47,13,47,51,0],[48,13,48,39,0],[49,9,49,10,0],[56,9,56,10,0],[57,13,57,53,0],[58,13,58,37,0],[59,13,59,14,0],[60,17,60,72,0],[62,13,62,68,0],[63,13,63,33,0],[64,13,64,14,0],[65,17,65,39,0],[68,13,68,69,0],[69,13,69,72,0],[70,13,70,66,0],[71,13,71,86,0],[72,13,72,92,0],[73,13,73,83,0],[74,13,74,80,0],[75,13,75,20,0],[75,22,75,31,0],[75,32,75,34,0],[75,35,75,43,0],[76,13,76,14,0],[80,17,80,55,0],[81,17,81,78,0],[83,17,83,176,0],[84,17,84,31,0],[85,17,85,47,0],[86,17,86,18,0],[87,21,87,93,0],[88,21,88,28,0],[88,30,88,37,0],[88,38,88,40,0],[88,41,88,45,0],[89,21,89,22,0],[90,25,90,51,0],[91,25,91,26,0],[92,29,92,52,0],[92,53,92,59,0],[94,21,94,22,0],[95,17,95,18,0],[96,17,96,74,0],[97,17,97,50,0],[98,17,98,18,0],[99,21,99,73,0],[100,21,100,46,0],[101,21,101,50,0],[102,21,102,56,0],[103,21,103,63,0],[104,21,104,63,0],[105,21,105,65,0],[106,21,106,65,0],[107,21,107,51,0],[108,21,108,43,0],[109,21,109,22,0],[110,25,110,45,0],[111,25,111,103,0],[112,25,112,97,0],[113,25,113,62,0],[114,25,114,69,0],[115,25,115,62,0],[116,21,116,22,0],[117,21,117,64,0],[118,21,118,74,0],[119,21,119,48,0],[120,17,120,18,0],[120,24,120,38,0],[121,17,121,18,0],[123,21,123,81,0],[124,21,124,99,0],[125,21,125,93,0],[126,21,126,52,0],[127,21,127,56,0],[128,21,128,69,0],[129,21,129,69,0],[130,21,130,62,0],[131,21,131,71,0],[132,21,132,71,0],[133,21,133,47,0],[134,21,134,64,0],[135,21,135,64,0],[136,21,136,71,0],[137,21,137,157,0],[138,21,138,66,0],[139,21,139,66,0],[140,21,140,74,0],[141,21,141,70,0],[142,21,142,80,0],[143,21,143,55,0],[144,17,144,18,0],[146,17,146,18,0],[148,21,148,87,0],[149,21,149,54,0],[150,21,150,58,0],[151,21,151,71,0],[152,21,152,71,0],[153,21,153,64,0],[154,21,154,73,0],[155,21,155,73,0],[156,21,156,68,0],[157,21,157,86,0],[158,21,158,28,0],[158,30,158,41,0],[158,42,158,44,0],[158,45,158,53,0],[159,21,159,22,0],[160,25,160,69,0],[161,25,161,100,0],[162,25,162,106,0],[163,25,163,56,0],[164,25,164,53,0],[165,25,165,66,0],[166,25,166,66,0],[167,25,167,73,0],[168,25,168,64,0],[169,25,169,63,0],[170,21,170,22,0],[171,21,171,72,0],[172,21,172,82,0],[173,21,173,59,0],[174,17,174,18,0],[175,13,175,14,0],[176,13,176,60,0],[177,13,177,62,0],[178,13,178,58,0],[179,13,179,39,0],[180,9,180,10,0],[186,9,186,10,0],[187,13,187,53,0],[189,13,189,37,0],[190,13,190,14,0],[191,17,191,72,0],[193,13,193,84,0],[194,13,194,87,0],[195,13,195,14,0],[196,17,196,80,0],[200,13,200,69,0],[201,13,201,68,0],[202,13,202,72,0],[204,13,204,34,0],[205,13,205,14,0],[207,17,207,127,0],[208,17,208,18,0],[209,21,209,86,0],[212,13,212,14,0],[214,13,214,34,0],[214,35,214,36,0],[215,17,215,52,0],[216,17,216,112,0],[217,17,217,49,0],[218,17,218,41,0],[219,13,219,14,0],[220,13,220,57,0],[221,13,221,14,0],[222,17,222,50,0],[223,13,223,14,0],[224,13,224,58,0],[225,13,225,14,0],[226,17,226,52,0],[227,13,227,14,0],[228,13,228,65,0],[229,13,229,25,0],[230,9,230,10,0],[236,9,236,10,1],[237,13,237,53,1],[239,13,239,37,1],[239,38,239,39,0],[239,40,239,95,0],[239,97,239,98,1],[241,13,241,69,1],[242,13,242,68,1],[244,13,244,33,1],[244,34,244,35,0],[244,36,244,58,0],[244,60,244,61,1],[246,13,246,68,1],[246,69,246,70,1],[246,71,246,134,1],[246,136,246,137,1],[248,13,248,55,1],[248,56,248,57,1],[248,58,248,114,1],[248,116,248,117,1],[250,13,264,15,1],[266,13,266,50,1],[267,13,267,25,1],[268,9,268,10,1],[274,9,274,10,1],[275,13,275,53,1],[277,13,277,37,1],[277,38,277,39,0],[277,40,277,95,0],[277,97,277,98,1],[279,13,279,69,1],[280,13,280,68,1],[282,13,282,33,1],[282,34,282,35,1],[282,36,282,58,1],[284,13,284,69,1],[285,13,285,30,1],[285,31,285,32,0],[285,33,285,90,0],[286,13,286,42,1],[286,43,286,44,1],[286,45,286,67,1],[287,13,287,57,1],[287,58,287,59,1],[287,60,287,115,1],[288,13,288,61,1],[288,62,288,63,1],[288,64,288,126,1],[290,13,290,52,1],[291,13,291,59,1],[292,13,292,25,1],[293,9,293,10,1],[299,9,299,10,1],[300,13,300,53,1],[302,13,302,37,1],[302,38,302,39,0],[302,40,302,95,0],[302,97,302,98,1],[304,13,304,69,1],[305,13,305,68,1],[307,13,307,33,1],[307,34,307,35,1],[307,36,307,58,1],[309,13,309,83,1],[310,13,310,30,1],[310,31,310,32,1],[310,33,310,90,1],[311,13,311,42,1],[311,43,311,44,1],[311,45,311,67,1],[312,13,312,57,1],[312,58,312,59,0],[312,60,312,123,0],[313,13,313,61,1],[313,62,313,63,1],[313,64,313,148,1],[315,13,315,81,1],[316,13,316,48,1],[316,48,316,75,1],[316,75,316,77,1],[317,13,317,29,1],[317,30,317,31,1],[317,32,317,88,1],[318,13,318,48,1],[319,13,319,72,1],[320,13,320,25,1],[321,9,321,10,1],[327,9,327,10,1],[328,13,328,53,1],[330,13,330,37,1],[330,38,330,39,0],[330,40,330,95,0],[330,97,330,98,1],[332,13,332,68,1],[334,13,334,33,1],[334,34,334,35,0],[334,36,334,58,0],[336,13,336,79,1],[337,13,337,30,1],[337,31,337,32,0],[337,33,337,90,0],[339,13,339,74,1],[340,13,340,47,1],[340,48,340,49,0],[340,50,340,72,0],[342,13,342,48,1],[343,13,343,51,1],[343,52,343,53,0],[343,54,343,119,0],[345,13,345,64,1],[346,13,346,69,1],[347,13,347,62,1],[347,63,347,64,0],[347,65,347,130,0],[349,13,349,41,1],[349,42,349,43,0],[349,44,349,125,0],[351,13,351,76,1],[352,13,352,32,1],[352,33,352,34,0],[352,35,352,94,0],[354,13,354,39,1],[355,17,355,35,0],[356,13,356,43,1],[357,17,357,39,0],[359,13,359,74,1],[361,13,361,33,1],[363,13,363,105,1],[365,13,365,75,1],[367,13,367,44,1],[369,13,369,69,1],[370,13,370,25,1],[371,9,371,10,1]]);
+    </script>
+  </body>
+</html>

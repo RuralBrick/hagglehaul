@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Models/GeographicRoute.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace hagglehaul.Server.Models;
+
+[BsonIgnoreExtraElements]
+public class GeographicRoute
+{
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? Id { get; set; }
+
+    [BsonElement(&quot;routeDescriptor&quot;)]
+    public string RouteDescriptor { get; set; } = null!;
+    
+    [BsonElement(&quot;image&quot;)]
+    public byte[] Image { get; set; } = null!;
+    
+    [BsonElement(&quot;distance&quot;)]
+    public double? Distance { get; set; } = null!;
+    
+    [BsonElement(&quot;duration&quot;)]
+    public double? Duration { get; set; } = null!;
+    
+    [BsonElement(&quot;geoJson&quot;)]
+    public string GeoJson { get; set; } = null!;
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,25,11,29,0],[11,30,11,34,0],[14,37,14,41,0],[14,42,14,46,0],[14,51,14,56,1],[17,27,17,31,1],[17,32,17,36,0],[17,41,17,46,1],[20,31,20,35,1],[20,36,20,40,1],[20,45,20,50,1],[23,31,23,35,1],[23,36,23,40,0],[23,45,23,50,1],[26,29,26,33,1],[26,34,26,38,0],[26,43,26,48,1]]);
+    </script>
+  </body>
+</html>

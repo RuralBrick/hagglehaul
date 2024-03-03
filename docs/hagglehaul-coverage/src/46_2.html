@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Services/EmailNotificationService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using Azure;
+using Azure.Communication.Email;
+using hagglehaul.Server.Models;
+using Microsoft.Extensions.Options;
+using Razor.Templating.Core;
+
+namespace hagglehaul.Server.Services;
+
+public enum EmailNotificationType
+{
+    NewBid, // Notify rider when a new bid is placed
+    AcceptedBid, // Notify driver when their bid is accepted
+    Confirmation, // Notify rider with next steps after bid is accepted
+}
+
+public interface IEmailNotificationService
+{
+    Task SendEmailNotification(EmailNotificationType type, string recipient, dynamic data);
+}
+
+public class EmailNotificationService : IEmailNotificationService
+{
+    private readonly EmailSettings _emailSettings;
+    private EmailClient _emailClient;
+    public EmailNotificationService(IOptions&lt;EmailSettings&gt; emailSettings)
+    {
+        _emailSettings = emailSettings.Value;
+        _emailClient = new EmailClient(_emailSettings.ConnectionString);
+    }
+    
+    protected Dictionary&lt;EmailNotificationType, string&gt; _emailTemplates = new()
+    {
+        { EmailNotificationType.NewBid, &quot;EmailViews/NewBidEmail.cshtml&quot; },
+        { EmailNotificationType.AcceptedBid, &quot;EmailViews/AcceptedBidEmail.cshtml&quot; },
+        { EmailNotificationType.Confirmation, &quot;EmailViews/ConfirmationEmail.cshtml&quot; },
+    };
+    
+    protected Dictionary&lt;EmailNotificationType, string&gt; _subjectLines = new()
+    {
+        { EmailNotificationType.NewBid, &quot;Hagglehaul Trip: You have a new bid&quot; },
+        { EmailNotificationType.AcceptedBid, &quot;Hagglehaul Driver Management: Your bid has been accepted&quot; },
+        { EmailNotificationType.Confirmation, &quot;Hagglehaul Trip: Ride Confirmation&quot; },
+    };
+
+    public async Task SendEmailNotification(EmailNotificationType type, string recipient, dynamic data)
+    {
+        var htmlContent = await RazorTemplateEngine.RenderAsync(_emailTemplates[type], data);
+        EmailSendOperation emailSendOperation = _emailClient.Send(
+            WaitUntil.Started,
+            senderAddress: _emailSettings.SenderAddress,
+            recipientAddress: recipient,
+            subject: _subjectLines[type],
+            htmlContent: htmlContent
+        );
+        await emailSendOperation.WaitForCompletionAsync();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,5,25,75,0],[26,5,26,6,0],[27,9,27,46,0],[28,9,28,73,0],[29,5,29,6,0],[31,5,36,7,0],[38,5,43,7,0],[46,5,46,6,0],[47,9,47,94,0],[48,9,54,11,0],[55,9,55,59,0],[56,5,56,6,0]]);
+    </script>
+  </body>
+</html>

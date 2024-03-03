@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server/Controllers/AuthenticationController.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using hagglehaul.Server.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using hagglehaul.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+
+namespace hagglehaul.Server.Controllers
+{
+    [ApiController]
+    [Route(&quot;api/[controller]&quot;)]
+    public class AuthenticationController : ControllerBase
+    {
+        private readonly IOptions&lt;JwtSettings&gt; _settings;
+        private readonly IUserCoreService _userCoreService;
+        private readonly IRiderProfileService _riderProfileService;
+        private readonly IDriverProfileService _driverProfileService;
+
+        public AuthenticationController(
+            IOptions&lt;JwtSettings&gt; settings,
+            IUserCoreService userCoreService,
+            IRiderProfileService riderProfileService,
+            IDriverProfileService driverProfileService
+        )
+        {
+            _settings = settings;
+            _userCoreService = userCoreService;
+            _riderProfileService = riderProfileService;
+            _driverProfileService = driverProfileService;
+        }
+
+        [HttpPost]
+        [Route(&quot;register&quot;)]
+        public async Task&lt;IActionResult&gt; Register([FromBody] Register model)
+        {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Password) ||
+                string.IsNullOrEmpty(model.Role))
+                return BadRequest(new { Error = &quot;One or more fields are empty&quot; });
+            
+            var existingUser = await _userCoreService.GetAsync(model.Email);
+            if (existingUser is not null)
+                return BadRequest(new { Error = &quot;User already exists&quot; });
+
+            if (model.Role != &quot;rider&quot; &amp;&amp; model.Role != &quot;driver&quot;)
+                return BadRequest(new { Error = &quot;Role must either be \&quot;rider\&quot; or \&quot;driver\&quot;&quot; });
+
+            _userCoreService.CreatePasswordHash(model.Password, out var hash, out var salt);
+            var userCore = new UserCore
+            {
+                Email = model.Email,
+                PasswordHash = hash,
+                Salt = salt,
+                Role = model.Role
+            };
+
+            await _userCoreService.CreateAsync(userCore);
+
+            if (model.Role == &quot;rider&quot;)
+            {
+                var riderProfile = new RiderProfile
+                {
+                    Email = model.Email,
+                    NumRatings = 0
+                };
+                await _riderProfileService.CreateAsync(riderProfile);
+            }
+            else
+            {
+                var driverProfile = new DriverProfile
+                {
+                    Email = model.Email,
+                    NumRatings = 0
+                };
+                await _driverProfileService.CreateAsync(driverProfile);
+            }
+
+            return await Login(new Login { Email = model.Email, Password = model.Password });
+        }
+
+        [HttpPost]
+        [Route(&quot;login&quot;)]
+        public async Task&lt;IActionResult&gt; Login([FromBody] Login model)
+        {
+            if (string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.Password))
+                return BadRequest(new { Error = &quot;One or more fields are empty&quot; });
+            
+            var userCore = await _userCoreService.GetAsync(model.Email);
+
+            if (userCore is not null &amp;&amp;
+                _userCoreService.ComparePasswordToHash(model.Password, userCore.PasswordHash, userCore.Salt)
+                )
+            {
+                var authClaims = new List&lt;Claim&gt;
+                {
+                    new Claim(ClaimTypes.Name, model.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                };
+
+                authClaims.Add(new Claim(ClaimTypes.Role, userCore.Role));
+
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Value.Secret));
+
+                var token = new JwtSecurityToken(
+                    issuer: _settings.Value.ValidIssuer,
+                    audience: _settings.Value.ValidAudience,
+                    expires: DateTime.Now.AddHours(3),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                    );
+
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    expiration = token.ValidTo
+                });
+            }
+            return Unauthorized();
+        }
+        
+        [HttpGet]
+        [Route(&quot;role&quot;)]
+        [Authorize]
+        public async Task&lt;String&gt; Role()
+        {
+            ClaimsPrincipal currentUser = this.User;
+            return currentUser.FindFirstValue(ClaimTypes.Role);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,30,10,0],[31,9,31,10,0],[32,13,32,34,0],[33,13,33,48,0],[34,13,34,56,0],[35,13,35,58,0],[36,9,36,10,0],[41,9,41,10,0],[42,13,44,50,0],[45,17,45,83,0],[47,13,47,77,0],[48,13,48,42,0],[49,17,49,74,0],[51,13,51,65,0],[52,17,52,98,0],[54,13,54,93,0],[55,13,61,15,0],[63,13,63,58,0],[65,13,65,39,0],[66,13,66,14,0],[67,17,71,19,0],[72,17,72,70,0],[73,13,73,14,0],[75,13,75,14,0],[76,17,80,19,0],[81,17,81,72,0],[82,13,82,14,0],[84,13,84,94,0],[85,9,85,10,0],[90,9,90,10,0],[91,13,92,54,0],[93,17,93,83,0],[95,13,95,73,0],[97,13,99,18,0],[100,13,100,14,0],[101,17,105,19,0],[107,17,107,75,0],[109,17,109,111,0],[111,17,117,23,0],[119,17,123,20,0],[125,13,125,35,0],[126,9,126,10,0],[132,9,132,10,0],[133,13,133,53,0],[134,13,134,64,0],[135,9,135,10,0]]);
+    </script>
+  </body>
+</html>
