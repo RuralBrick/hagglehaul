@@ -57,8 +57,8 @@
 
         <p>Dear <strong>@Model.RiderName</strong>,</p>
         <p>Your trip <strong>@Model.TripName</strong> has been confirmed.</p>
-        <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating ⭐)</p>
-        <p><strong>Price:</strong> $@Model.Price</p>
+        <p><strong>Driver:</strong> @Model.DriverName (@Model.DriverRating)</p>
+        <p><strong>Price:</strong> @Model.Price</p>
         <p><strong>Driver Phone:</strong> @Model.DriverPhone</p>
         <p><strong>Driver Email:</strong> @Model.DriverEmail</p>
         <p><strong>Pickup Time:</strong> @Model.StartTime.ToString("MM/dd/yyyy") at @Model.StartTime.ToString("h:mm tt")</p>

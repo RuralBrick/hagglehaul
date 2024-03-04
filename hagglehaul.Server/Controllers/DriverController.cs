@@ -323,7 +323,7 @@ namespace hagglehaul.Server.Controllers
                     TripName = trip.Name,
                     DriverName = driverUser.Name,
                     DriverRating = driverProfile.Rating,
-                    Price = request.CentsAmount,
+                    Price = (decimal)(request.CentsAmount / 100.0),
                     StartTime = trip.StartTime,
                     PickupAddress = trip.PickupAddress,
                     DestinationAddress = trip.DestinationAddress,
