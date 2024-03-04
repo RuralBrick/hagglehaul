@@ -305,7 +305,53 @@ namespace hagglehaul.Tests.ControllerTests
             )!.ReturnsAsync((string s) =>
                 HhTestUtilities.GetBidData(2, false).ToList()
             );
-            
+
+            // _mockUserCoreService.Setup(
+            //     x => x.GetAsync(It.IsAny<string>())
+            // )!.ReturnsAsync(
+            //     (string s) => (
+            //         s == "rider@example.com" ?
+            //         new UserCore
+            //         {
+            //             Email = "rider@example.com",
+            //             Phone = "1-800-RIDENOW",
+            //             Name = "Beedeebeedee",
+            //         } :
+            //         new UserCore
+            //         {
+            //             Email = "driver@example.com",
+            //             Phone = "1-800-THISCAR",
+            //             Name = "Doobeedoobee",
+            //         }
+            //     )
+            // );
+
+            // _mockDriverProfileService.Setup(
+            //     x => x.GetAsync(It.IsAny<string>())
+            // )!.ReturnsAsync(
+            //     (string email) => new DriverProfile
+            //     {
+            //         Email = "driver@example.com",
+            //         Rating = 4.20,
+            //     }
+            // );
+
+            // ConfirmationEmail sentRiderEmail = new ConfirmationEmail();
+            // AcceptedBidEmail sentDriverEmail = new AcceptedBidEmail();
+            // _mockEmailNotificationService.Setup(
+            //     x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<dynamic>())
+            // )!.Callback(
+            //     (EmailNotificationType _, string email, dynamic emailModel) =>
+            //     {
+            //         if (email == "rider@example.com")
+            //             sentRiderEmail = emailModel as ConfirmationEmail;
+            //         else if (email == "driver@example.com")
+            //             sentDriverEmail = emailModel as AcceptedBidEmail;
+            //         else
+            //             Assert.Fail($"Email {email} not rider@example.com or driver@example.com");
+            //     }
+            // )
+
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Name, "rider@example.com"),
