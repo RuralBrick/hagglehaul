@@ -19,7 +19,8 @@ public class DriverControllerTests
     private Mock<ITripService> _mockTripService;
     private Mock<IBidService> _mockBidService;
     private Mock<IGeographicRouteService> _mockGeographicRouteService;
-    
+    private Mock<IEmailNotificationService> _mockEmailNotificationService;
+
     private DriverController _controller;
     
     [OneTimeSetUp]
@@ -31,8 +32,17 @@ public class DriverControllerTests
         _mockTripService = new Mock<ITripService>();
         _mockBidService = new Mock<IBidService>();
         _mockGeographicRouteService = new Mock<IGeographicRouteService>();
-        
-        _controller = new DriverController(_mockDriverProfileService.Object, _mockRiderProfileService.Object, _mockUserCoreService.Object, _mockTripService.Object, _mockBidService.Object, _mockGeographicRouteService.Object);
+        _mockEmailNotificationService = new Mock<IEmailNotificationService>();
+
+        _controller = new DriverController(
+            _mockDriverProfileService.Object,
+            _mockRiderProfileService.Object,
+            _mockUserCoreService.Object,
+            _mockTripService.Object,
+            _mockBidService.Object,
+            _mockGeographicRouteService.Object,
+            _mockEmailNotificationService.Object
+        );
     }
     
     [SetUp]

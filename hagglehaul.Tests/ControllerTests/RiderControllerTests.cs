@@ -23,6 +23,7 @@ namespace hagglehaul.Tests.ControllerTests
         private Mock<ITripService> _mockTripService;
         private Mock<IBidService> _mockBidService;
         private Mock<IGeographicRouteService> _mockGeographicRouteService;
+        private Mock<IEmailNotificationService> _mockEmailNotificationService;
 
         private RiderController _controller;
 
@@ -35,6 +36,7 @@ namespace hagglehaul.Tests.ControllerTests
             _mockTripService = new Mock<ITripService>();
             _mockBidService = new Mock<IBidService>();
             _mockGeographicRouteService = new Mock<IGeographicRouteService>();
+            _mockEmailNotificationService = new Mock<IEmailNotificationService>();
 
             _controller = new RiderController(
                 _mockRiderProfileService.Object,
@@ -42,7 +44,8 @@ namespace hagglehaul.Tests.ControllerTests
                 _mockUserCoreService.Object,
                 _mockTripService.Object,
                 _mockBidService.Object,
-                _mockGeographicRouteService.Object
+                _mockGeographicRouteService.Object,
+                _mockEmailNotificationService.Object
             );
         }
 
