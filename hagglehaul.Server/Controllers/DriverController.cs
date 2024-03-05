@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using hagglehaul.Server.EmailViews;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -18,8 +19,17 @@ namespace hagglehaul.Server.Controllers
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
         private readonly IGeographicRouteService _geographicRouteService;
+        private readonly IEmailNotificationService _emailNotificationService;
 
-        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
+        public DriverController(
+            IDriverProfileService driverProfileService,
+            IRiderProfileService riderProfileService,
+            IUserCoreService userCoreService,
+            ITripService tripService,
+            IBidService bidService,
+            IGeographicRouteService geographicRouteService,
+            IEmailNotificationService emailNotificationService
+        )
         {
             _driverProfileService = driverProfileService;
             _riderProfileService = riderProfileService;
@@ -27,6 +37,7 @@ namespace hagglehaul.Server.Controllers
             _tripService = tripService;
             _bidService = bidService;
             _geographicRouteService = geographicRouteService;
+            _emailNotificationService = emailNotificationService;
         }
 
         [Authorize]
@@ -299,6 +310,26 @@ namespace hagglehaul.Server.Controllers
                     CentsAmount = request.CentsAmount
                 });
             }
+
+            UserCore riderUser = await _userCoreService.GetAsync(trip.RiderEmail);
+            UserCore driverUser = await _userCoreService.GetAsync(username);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(username);
+            _ = _emailNotificationService.SendEmailNotification(
+                EmailNotificationType.NewBid,
+                trip.RiderEmail,
+                new NewBidEmail
+                {
+                    RiderName = riderUser.Name,
+                    TripName = trip.Name,
+                    DriverName = driverUser.Name,
+                    DriverRating = driverProfile.Rating,
+                    Price = (decimal)(request.CentsAmount / 100.0),
+                    StartTime = trip.StartTime,
+                    PickupAddress = trip.PickupAddress,
+                    DestinationAddress = trip.DestinationAddress,
+                    RiderEmail = trip.RiderEmail,
+                }
+            );
 
             return Ok();
         }

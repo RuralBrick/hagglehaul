@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using Azure.Core;
 using hagglehaul.Server.Controllers;
+using hagglehaul.Server.EmailViews;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using hagglehaul.Tests.SharedHelpers;
@@ -19,7 +20,8 @@ public class DriverControllerTests
     private Mock<ITripService> _mockTripService;
     private Mock<IBidService> _mockBidService;
     private Mock<IGeographicRouteService> _mockGeographicRouteService;
-    
+    private Mock<IEmailNotificationService> _mockEmailNotificationService;
+
     private DriverController _controller;
     
     [OneTimeSetUp]
@@ -31,8 +33,17 @@ public class DriverControllerTests
         _mockTripService = new Mock<ITripService>();
         _mockBidService = new Mock<IBidService>();
         _mockGeographicRouteService = new Mock<IGeographicRouteService>();
-        
-        _controller = new DriverController(_mockDriverProfileService.Object, _mockRiderProfileService.Object, _mockUserCoreService.Object, _mockTripService.Object, _mockBidService.Object, _mockGeographicRouteService.Object);
+        _mockEmailNotificationService = new Mock<IEmailNotificationService>();
+
+        _controller = new DriverController(
+            _mockDriverProfileService.Object,
+            _mockRiderProfileService.Object,
+            _mockUserCoreService.Object,
+            _mockTripService.Object,
+            _mockBidService.Object,
+            _mockGeographicRouteService.Object,
+            _mockEmailNotificationService.Object
+        );
     }
     
     [SetUp]
@@ -44,6 +55,7 @@ public class DriverControllerTests
         _mockTripService.Reset();
         _mockBidService.Reset();
         _mockGeographicRouteService.Reset();
+        _mockEmailNotificationService.Reset();
     }
 
     [Test]
@@ -517,10 +529,15 @@ public class DriverControllerTests
     [Test]
     public async Task DriverControllerCreateBidTest()
     {
+        var trip = new Trip();
         _mockTripService.Setup(
             x => x.GetTripByIdAsync(It.IsAny<string>())
         )!.ReturnsAsync(
-            (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
+            (string s) =>
+            {
+                trip = HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s);
+                return trip;
+            }
         );
         
         _mockBidService.Setup(
@@ -533,6 +550,48 @@ public class DriverControllerTests
         _mockBidService.Setup(
             x => x.CreateAsync(It.IsAny<Bid>())
         )!.Callback<Bid>((Bid b) => saveBid = b);
+
+        _mockUserCoreService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => (
+                s == "rider@example.com" ?
+                new UserCore
+                {
+                    Email = "rider@example.com",
+                    Phone = "1-800-RIDENOW",
+                    Name = "Eebeedeebee",
+                } :
+                new UserCore
+                {
+                    Email = "driver@example.com",
+                    Phone = "1-800-THISCAR",
+                    Name = "Doobeedooba",
+                }
+            )
+        );
+
+        _mockDriverProfileService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string email) => new DriverProfile
+            {
+                Email = "driver@example.com",
+                Rating = 4.20,
+            }
+        );
+
+        string emailAddressed = String.Empty;
+        NewBidEmail sentEmail = new NewBidEmail();
+        _mockEmailNotificationService.Setup(
+            x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<NewBidEmail>())
+        )!.Callback(
+            (EmailNotificationType _, string email, dynamic emailModel) =>
+            {
+                emailAddressed = email;
+                sentEmail = emailModel as NewBidEmail;
+            }
+        );
 
         var request = new CreateOrUpdateBid
         {
@@ -553,9 +612,22 @@ public class DriverControllerTests
         
         Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Once());
-        
+        _mockUserCoreService.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Exactly(2));
+        _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Exactly(1));
+        _mockEmailNotificationService.Verify(x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<NewBidEmail>()), Times.Exactly(1));
+
         Assert.That(saveBid.TripId, Is.EqualTo(request.TripId));
         Assert.That(saveBid.CentsAmount, Is.EqualTo(request.CentsAmount));
+        Assert.That(emailAddressed, Is.EqualTo("rider@example.com"));
+        Assert.That(sentEmail.RiderName, Is.EqualTo("Eebeedeebee"));
+        Assert.That(sentEmail.TripName, Is.EqualTo("MyTrip1"));
+        Assert.That(sentEmail.DriverName, Is.EqualTo("Doobeedooba"));
+        Assert.That(sentEmail.DriverRating, Is.EqualTo(4.20));
+        Assert.That(sentEmail.Price, Is.EqualTo(1.00));
+        Assert.That(sentEmail.StartTime, Is.EqualTo(trip.StartTime));
+        Assert.That(sentEmail.PickupAddress, Is.EqualTo("123 Main St"));
+        Assert.That(sentEmail.DestinationAddress, Is.EqualTo("456 Elm St"));
+        Assert.That(sentEmail.RiderEmail, Is.EqualTo("rider@example.com"));
     }
     
     [Test]
@@ -719,10 +791,15 @@ public class DriverControllerTests
     [Test]
     public async Task DriverControllerCanUpdateBidTest()
     {
+        var trip = new Trip();
         _mockTripService.Setup(
             x => x.GetTripByIdAsync(It.IsAny<string>())
         )!.ReturnsAsync(
-            (string s) => HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s)
+            (string s) =>
+            {
+                trip = HhTestUtilities.GetTripData().FirstOrDefault(trip => trip.Id == s);
+                return trip;
+            }
         );
         
         _mockBidService.Setup(
@@ -740,6 +817,48 @@ public class DriverControllerTests
             saveId = id;
             saveBid = b;
         });
+
+        _mockUserCoreService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string s) => (
+                s == "rider@example.com" ?
+                new UserCore
+                {
+                    Email = "rider@example.com",
+                    Phone = "1-800-RIDENOW",
+                    Name = "Eebeedeebee",
+                } :
+                new UserCore
+                {
+                    Email = "driver@example.com",
+                    Phone = "1-800-THISCAR",
+                    Name = "Doobeedooba",
+                }
+            )
+        );
+
+        _mockDriverProfileService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+        )!.ReturnsAsync(
+            (string email) => new DriverProfile
+            {
+                Email = "driver@example.com",
+                Rating = 4.20,
+            }
+        );
+
+        string emailAddressed = String.Empty;
+        NewBidEmail sentEmail = new NewBidEmail();
+        _mockEmailNotificationService.Setup(
+            x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<NewBidEmail>())
+        )!.Callback(
+            (EmailNotificationType _, string email, dynamic emailModel) =>
+            {
+                emailAddressed = email;
+                sentEmail = emailModel as NewBidEmail;
+            }
+        );
 
         var request = new CreateOrUpdateBid
         {
@@ -765,13 +884,36 @@ public class DriverControllerTests
         Assert.That(saveId, Is.EqualTo(request.TripId));
         Assert.That(saveBid.TripId, Is.EqualTo(request.TripId));
         Assert.That(saveBid.CentsAmount, Is.EqualTo(request.CentsAmount));
-        
+        Assert.That(emailAddressed, Is.EqualTo("rider@example.com"));
+        Assert.That(sentEmail.RiderName, Is.EqualTo("Eebeedeebee"));
+        Assert.That(sentEmail.TripName, Is.EqualTo("MyTrip1"));
+        Assert.That(sentEmail.DriverName, Is.EqualTo("Doobeedooba"));
+        Assert.That(sentEmail.DriverRating, Is.EqualTo(4.20));
+        Assert.That(sentEmail.Price, Is.EqualTo(1.01));
+        Assert.That(sentEmail.StartTime, Is.EqualTo(trip.StartTime));
+        Assert.That(sentEmail.PickupAddress, Is.EqualTo("123 Main St"));
+        Assert.That(sentEmail.DestinationAddress, Is.EqualTo("456 Elm St"));
+        Assert.That(sentEmail.RiderEmail, Is.EqualTo("rider@example.com"));
+
         // Create a new bid
         request.TripId = new StringBuilder().Insert(0, "2", 24).ToString();
         Assert.That(await _controller.CreateOrUpdateBid(request), Is.InstanceOf<OkResult>());
         _mockBidService.Verify(x => x.CreateAsync(It.IsAny<Bid>()), Times.Once());
         // Update was not called any further
-        _mockBidService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Bid>()), Times.Once());
+        Assert.That(emailAddressed, Is.EqualTo("rider@example.com"));
+        Assert.That(sentEmail.RiderName, Is.EqualTo("Eebeedeebee"));
+        Assert.That(sentEmail.TripName, Is.EqualTo("MyTrip2"));
+        Assert.That(sentEmail.DriverName, Is.EqualTo("Doobeedooba"));
+        Assert.That(sentEmail.DriverRating, Is.EqualTo(4.20));
+        Assert.That(sentEmail.Price, Is.EqualTo(1.01));
+        Assert.That(sentEmail.StartTime, Is.EqualTo(trip.StartTime));
+        Assert.That(sentEmail.PickupAddress, Is.EqualTo("123 Main St"));
+        Assert.That(sentEmail.DestinationAddress, Is.EqualTo("456 Elm St"));
+        Assert.That(sentEmail.RiderEmail, Is.EqualTo("rider@example.com"));
+
+        _mockUserCoreService.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Exactly(4));
+        _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Exactly(2));
+        _mockEmailNotificationService.Verify(x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<NewBidEmail>()), Times.Exactly(2));
     }
 
     [Test]
