@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using hagglehaul.Server.Controllers;
+using hagglehaul.Server.EmailViews;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using hagglehaul.Tests.SharedHelpers;
@@ -287,10 +288,12 @@ namespace hagglehaul.Tests.ControllerTests
         [Test]
         public async Task RiderConfirmDriverTest()
         {
+            var trip = HhTestUtilities.GetTripData(1, false, false).FirstOrDefault();
             _mockTripService.Setup(
                 x => x.GetTripByIdAsync(It.IsAny<String>())
-            )!.ReturnsAsync((string s) =>
-                HhTestUtilities.GetTripData(1, false, false).FirstOrDefault());
+            )!.ReturnsAsync(
+                (string s) => trip
+            );
 
             _mockTripService.Setup(
                 x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>())
@@ -306,51 +309,51 @@ namespace hagglehaul.Tests.ControllerTests
                 HhTestUtilities.GetBidData(2, false).ToList()
             );
 
-            // _mockUserCoreService.Setup(
-            //     x => x.GetAsync(It.IsAny<string>())
-            // )!.ReturnsAsync(
-            //     (string s) => (
-            //         s == "rider@example.com" ?
-            //         new UserCore
-            //         {
-            //             Email = "rider@example.com",
-            //             Phone = "1-800-RIDENOW",
-            //             Name = "Beedeebeedee",
-            //         } :
-            //         new UserCore
-            //         {
-            //             Email = "driver@example.com",
-            //             Phone = "1-800-THISCAR",
-            //             Name = "Doobeedoobee",
-            //         }
-            //     )
-            // );
+            _mockUserCoreService.Setup(
+                x => x.GetAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) => (
+                    s == "rider@example.com" ?
+                    new UserCore
+                    {
+                        Email = "rider@example.com",
+                        Phone = "1-800-RIDENOW",
+                        Name = "Eebeedeebee",
+                    } :
+                    new UserCore
+                    {
+                        Email = "driver@example.com",
+                        Phone = "1-800-THISCAR",
+                        Name = "Doobeedooba",
+                    }
+                )
+            );
 
-            // _mockDriverProfileService.Setup(
-            //     x => x.GetAsync(It.IsAny<string>())
-            // )!.ReturnsAsync(
-            //     (string email) => new DriverProfile
-            //     {
-            //         Email = "driver@example.com",
-            //         Rating = 4.20,
-            //     }
-            // );
+            _mockDriverProfileService.Setup(
+                x => x.GetAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string email) => new DriverProfile
+                {
+                    Email = "driver@example.com",
+                    Rating = 4.20,
+                }
+            );
 
-            // ConfirmationEmail sentRiderEmail = new ConfirmationEmail();
-            // AcceptedBidEmail sentDriverEmail = new AcceptedBidEmail();
-            // _mockEmailNotificationService.Setup(
-            //     x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<dynamic>())
-            // )!.Callback(
-            //     (EmailNotificationType _, string email, dynamic emailModel) =>
-            //     {
-            //         if (email == "rider@example.com")
-            //             sentRiderEmail = emailModel as ConfirmationEmail;
-            //         else if (email == "driver@example.com")
-            //             sentDriverEmail = emailModel as AcceptedBidEmail;
-            //         else
-            //             Assert.Fail($"Email {email} not rider@example.com or driver@example.com");
-            //     }
-            // )
+            ConfirmationEmail sentRiderEmail = new ConfirmationEmail();
+            AcceptedBidEmail sentDriverEmail = new AcceptedBidEmail();
+            _mockEmailNotificationService.Setup(
+                x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<object>())
+            )!.Callback(
+                (EmailNotificationType _, string email, dynamic emailModel) =>
+                {
+                    if (email == "rider@example.com")
+                        sentRiderEmail = emailModel as ConfirmationEmail;
+                    else if (email == "driver@example.com")
+                        sentDriverEmail = emailModel as AcceptedBidEmail;
+                    else
+                        Assert.Fail($"Email {email} not rider@example.com or driver@example.com");
+                }
+            );
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -371,6 +374,33 @@ namespace hagglehaul.Tests.ControllerTests
             _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Once());
             _mockTripService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<Trip>()), Times.Once());
             _mockBidService.Verify(x => x.GetTripBidsAsync(It.IsAny<String>()), Times.Once());
+            _mockUserCoreService.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Exactly(2));
+            _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<string>()), Times.Once());
+            _mockEmailNotificationService.Verify(x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<ConfirmationEmail>()), Times.Once());
+            _mockEmailNotificationService.Verify(x => x.SendEmailNotification(It.IsAny<EmailNotificationType>(), It.IsAny<string>(), It.IsAny<AcceptedBidEmail>()), Times.Once());
+
+            Assert.That(sentRiderEmail.RiderName, Is.EqualTo("Eebeedeebee"));
+            Assert.That(sentRiderEmail.TripName, Is.EqualTo("MyTrip1"));
+            Assert.That(sentRiderEmail.DriverName, Is.EqualTo("Doobeedooba"));
+            Assert.That(sentRiderEmail.DriverRating, Is.EqualTo(4.20));
+            Assert.That(sentRiderEmail.Price, Is.EqualTo(1.00));
+            Assert.That(sentRiderEmail.DriverPhone, Is.EqualTo("1-800-THISCAR"));
+            Assert.That(sentRiderEmail.DriverEmail, Is.EqualTo("driver@example.com"));
+            Assert.That(sentRiderEmail.StartTime, Is.EqualTo(trip.StartTime));
+            Assert.That(sentRiderEmail.PickupAddress, Is.EqualTo("123 Main St"));
+            Assert.That(sentRiderEmail.DestinationAddress, Is.EqualTo("456 Elm St"));
+            Assert.That(sentRiderEmail.RiderEmail, Is.EqualTo("rider@example.com"));
+
+            Assert.That(sentDriverEmail.DriverName, Is.EqualTo("Doobeedooba"));
+            Assert.That(sentDriverEmail.TripName, Is.EqualTo("MyTrip1"));
+            Assert.That(sentDriverEmail.Price, Is.EqualTo(1.00));
+            Assert.That(sentDriverEmail.RiderName, Is.EqualTo("Eebeedeebee"));
+            Assert.That(sentDriverEmail.RiderPhone, Is.EqualTo("1-800-RIDENOW"));
+            Assert.That(sentDriverEmail.RiderEmail, Is.EqualTo("rider@example.com"));
+            Assert.That(sentDriverEmail.StartTime, Is.EqualTo(trip.StartTime));
+            Assert.That(sentDriverEmail.PickupAddress, Is.EqualTo("123 Main St"));
+            Assert.That(sentDriverEmail.DestinationAddress, Is.EqualTo("456 Elm St"));
+            Assert.That(sentDriverEmail.DriverEmail, Is.EqualTo("driver@example.com"));
         }
         
         [Test]
