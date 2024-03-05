@@ -55,8 +55,11 @@ namespace hagglehaul.Tests.ControllerTests
         {
             _mockRiderProfileService.Reset();
             _mockDriverProfileService.Reset();
+            _mockUserCoreService.Reset();
             _mockTripService.Reset();
             _mockBidService.Reset();
+            _mockGeographicRouteService.Reset();
+            _mockEmailNotificationService.Reset();
         }
 
         [Test]

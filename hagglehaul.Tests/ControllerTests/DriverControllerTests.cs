@@ -55,6 +55,7 @@ public class DriverControllerTests
         _mockTripService.Reset();
         _mockBidService.Reset();
         _mockGeographicRouteService.Reset();
+        _mockEmailNotificationService.Reset();
     }
 
     [Test]
