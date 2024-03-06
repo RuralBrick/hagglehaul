@@ -1,11 +1,14 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Modal, Button, Row} from 'react-bootstrap';
+import React, { useEffect, useRef, useState } from 'react';
+import { Modal, Button, Row } from 'react-bootstrap';
 import './DriverLaunchModal.css';
 
-const DriverLaunchModal = ({show, setShow, riderPhone, riderEmail, geoJSON}) => {
+// Component for displaying driver actions in a modal
+const DriverLaunchModal = ({ show, setShow, riderPhone, riderEmail, geoJSON }) => {
+    // States for storing latitude and longitude coordinates
     const [pLatLong, setPLatLong] = useState("0,0");
     const [dLatLong, setDLatLong] = useState("0,0");
-    
+
+    // Effect hook to update coordinates when geoJSON changes
     useEffect(() => {
         if (geoJSON) {
             geoJSON.features.map((feature) => {
@@ -18,7 +21,8 @@ const DriverLaunchModal = ({show, setShow, riderPhone, riderEmail, geoJSON}) => 
             });
         }
     }, [geoJSON]);
-    
+
+    // Render the modal with driver actions
     return (
         <Modal
             size="lg"
@@ -34,62 +38,63 @@ const DriverLaunchModal = ({show, setShow, riderPhone, riderEmail, geoJSON}) => 
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
+                {/* Google Maps launch buttons */}
                 <div className="launch-labeled-section google-maps-launch">
                     <Row sm={1} md={2} lg={2}>
-                    <Button variant="light" as={"a"}
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${pLatLong}&travelmode=driving`}
-                            target="_blank" rel="noopener noreferrer" className="launch-button">
-                        <span style={{fontSize: "1.5em"}}>&#129517; &#10230; &#128587;</span> <br/>
-                        My Location to Pickup
-                    </Button>
-                    <Button variant="primary" as={"a"}
-                            href={`https://www.google.com/maps/dir/?api=1&origin=${pLatLong}&destination=${dLatLong}&travelmode=driving`}
-                            target="_blank" rel="noopener noreferrer" className="launch-button">
-                        <span style={{fontSize: "1.5em"}}>&#128587; &#10230; &#127937;</span> <br/>
-                        Pickup to Destination
-                    </Button>
+                        <Button variant="light" as={"a"}
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${pLatLong}&travelmode=driving`}
+                                target="_blank" rel="noopener noreferrer" className="launch-button">
+                            <span style={{ fontSize: "1.5em" }}>&#129517; &#10230; &#128587;</span> <br />
+                            My Location to Pickup
+                        </Button>
+                        <Button variant="primary" as={"a"}
+                                href={`https://www.google.com/maps/dir/?api=1&origin=${pLatLong}&destination=${dLatLong}&travelmode=driving`}
+                                target="_blank" rel="noopener noreferrer" className="launch-button">
+                            <span style={{ fontSize: "1.5em" }}>&#128587; &#10230; &#127937;</span> <br />
+                            Pickup to Destination
+                        </Button>
                     </Row>
                 </div>
+                {/* Apple Maps launch buttons */}
                 <div className="launch-labeled-section apple-maps-launch">
                     <Row sm={1} md={2} lg={2}>
                         <Button variant="light" as={"a"}
                                 href={`https://maps.apple.com/?daddr=${pLatLong}&dirflg=d`}
                                 target="_blank" rel="noopener noreferrer" className="launch-button">
-                            <span style={{fontSize: "1.5em"}}>&#129517; &#10230; &#128587;</span> <br/>
+                            <span style={{ fontSize: "1.5em" }}>&#129517; &#10230; &#128587;</span> <br />
                             My Location to Pickup
                         </Button>
                         <Button variant="primary" as={"a"}
                                 href={`https://maps.apple.com/?saddr=${pLatLong}&daddr=${dLatLong}&dirflg=d`}
                                 target="_blank" rel="noopener noreferrer" className="launch-button">
-                            <span style={{fontSize: "1.5em"}}>&#128587; &#10230; &#127937;</span> <br/>
+                            <span style={{ fontSize: "1.5em" }}>&#128587; &#10230; &#127937;</span> <br />
                             Pickup to Destination
                         </Button>
                     </Row>
                 </div>
+                {/* Waze launch buttons */}
                 <div className="launch-labeled-section waze-launch">
                     <Button variant="light" as={"a"} href={`https://www.waze.com/ul?ll=${pLatLong}&navigate=yes`}
                             target="_blank" rel="noopener noreferrer" className="launch-button">
-                        <span style={{fontSize: "1.5em"}}>&#129517; &#10230; &#128587;</span> <br/>
+                        <span style={{ fontSize: "1.5em" }}>&#129517; &#10230; &#128587;</span> <br />
                         My Location to Pickup
                     </Button>
                     <Button variant="primary" as={"a"} href={`https://www.waze.com/ul?ll=${dLatLong}&navigate=yes`}
                             target="_blank" rel="noopener noreferrer" className="launch-button">
-                        <span style={{fontSize: "1.5em"}}>&#128587; &#10230; &#127937;</span> <br/>
+                        <span style={{ fontSize: "1.5em" }}>&#128587; &#10230; &#127937;</span> <br />
                         Pickup to Destination
                     </Button>
                 </div>
-
-
+                {/* Buttons for contacting rider */}
                 <Button as={"a"} href={`tel:${riderPhone}`} target="_blank" rel="noopener noreferrer"
-                        style={{width: "100%", marginBottom: "10px", backgroundColor: "#D96C06"}}>&#128222; Call Rider</Button>
+                        style={{ width: "100%", marginBottom: "10px", backgroundColor: "#D96C06" }}>&#128222; Call Rider</Button>
                 <Button as={"a"} href={`sms:${riderPhone}`} target="_blank" rel="noopener noreferrer"
-                        style={{width: "100%", marginBottom: "10px", backgroundColor: "#D96C06"}}>&#128172; Text Rider</Button>
+                        style={{ width: "100%", marginBottom: "10px", backgroundColor: "#D96C06" }}>&#128172; Text Rider</Button>
                 <Button as={"a"} href={`mailto:${riderEmail}`} target="_blank" rel="noopener noreferrer"
-                        style={{width: "100%", marginBottom: "10px", backgroundColor: "#D96C06"}}>&#128231; Email Rider</Button>
+                        style={{ width: "100%", marginBottom: "10px", backgroundColor: "#D96C06" }}>&#128231; Email Rider</Button>
             </Modal.Body>
         </Modal>
     );
 }
 
 export default DriverLaunchModal;
-    
