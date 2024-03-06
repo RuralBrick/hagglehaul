@@ -1,14 +1,16 @@
-import React, {useState, useContext} from 'react';
-import {Modal, Button, Spinner} from 'react-bootstrap';
+import React, { useState, useContext } from 'react';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import './ModifyBidModal.css';
-import {TokenContext} from "@/App.jsx";
+import { TokenContext } from "@/App.jsx";
 
-const ModifyBidModal = ({show, setShow, setError, tripId}) => {
+// Modal component for modifying bid amount
+const ModifyBidModal = ({ show, setShow, setError, tripId }) => {
     const [waiting, setWaiting] = useState(false);
     const [cents, setCents] = useState(0);
     const [textValue, setTextValue] = useState("$0.00");
-    const {token, role} = useContext(TokenContext);
-    
+    const { token, role } = useContext(TokenContext);
+
+    // Function to modify bid
     async function modifyBid() {
         setWaiting(true);
         await fetch('/api/Driver/bid', {
@@ -17,7 +19,7 @@ const ModifyBidModal = ({show, setShow, setError, tripId}) => {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token,
             },
-            body: JSON.stringify({tripId: tripId, centsAmount: cents}),
+            body: JSON.stringify({ tripId: tripId, centsAmount: cents }),
         }).then(async (response) => {
             if (!response.ok) {
                 try {
@@ -30,7 +32,8 @@ const ModifyBidModal = ({show, setShow, setError, tripId}) => {
             window.location.reload();
         });
     }
-    
+
+    // Function to handle key press for input
     async function handleKeyPress(e) {
         var number = ""
         for (var i = 0; i < e.target.value.length; i++) {
@@ -41,7 +44,8 @@ const ModifyBidModal = ({show, setShow, setError, tripId}) => {
         setCents(parseInt(number));
         setTextValue("$" + (parseInt(number) / 100).toFixed(2));
     }
-    
+
+    // Render the modal
     return (
         <Modal
             aria-labelledby="contained-modal-title-vcenter"
@@ -55,13 +59,13 @@ const ModifyBidModal = ({show, setShow, setError, tripId}) => {
                 <input type="text" placeholder="Enter new bid" className="cents-input" value={textValue} onChange={handleKeyPress} inputmode="numeric" />
             </Modal.Body>
             <Modal.Footer>
-                <Button style={{backgroundColor: "#D96C06"}} onClick={() => {setShow(false)}}>Cancel</Button>
+                <Button style={{ backgroundColor: "#D96C06" }} onClick={() => { setShow(false) }}>Cancel</Button>
                 {waiting ?
-                    <Spinner animation="border" role="status" style={{color: "#D96C06"}}>
+                    <Spinner animation="border" role="status" style={{ color: "#D96C06" }}>
                         <span className="visually-hidden">Loading...</span>
                     </Spinner>
                     :
-                    <Button style={{backgroundColor: "#D96C06"}} onClick={modifyBid}>Modify</Button>
+                    <Button style={{ backgroundColor: "#D96C06" }} onClick={modifyBid}>Modify</Button>
                 }
             </Modal.Footer>
         </Modal>
