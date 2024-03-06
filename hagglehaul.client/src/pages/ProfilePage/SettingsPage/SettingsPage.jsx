@@ -129,7 +129,7 @@ function SettingsPage() {
                         < br />
                         <div>
                             <label>
-                                <p>{role}</p>
+                                <p>Name</p>
                                 <input type="text" value={name} onChange={e => setName(e.target.value)} />
                             </label>
                         </div>
