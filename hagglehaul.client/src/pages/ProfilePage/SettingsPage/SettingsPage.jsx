@@ -73,7 +73,11 @@ function SettingsPage() {
     const handleRiderChangeSubmit = async e => {
 
         e.preventDefault();
-        if (!preSubmitValidation()) return;
+        if (newPassword != "") {
+
+            if (!preSubmitValidation()) return;
+
+        }
 
         setWaiting(true);
         const results = await customizeRider({
@@ -97,7 +101,11 @@ function SettingsPage() {
     const handleDriverChangeSubmit = async e => {
 
         e.preventDefault();
-        if (!preSubmitValidation()) return;
+        if (newPassword != "") {
+
+            if (!preSubmitValidation()) return;
+
+        }
 
         const carDescription = carBrand + carColor + license;
 
