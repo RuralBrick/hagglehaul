@@ -1,5 +1,8 @@
 ﻿namespace hagglehaul.Server.Models
 {
+    /// <summary>
+    /// Options to search for trips in the market.
+    /// </summary>
     public class TripMarketOptions
     {
         public double? CurrentLat { get; set; }
