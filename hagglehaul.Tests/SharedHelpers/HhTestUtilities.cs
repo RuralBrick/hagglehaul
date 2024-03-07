@@ -58,10 +58,10 @@ public class HhTestUtilities
         return result;
     }
 
-    public static List<Trip> GetTripData(int count = 2, bool inPast = false, bool hasDriver = false, int timeDelta = 0)
+    public static List<Trip> GetTripData(int count = 2, bool inPast = false, bool hasDriver = false, int timeDelta = 0, int start = 1)
     {
         var result = new List<Trip>(count);
-        for (var i = 1; i <= count; i++)
+        for (var i = start; i < count + start; i++)
         {
             result.Add(new Trip
             {
