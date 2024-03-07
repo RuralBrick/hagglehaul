@@ -5,17 +5,67 @@ using System.Security.Cryptography;
 
 namespace hagglehaul.Server.Services
 {
+    /// <summary>
+    /// Corresponds to UserCore collection in the database, along with some utilities.
+    /// </summary>
     public interface IUserCoreService
     {
+        /// <summary>
+        /// Gets a list of all UserCore objects in the database.
+        /// </summary>
+        /// <returns>A <see cref="List{T}"/> of <see cref="UserCore"/> objects.</returns>
         Task<List<UserCore>> GetAsync();
+        /// <summary>
+        /// Gets a UserCore object by the user's email.
+        /// </summary>
+        /// <param name="email">The valid email of the user. Each email should correspond
+        /// with only one UserCore object.</param>
+        /// <returns></returns>
         Task<UserCore> GetAsync(string email);
+        /// <summary>
+        /// Creates a UserCore object.
+        /// </summary>
+        /// <param name="userCore">The <see cref="UserCore"/> object to insert. We do not
+        /// check the object for correctness.</param>
+        /// <returns></returns>
         Task<UserCore> CreateAsync(UserCore userCore);
+        /// <summary>
+        /// Updates a UserCore object.
+        /// </summary>
+        /// <param name="email">The valid email of the user.</param>
+        /// <param name="userCoreIn">The <see cref="UserCore"/> object to insert. We do not
+        /// check the object for correctness.</param>
+        /// <returns></returns>
         Task UpdateAsync(string email, UserCore userCoreIn);
+        /// <summary>
+        /// Removes a UserCore object.
+        /// </summary>
+        /// <param name="email">The valid email of the user.</param>
+        /// <returns></returns>
         Task RemoveAsync(string email);
+        /// <summary>
+        /// Creates a random salt and a hash from a password. Should use an algorithm similar to
+        /// or stronger than <see cref="KeyDerivation.Pbkdf2"/>.
+        /// </summary>
+        /// <param name="password">The non-encoded password.</param>
+        /// <param name="hash">The hash, encoded as a base 64 string.</param>
+        /// <param name="salt">The salt, encoded as a base 64 string.</param>
         void CreatePasswordHash(string password, out string hash, out string salt);
+        /// <summary>
+        /// Verifies a password against a hash and a salt. Should use an algorithm similar to
+        /// or stronger than <see cref="KeyDerivation.Pbkdf2"/>.
+        /// </summary>
+        /// <param name="password">The non-encoded password.</param>
+        /// <param name="hash">The hash, encoded as a base 64 string.</param>
+        /// <param name="salt">The salt, encoded as a base 64 string.</param>
+        /// <returns><c>true</c> if the password matches the hash and salt, or
+        /// <c>false</c> otherwise.</returns>
         bool ComparePasswordToHash(string password, string hash, string salt);
     }
     
+    /// <summary>
+    /// See <see cref="IUserCoreService"/>.
+    /// </summary>
     public class UserCoreService : IUserCoreService
     {
         private readonly IMongoCollection<UserCore> _userCoreCollection;

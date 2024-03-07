@@ -8,6 +8,9 @@ using System.Security.Claims;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// <summary>
+    /// Test controller for frontend to database connection.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class MongoTestController : ControllerBase
@@ -19,6 +22,10 @@ namespace hagglehaul.Server.Controllers
             _mongoTestService = mongoTestService;
         }
 
+        /// <summary>
+        /// Test frontend to database endpoint without authentication.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("insecure")]
         [SwaggerOperation(Summary = "Test frontend to database endpoint without authentication")]
@@ -27,6 +34,10 @@ namespace hagglehaul.Server.Controllers
             return await _mongoTestService.GetAsync();
         }
 
+        /// <summary>
+        /// Test frontend to database endpoint with authentication.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("secure")]
         [Authorize]

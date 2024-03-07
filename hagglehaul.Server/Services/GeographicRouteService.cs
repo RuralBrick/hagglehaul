@@ -8,12 +8,34 @@ using MongoDB.Bson;
 
 namespace hagglehaul.Server.Services;
 
+/// <summary>
+/// Service which provides geographic route information through Mapbox, including navigation, geocoding,
+/// and mapping.
+/// </summary>
 public interface IGeographicRouteService
 {
+    /// <summary>
+    /// Gets cached route information or calls Mapbox API to get route information. Route information
+    /// includes distance, duration, navigation polyline, and a static map image.
+    /// </summary>
+    /// <param name="startLong">The longitude of the pickup location.</param>
+    /// <param name="startLat">The latitude of the pickup location.</param>
+    /// <param name="endLong">The longitude of the destination location.</param>
+    /// <param name="endLat">The latitude of the destination location.</param>
+    /// <returns></returns>
     Task<GeographicRoute> GetGeographicRoute(double startLong, double startLat, double endLong, double endLat);
+    /// <summary>
+    /// Gets cached address lookup information or calls Mapbox API to get geocoding information. Returns a list
+    /// of search results that match the query.
+    /// </summary>
+    /// <param name="query">The keywords (what is put in the search bar)</param>
+    /// <returns></returns>
     Task<string> GeocodingLookup(string query);
 }
 
+/// <summary>
+/// See <see cref="IGeographicRouteService"/>.
+/// </summary>
 public class GeographicRouteService : IGeographicRouteService
 {
     private readonly IMongoCollection<GeographicRoute> _geographicRouteCollection;
