@@ -1256,4 +1256,81 @@ MaxCurrentToStartDistance = 2.0
 
         Assert.That(saveTrip.RiderHasBeenRated, Is.EqualTo(true));
     }
+
+    // Test driver post rating for a trip that doesn't exist
+    [Test]
+    public async Task DriverPostRatingForNonexistantTrip()
+    {
+        _mockTripService.Setup(
+                       x => x.GetTripByIdAsync(It.IsAny<string>())
+                              )!.ReturnsAsync(
+                       (string s) => null
+                              );
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "driver@example.com"),
+                new Claim(ClaimTypes.Role, "driver")
+            }))
+            }
+        };
+
+        Assert.That(await _controller.RateRider(new GiveRating
+        {
+            TripId = "testTrip",
+            RatingGiven = 5,
+        }), Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    // Test driver post rating for rider without previous rating
+    [Test]
+    public async Task DriverGiveFirstRating()
+    {
+        _mockTripService.Setup(
+                       x => x.GetTripByIdAsync(It.IsAny<string>())
+                              )!.ReturnsAsync(
+                       (string s) => new Trip
+                       {
+                           Id = "testTrip",
+                           RiderEmail = "rider@example.com",
+                       });
+
+        _mockRiderProfileService.Setup(
+                       x => x.GetAsync(It.IsAny<string>())
+                              )!.ReturnsAsync(
+                       (string s) => new RiderProfile
+                       {
+                           Email = "rider@example.com",
+                       });
+
+        _mockRiderProfileService.Setup(
+            x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<RiderProfile>()))!.Callback(
+            (string s, RiderProfile rp) =>
+            {
+                Assert.That(rp.Rating, Is.EqualTo(5));
+                Assert.That(rp.NumRatings, Is.EqualTo(1));
+            });
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                new Claim(ClaimTypes.Name, "driver@example.com"),
+                new Claim(ClaimTypes.Role, "driver")
+                }))
+            }
+        };
+
+        _ = await _controller.RateRider(new GiveRating
+        {
+            TripId = "testTrip",
+            RatingGiven = 5,
+        });
+    }
 }
