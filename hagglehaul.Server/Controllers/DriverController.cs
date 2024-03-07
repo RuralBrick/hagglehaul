@@ -259,21 +259,6 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
-        [Authorize]
-        [HttpGet]
-        [Route("bid")]
-        public async Task<IActionResult> GetDriverBids()
-        {
-            ClaimsPrincipal currentUser = this.User;
-
-            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
-
-            var email = currentUser.FindFirstValue(ClaimTypes.Name);
-
-            var bids = await _bidService.GetDriverBidsAsync(email);
-            return Ok(bids);
-        }
-
         [HttpPost]
         [HttpPatch]
         [Route("bid")]
@@ -500,10 +485,11 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("allTrips")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get all biddable trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully returned all biddable trips.")]
         public async Task<IActionResult> GetAllAvailableTrips()
         {
-            var allTrips = await _tripService.GetAllTripsAsync();
-            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null).ToList();
+            var availableTrips = await GetEligibleMarketTrips();
             var searchedTrips = await TripsToSearchedTrips(availableTrips);
             return Ok(searchedTrips);
         }
@@ -677,6 +663,9 @@ namespace hagglehaul.Server.Controllers
         [HttpPost]
         [Route("tripMarket")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get biddable trips and filter and sort using options.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully returned the biddable trips.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid options")]
         public async Task<IActionResult> GetAllAvailableTrips([FromBody] TripMarketOptions options)
         {
             List<Trip> trips;
@@ -695,6 +684,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("rating")]
+        [SwaggerOperation(Summary = "Rate a rider.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully rated the rider.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or trip.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> RateRider([FromBody] GiveRating giveRating)
         {
             ClaimsPrincipal currentUser = this.User;
