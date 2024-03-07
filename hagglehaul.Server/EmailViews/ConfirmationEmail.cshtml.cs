@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 
 namespace hagglehaul.Server.EmailViews
 {
@@ -8,7 +9,9 @@ namespace hagglehaul.Server.EmailViews
 
         public string TripName { get; set; }
         public string DriverName { get; set; }
-        public double DriverRating { get; set; }
+        [DisplayFormat(DataFormatString = "{0:0.##} ⭐", NullDisplayText = "unrated")]
+        public double? DriverRating { get; set; }
+        [DisplayFormat(DataFormatString = "{0:C}")]
         public decimal Price { get; set; } // In dollars
 
         public string DriverPhone { get; set; }

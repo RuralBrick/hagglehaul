@@ -56,11 +56,11 @@
         <div class="confirmed-text">Your Bid Won!</div>
 
         <p>Dear <strong>@Model.DriverName</strong>,</p>
-        <p>Your bid on <strong>@Model.TripName</strong> has been bought for <strong>$@Model.Price</strong>.</p>
+        <p>Your bid on <strong>@Model.TripName</strong> has been bought for <strong>@Model.Price.ToString("C")</strong>.</p>
         <p><strong>Rider Name:</strong> @Model.RiderName</p>
         <p><strong>Rider Phone:</strong> @Model.RiderPhone</p>
         <p><strong>Rider Email:</strong> @Model.RiderEmail</p>
-        <p><strong>Pickup Time:</strong> @Model.StartTime.ToString("MM/dd/yyyy") at @Model.StartTime.ToString("h:mm tt")</p>
+        <p><strong>Pickup Time:</strong> @Model.StartTime.ToLocalTime().ToString("MM/dd/yyyy") at @Model.StartTime.ToLocalTime().ToString("h:mm tt")</p>
         <p><strong>Pickup Location:</strong> @Model.PickupAddress</p>
         <p><strong>Destination:</strong> @Model.DestinationAddress</p>
 

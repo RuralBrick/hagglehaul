@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
 using Swashbuckle.AspNetCore.Annotations;
+using hagglehaul.Server.EmailViews;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -18,8 +19,17 @@ namespace hagglehaul.Server.Controllers
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
         private readonly IGeographicRouteService _geographicRouteService;
+        private readonly IEmailNotificationService _emailNotificationService;
 
-        public RiderController(IRiderProfileService riderProfileService, IDriverProfileService driverProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
+        public RiderController(
+            IRiderProfileService riderProfileService,
+            IDriverProfileService driverProfileService,
+            IUserCoreService userCoreService,
+            ITripService tripService,
+            IBidService bidService,
+            IGeographicRouteService geographicRouteService,
+            IEmailNotificationService emailNotificationService
+        )
         {
             _riderProfileService = riderProfileService;
             _driverProfileService = driverProfileService;
@@ -27,6 +37,7 @@ namespace hagglehaul.Server.Controllers
             _tripService = tripService;
             _bidService = bidService;
             _geographicRouteService = geographicRouteService;
+            _emailNotificationService = emailNotificationService;
         }
 
         [Authorize]
@@ -346,6 +357,46 @@ namespace hagglehaul.Server.Controllers
             if (bid == null) { return BadRequest(new { Error = "Bid does not exist" }); }
             trip.DriverEmail = bid.DriverEmail;
             await _tripService.UpdateAsync(addTripDriver.TripId, trip);
+
+            UserCore riderUser = await _userCoreService.GetAsync(email);
+            UserCore driverUser = await _userCoreService.GetAsync(trip.DriverEmail);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(trip.DriverEmail);
+            _ = _emailNotificationService.SendEmailNotification(
+                EmailNotificationType.Confirmation,
+                email,
+                new ConfirmationEmail
+                {
+                    RiderName = riderUser.Name,
+                    TripName = trip.Name,
+                    DriverName = driverUser.Name,
+                    DriverRating = driverProfile.Rating,
+                    Price = (decimal)(bid.CentsAmount / 100.0),
+                    DriverPhone = driverUser.Phone,
+                    DriverEmail = driverUser.Email,
+                    StartTime = trip.StartTime,
+                    PickupAddress = trip.PickupAddress,
+                    DestinationAddress = trip.DestinationAddress,
+                    RiderEmail = email,
+                }
+            );
+            _ = _emailNotificationService.SendEmailNotification(
+                EmailNotificationType.AcceptedBid,
+                trip.DriverEmail,
+                new AcceptedBidEmail
+                {
+                    DriverName = driverUser.Name,
+                    TripName = trip.Name,
+                    Price = (decimal)(bid.CentsAmount / 100.0),
+                    RiderName = riderUser.Name,
+                    RiderPhone = riderUser.Phone,
+                    RiderEmail = riderUser.Email,
+                    StartTime = trip.StartTime,
+                    PickupAddress = trip.PickupAddress,
+                    DestinationAddress = trip.DestinationAddress,
+                    DriverEmail = trip.DriverEmail,
+                }
+            );
+
             return Ok();
         }
 
