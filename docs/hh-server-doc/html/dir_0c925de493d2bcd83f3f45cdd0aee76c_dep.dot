@@ -1,0 +1,20 @@
+digraph "/Users/jacob/Documents/Projects/130-project/hagglehaul/hagglehaul.Server"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_4e9ee54f7ad85b8bbb27c02f095110f9 {
+    graph [ bgcolor="#daedff", pencolor="grey25", label="hagglehaul", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_4e9ee54f7ad85b8bbb27c02f095110f9.html",tooltip=""]
+  subgraph clusterdir_0c925de493d2bcd83f3f45cdd0aee76c {
+    graph [ bgcolor="#daedff", pencolor="grey25", label="", fontname=Helvetica,fontsize=10 style="filled,bold", URL="dir_0c925de493d2bcd83f3f45cdd0aee76c.html",tooltip=""]
+    dir_0c925de493d2bcd83f3f45cdd0aee76c [shape=plaintext, label="hagglehaul.Server"];
+  dir_317e30ad08ab808d3b56c084409dba3e [label="Controllers", fillcolor="#4ea9ff", color="grey25", style="filled", URL="dir_317e30ad08ab808d3b56c084409dba3e.html",tooltip=""];
+  dir_497c81e985d1ef7193ab0ebd58cf9d31 [label="EmailViews", fillcolor="#4ea9ff", color="grey25", style="filled", URL="dir_497c81e985d1ef7193ab0ebd58cf9d31.html",tooltip=""];
+  dir_9e46acc84fe6598162310a03db87dac2 [label="Models", fillcolor="#4ea9ff", color="grey25", style="filled", URL="dir_9e46acc84fe6598162310a03db87dac2.html",tooltip=""];
+  dir_518516023203fb82c88c8364da64e421 [label="obj", fillcolor="#4ea9ff", color="grey25", style="filled", URL="dir_518516023203fb82c88c8364da64e421.html",tooltip=""];
+  dir_3cdfc0e0782f8ede9be419ec595041f2 [label="Services", fillcolor="#4ea9ff", color="grey25", style="filled", URL="dir_3cdfc0e0782f8ede9be419ec595041f2.html",tooltip=""];
+  }
+  }
+}
