@@ -131,6 +131,60 @@ public class DriverControllerTests
         Assert.That(savedUserCore.PasswordHash, Is.EqualTo("1234567"));
     }
 
+    // Test that a driver can get all market trips with no options
+    [Test]
+    public async Task DriverGetAllMarketTrips()
+    {
+        var trips = HhTestUtilities.GetTripData(start: 1, count: 2);
+        trips.AddRange(HhTestUtilities.GetTripData(start: 3, inPast: true));
+        trips.AddRange(HhTestUtilities.GetTripData(start: 5, hasDriver: true));
+        _mockTripService.Setup(
+                       x => x.GetAllTripsAsync()
+                              )!.ReturnsAsync(
+                       trips.ToList()
+                              );
+
+        _mockBidService.Setup(x => x.GetTripBidsAsync(It.IsAny<string>()))
+                       .ReturnsAsync(new List<Bid>(0));
+
+        _mockGeographicRouteService.Setup(
+                       x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+                              )!.ReturnsAsync(
+                       (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+                       {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+                              );
+
+        _mockDriverProfileService.Setup(
+                                  x => x.GetAsync(It.IsAny<string>())
+                                                               )!.ReturnsAsync(
+                                  (string s) => new DriverProfile
+                                  {
+                                      Email = ""
+                                  });
+
+        _mockUserCoreService.Setup(
+                                         x => x.GetAsync(It.IsAny<string>())
+                                                                                                   )!.ReturnsAsync(
+                                         (string s) => new UserCore
+                                         {
+                                  Email = ""
+                              });
+
+        var result = await _controller.GetAllAvailableTrips();
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var tripsResult = ((OkObjectResult) result).Value as List<SearchedTrip>;
+
+        Assert.That(tripsResult, Is.TypeOf<List<SearchedTrip>>());
+
+        Assert.That(tripsResult.Count, Is.EqualTo(2));
+        Assert.That(tripsResult[0].TripId, Is.EqualTo("111111111111111111111111"));
+        Assert.That(tripsResult[1].TripId, Is.EqualTo("222222222222222222222222"));
+    }
+
     [Test]
     public async Task DriverFilterTripMarketByMaxEndToTargetDistance()
     {
