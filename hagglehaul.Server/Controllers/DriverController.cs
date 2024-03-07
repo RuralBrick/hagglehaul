@@ -616,8 +616,6 @@ namespace hagglehaul.Server.Controllers
                     case "currentToStartDistance":
                         if (options.CurrentLat == null || options.CurrentLong == null)
                             throw new ArgumentException("Must include current coordinates");
-                        if (options.TargetLat == null || options.TargetLong == null)
-                            throw new ArgumentException("Must include target coordinates");
                         if (sortedTrips == null)
                             sortedTrips = filteredTrips.OrderBy(trip => TripCurrentToStartDistance(trip, options));
                         else
