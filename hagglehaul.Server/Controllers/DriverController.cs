@@ -10,6 +10,9 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// <summary>
+    /// Controller for driver-related operations.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class DriverController : ControllerBase
@@ -41,6 +44,14 @@ namespace hagglehaul.Server.Controllers
             _emailNotificationService = emailNotificationService;
         }
 
+        /// <summary>
+        /// Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the dashboard is successfully returned,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpGet]
         [Route("dashboard")]
@@ -175,6 +186,14 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverDashboard);
         }
 
+        /// <summary>
+        /// Get the basic info of the current driver.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the driver's basic info is successfully returned,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpGet]
         [Route("about")]
@@ -206,6 +225,15 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverBasicInfo);
         }
 
+        /// <summary>
+        /// Modify account details, including password.
+        /// </summary>
+        /// <param name="driverUpdate">The update form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the account details are successfully updated,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
@@ -270,6 +298,15 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Create or update a bid for a trip.
+        /// </summary>
+        /// <param name="request">The bidding form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the bid was successfully created or updated,
+        /// <see cref="BadRequestObjectResult"/> if the tripId is invalid or the trip is either confirmed or in the past,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [HttpPost]
         [HttpPatch]
         [Route("bid")]
@@ -345,6 +382,15 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Delete a bid for a trip.
+        /// </summary>
+        /// <param name="tripId">The ID of the trip to delete the user's bid from</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the bid was successfully deleted,
+        /// <see cref="BadRequestObjectResult"/> if the tripId is invalid or the trip is either confirmed or in the past,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [HttpDelete]
         [Route("bid")]
         [Authorize]
@@ -513,6 +559,12 @@ namespace hagglehaul.Server.Controllers
             return searchedTrips;
         }
 
+        /// <summary>
+        /// Get all biddable trips.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the biddable trips are successfully returned
+        /// </returns>
         [HttpGet]
         [Route("allTrips")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
@@ -687,7 +739,14 @@ namespace hagglehaul.Server.Controllers
             return finalTrips;
         }
 
-
+        /// <summary>
+        /// Get biddable trips and filter and sort using options.
+        /// </summary>
+        /// <param name="options">The filtering and searching options form.</param>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the biddable trips are successfully returned,
+        /// <see cref="BadRequestObjectResult"/> if the options are invalid
+        /// </returns>
         [HttpGet]
         [HttpPost]
         [Route("tripMarket")]
@@ -710,6 +769,15 @@ namespace hagglehaul.Server.Controllers
             return Ok(searchedTrips);
         }
 
+        /// <summary>
+        /// Rate a rider.
+        /// </summary>
+        /// <param name="giveRating">The rating form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the rider was successfully rated,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("rating")]

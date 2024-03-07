@@ -14,6 +14,9 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// <summary>
+    /// Controller for authentication, registration, and role management.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthenticationController : ControllerBase
@@ -36,6 +39,14 @@ namespace hagglehaul.Server.Controllers
             _driverProfileService = driverProfileService;
         }
 
+        /// <summary>
+        /// Creates a new user and stores their information in the database.
+        /// </summary>
+        /// <param name="model">The registration form</param>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the user is registered successfully,
+        /// <see cref="BadRequestObjectResult"/> if one or more fields are empty, the user already exists, or invalid role
+        /// </returns>
         [HttpPost]
         [Route("register")]
         [SwaggerOperation(Summary = "Register a new user")]
@@ -88,6 +99,15 @@ namespace hagglehaul.Server.Controllers
             return await Login(new Login { Email = model.Email, Password = model.Password });
         }
 
+        /// <summary>
+        /// Logs in as an existing user.
+        /// </summary>
+        /// <param name="model">The login form</param>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the user is logged in successfully,
+        /// <see cref="BadRequestObjectResult"/> if one or more fields are empty,
+        /// <see cref="UnauthorizedResult"/> if invalid email or password
+        /// </returns>
         [HttpPost]
         [Route("login")]
         [SwaggerOperation(Summary = "Login as an existing user")]
@@ -133,6 +153,12 @@ namespace hagglehaul.Server.Controllers
             return Unauthorized();
         }
         
+        /// <summary>
+        /// Get the role of the current user.
+        /// </summary>
+        /// <returns>
+        /// <see cref="String"/> representing the role of the current user, either "driver" or "rider".
+        /// </returns>
         [HttpGet]
         [Route("role")]
         [Authorize]
