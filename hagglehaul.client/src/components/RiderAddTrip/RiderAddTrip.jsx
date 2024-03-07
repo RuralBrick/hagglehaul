@@ -1,30 +1,31 @@
-import React, {useContext, useState} from 'react';
+import React, { useContext, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './RiderAddTrip.css';
 import AddressSearchBar from "@/components/AddressSearchBar/AddressSearchBar.jsx";
 import PassengerDropdown from "@/components/PassengerDropdown/PassengerDropdown.jsx"; // Ensure this is correctly imported
 import DatePickerComponent from '@/components/DatePicker/DatePicker.jsx';
-import {TokenContext} from "@/App.jsx";
-import {Spinner} from "react-bootstrap";
-
+import { TokenContext } from "@/App.jsx";
+import { Spinner } from "react-bootstrap";
 
 const errorAddingTripMessage = "Something went wrong. Please try again.";
+
 Date.prototype.addHours = function(h) {
     this.setTime(this.getTime() + (h*60*60*1000));
     return this;
 }
 
 function RiderAddTrip() {
-    const {token, role} = useContext(TokenContext);
+    const { token, role } = useContext(TokenContext);
     const [origin, setOrigin] = useState();
     const [destination, setDestination] = useState();
-    const [originText, setOriginText] = useState(); 
+    const [originText, setOriginText] = useState();
     const [destinationText, setDestinationText] = useState();
     const [passengers, setPassengers] = useState(""); // State for tracking the number of passengers
     const [statusMessage, setStatusMessage] = useState("");
     const [date, setDate] = useState(new Date().addHours(168)); // State for selected date and time
     const [waiting, setWaiting] = useState(false);
 
+    // Function to add a trip
     async function addTrip(tripData) {
         return await fetch('/api/Rider/trip', {
             method: 'POST',
@@ -39,17 +40,18 @@ function RiderAddTrip() {
                     try {
                         return JSON.parse(await response.text());
                     } catch (err) {
-                        return {error: "Something went wrong."};
+                        return { error: "Something went wrong." };
                     }
                 }
-                return {success: "success"};
-            })
+                return { success: "success" };
+            });
     }
-    
+
+    // Function to handle trip submission
     const handleTripSubmit = async e => {
         e.preventDefault();
         setWaiting(true);
-        
+
         if (role !== "rider") {
             setStatusMessage("You are not authorized to add a trip.");
             return;
@@ -112,7 +114,7 @@ function RiderAddTrip() {
                 </div>
                 <br/>
                 {waiting ?
-                    <Spinner animation="border" role="status" style={{color: "#D96C06"}}>
+                    <Spinner animation="border" role="status" style={{ color: "#D96C06" }}>
                         <span className="visually-hidden">Loading...</span>
                     </Spinner>
                     :
@@ -120,7 +122,6 @@ function RiderAddTrip() {
                 }
             </form>
         </div>
-
     );
 
 }
