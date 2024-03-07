@@ -3,6 +3,7 @@ using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver.Core.Authentication;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
 
 namespace hagglehaul.Server.Controllers
@@ -20,6 +21,7 @@ namespace hagglehaul.Server.Controllers
 
         [HttpGet]
         [Route("insecure")]
+        [SwaggerOperation(Summary = "Test frontend to database endpoint without authentication")]
         public async Task<List<MongoTest>> Get()
         {
             return await _mongoTestService.GetAsync();
@@ -28,6 +30,7 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("secure")]
         [Authorize]
+        [SwaggerOperation(Summary = "Test frontend to database endpoint with authentication")]
         public async Task<List<MongoTest>> GetSecure()
         {
             ClaimsPrincipal currentUser = this.User;

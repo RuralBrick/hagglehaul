@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -44,6 +45,10 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("dashboard")]
         [ProducesResponseType(typeof(DriverDashboard), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Succesfully returned the dashboard.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid User or Authentication")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> GetDashboard()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -174,12 +179,21 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("about")]
         [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get the basic info of the current driver.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Got the driver's basic info.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> Get()
         {
             ClaimsPrincipal currentUser = this.User;
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
             }
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
@@ -195,6 +209,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
+        [SwaggerOperation(Summary = "Modify account details, including password.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully updated the account details.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or error with updating password.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> ModifyAccountDetails([FromBody] DriverUpdate driverUpdate)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -202,6 +220,11 @@ namespace hagglehaul.Server.Controllers
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
             }
             bool changingPassword = !String.IsNullOrEmpty(driverUpdate.NewPassword);
             if (String.IsNullOrEmpty(driverUpdate.CurrentPassword) && changingPassword)
@@ -226,7 +249,6 @@ namespace hagglehaul.Server.Controllers
 
             if (changingPassword)
             {
-                Console.WriteLine("changing pass");
                 _userCoreService.CreatePasswordHash(driverUpdate.NewPassword, out var newHash, out var newSalt);
                 userCore.PasswordHash = newHash;
                 userCore.Salt = newSalt;
@@ -248,25 +270,14 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
-        [Authorize]
-        [HttpGet]
-        [Route("bid")]
-        public async Task<IActionResult> GetDriverBids()
-        {
-            ClaimsPrincipal currentUser = this.User;
-
-            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
-
-            var email = currentUser.FindFirstValue(ClaimTypes.Name);
-
-            var bids = await _bidService.GetDriverBidsAsync(email);
-            return Ok(bids);
-        }
-
         [HttpPost]
         [HttpPatch]
         [Route("bid")]
         [Authorize]
+        [SwaggerOperation(Summary = "Create or update a bid for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "The bid was successfully created or updated.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The tripId is invalid or the trip is either confirmed or in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> CreateOrUpdateBid([FromBody] CreateOrUpdateBid request)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -337,6 +348,10 @@ namespace hagglehaul.Server.Controllers
         [HttpDelete]
         [Route("bid")]
         [Authorize]
+        [SwaggerOperation(Summary = "Delete a bid for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "The bid was successfully deleted.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The tripId is invalid or the trip is either confirmed or in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> DeleteBid([FromQuery] string tripId)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -501,10 +516,11 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("allTrips")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get all biddable trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully returned all biddable trips.")]
         public async Task<IActionResult> GetAllAvailableTrips()
         {
-            var allTrips = await _tripService.GetAllTripsAsync();
-            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null).ToList();
+            var availableTrips = await GetEligibleMarketTrips();
             var searchedTrips = await TripsToSearchedTrips(availableTrips);
             return Ok(searchedTrips);
         }
@@ -631,8 +647,6 @@ namespace hagglehaul.Server.Controllers
                     case "currentToStartDistance":
                         if (options.CurrentLat == null || options.CurrentLong == null)
                             throw new ArgumentException("Must include current coordinates");
-                        if (options.TargetLat == null || options.TargetLong == null)
-                            throw new ArgumentException("Must include target coordinates");
                         if (sortedTrips == null)
                             sortedTrips = filteredTrips.OrderBy(trip => TripCurrentToStartDistance(trip, options));
                         else
@@ -678,6 +692,9 @@ namespace hagglehaul.Server.Controllers
         [HttpPost]
         [Route("tripMarket")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get biddable trips and filter and sort using options.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully returned the biddable trips.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid options")]
         public async Task<IActionResult> GetAllAvailableTrips([FromBody] TripMarketOptions options)
         {
             List<Trip> trips;
@@ -696,6 +713,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("rating")]
+        [SwaggerOperation(Summary = "Rate a rider.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully rated the rider.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or trip.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> RateRider([FromBody] GiveRating giveRating)
         {
             ClaimsPrincipal currentUser = this.User;

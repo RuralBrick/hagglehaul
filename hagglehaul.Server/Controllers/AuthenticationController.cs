@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
@@ -37,6 +38,9 @@ namespace hagglehaul.Server.Controllers
 
         [HttpPost]
         [Route("register")]
+        [SwaggerOperation(Summary = "Register a new user")]
+        [SwaggerResponse(StatusCodes.Status200OK, "User registered successfully")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "One or more fields are empty, the user already exists, or invalid role")]
         public async Task<IActionResult> Register([FromBody] Register model)
         {
             if (string.IsNullOrEmpty(model.Email) ||
@@ -86,6 +90,10 @@ namespace hagglehaul.Server.Controllers
 
         [HttpPost]
         [Route("login")]
+        [SwaggerOperation(Summary = "Login as an existing user")]
+        [SwaggerResponse(StatusCodes.Status200OK, "User logged in successfully")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "One or more fields are empty")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Invalid email or password")]
         public async Task<IActionResult> Login([FromBody] Login model)
         {
             if (string.IsNullOrEmpty(model.Email) ||
@@ -128,6 +136,8 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("role")]
         [Authorize]
+        [SwaggerOperation(Summary = "Get the role of the current user")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Role retrieved successfully")]
         public async Task<String> Role()
         {
             ClaimsPrincipal currentUser = this.User;
