@@ -1,6 +1,7 @@
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers;
 
@@ -17,6 +18,10 @@ public class PlaceLookupController : ControllerBase
     
     [Authorize]
     [HttpGet(Name = "GetPlaceLookup")]
+    [SwaggerOperation(Summary = "Lookup geographic place by name")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Geographic place found")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Request has empty place name")]
+    [SwaggerResponse(StatusCodes.Status500InternalServerError, "Geographic place lookup failed")]
     public async Task<IActionResult> Get([FromQuery] string placeName)
     {
         if (String.IsNullOrEmpty(placeName))
