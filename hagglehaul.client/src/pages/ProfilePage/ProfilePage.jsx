@@ -7,7 +7,7 @@ function ProfilePage() {
     return (
         <div className="profile-page">
             <div className="container text-center">
-                <h1>Welcome, Jordan</h1>
+                <h1>Welcome</h1>
                 <div className="profile-menu mt-5">
                     <Link to="/profile/activity" className="profile-menu-item">
                         <h3>Activity</h3>
