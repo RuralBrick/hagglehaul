@@ -503,8 +503,7 @@ namespace hagglehaul.Server.Controllers
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAvailableTrips()
         {
-            var allTrips = await _tripService.GetAllTripsAsync();
-            var availableTrips = allTrips.Where(trip => trip.DriverEmail == null).ToList();
+            var availableTrips = await GetEligibleMarketTrips();
             var searchedTrips = await TripsToSearchedTrips(availableTrips);
             return Ok(searchedTrips);
         }
