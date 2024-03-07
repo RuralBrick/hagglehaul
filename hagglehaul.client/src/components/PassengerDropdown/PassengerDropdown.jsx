@@ -1,6 +1,7 @@
 import React from 'react';
 import './PassengerDropdown.css'; // Make sure this is correctly referenced
 
+// Component for selecting the number of passengers
 function PassengerDropdown({ selectedPassengers, onChange }) {
     return (
         <div className="passenger-dropdown">
