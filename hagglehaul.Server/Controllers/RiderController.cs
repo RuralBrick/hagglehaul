@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using hagglehaul.Server.Models;
+using Swashbuckle.AspNetCore.Annotations;
 using hagglehaul.Server.EmailViews;
 
 namespace hagglehaul.Server.Controllers
@@ -43,6 +44,10 @@ namespace hagglehaul.Server.Controllers
         [HttpGet]
         [Route("about")]
         [ProducesResponseType(typeof(RiderBasicInfo), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get the basic info of the current rider.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Got the rider's basic info.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> Get()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -62,6 +67,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpGet]
         [Route("dashboard")]
+        [SwaggerOperation(Summary = "Gets the necessary info for a rider dashboard. Shows confirmed trips, trips in bidding, and past trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Succesfully returned the dashboard.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid User or Authentication")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         [ProducesResponseType(typeof(RiderDashboard), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDashboard()
         {
@@ -193,6 +202,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
+        [SwaggerOperation(Summary = "Modify account details, including password.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully updated the account details.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or error with updating password.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> ModifyAccountDetails([FromBody] RiderUpdate riderUpdate )
         {
             ClaimsPrincipal currentUser = this.User;
@@ -210,6 +223,10 @@ namespace hagglehaul.Server.Controllers
             //check role for error
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
+            }
             UserCore userCore = await _userCoreService.GetAsync(email);
 
             if (changingPassword)
@@ -243,6 +260,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("trip")]
+        [SwaggerOperation(Summary = "Create a new trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully created the trip.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth, invalid party size, or start time is in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> PostRiderTrip([FromBody] CreateTrip tripDetails)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -281,6 +302,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpDelete]
         [Route("trip")]
+        [SwaggerOperation(Summary = "Delete a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully deleted the trip.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth, trip does not exist, trip has a driver, or trip has already started.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> DeleteRiderTrip([FromQuery] string tripId)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -306,6 +331,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("tripDriver")]
+        [SwaggerOperation(Summary = "Confirm a driver for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully confirmed the driver.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth, trip does not exist, trip has a driver, trip has already started, or bid does not exist.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> ConfirmDriver([FromBody] AddTripDriver addTripDriver)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -374,6 +403,10 @@ namespace hagglehaul.Server.Controllers
         [Authorize]
         [HttpPost]
         [Route("rating")]
+        [SwaggerOperation(Summary = "Rate a driver.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully rated the driver.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth, trip does not exist, trip has no driver, trip has not been taken yet, or driver has already been rated.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a rider.")]
         public async Task<IActionResult> RateDriver([FromBody] GiveRating giveRating)
         {
             ClaimsPrincipal currentUser = this.User;
