@@ -1,0 +1,1303 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "hagglehaul.Server",
+    "description": "This is a statically-hosted copy of our API endpoint documentation; the interface to try endpoints will not work here.",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/Authentication/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register a new user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "One or more fields are empty, the user already exists, or invalid role"
+          }
+        }
+      }
+    },
+    "/api/Authentication/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login as an existing user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully"
+          },
+          "400": {
+            "description": "One or more fields are empty"
+          },
+          "401": {
+            "description": "Invalid email or password"
+          }
+        }
+      }
+    },
+    "/api/Authentication/role": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get the role of the current user",
+        "responses": {
+          "200": {
+            "description": "Role retrieved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Driver/dashboard": {
+      "get": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.",
+        "responses": {
+          "200": {
+            "description": "Succesfully returned the dashboard."
+          },
+          "400": {
+            "description": "Invalid User or Authentication"
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      }
+    },
+    "/api/Driver/about": {
+      "get": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Get the basic info of the current driver.",
+        "responses": {
+          "200": {
+            "description": "Got the driver's basic info."
+          },
+          "400": {
+            "description": "Invalid user/auth"
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      }
+    },
+    "/api/Driver/modifyAcc": {
+      "post": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Modify account details, including password.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverUpdate"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverUpdate"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the account details."
+          },
+          "400": {
+            "description": "Invalid user/auth or error with updating password."
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      }
+    },
+    "/api/Driver/bid": {
+      "post": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Create or update a bid for a trip.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateBid"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateBid"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateBid"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The bid was successfully created or updated."
+          },
+          "400": {
+            "description": "The tripId is invalid or the trip is either confirmed or in the past."
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Create or update a bid for a trip.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateBid"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateBid"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateBid"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The bid was successfully created or updated."
+          },
+          "400": {
+            "description": "The tripId is invalid or the trip is either confirmed or in the past."
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Delete a bid for a trip.",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The bid was successfully deleted."
+          },
+          "400": {
+            "description": "The tripId is invalid or the trip is either confirmed or in the past."
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      }
+    },
+    "/api/Driver/allTrips": {
+      "get": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Get all biddable trips.",
+        "responses": {
+          "200": {
+            "description": "Successfully returned all biddable trips."
+          }
+        }
+      }
+    },
+    "/api/Driver/tripMarket": {
+      "get": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Get biddable trips and filter and sort using options.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripMarketOptions"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripMarketOptions"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripMarketOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully returned the biddable trips."
+          },
+          "400": {
+            "description": "Invalid options"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Get biddable trips and filter and sort using options.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripMarketOptions"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripMarketOptions"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripMarketOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully returned the biddable trips."
+          },
+          "400": {
+            "description": "Invalid options"
+          }
+        }
+      }
+    },
+    "/api/Driver/rating": {
+      "post": {
+        "tags": [
+          "Driver"
+        ],
+        "summary": "Rate a rider.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveRating"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveRating"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveRating"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully rated the rider."
+          },
+          "400": {
+            "description": "Invalid user/auth or trip."
+          },
+          "401": {
+            "description": "The user is not a driver."
+          }
+        }
+      }
+    },
+    "/api/MongoTest/insecure": {
+      "get": {
+        "tags": [
+          "MongoTest"
+        ],
+        "summary": "Test frontend to database endpoint without authentication",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MongoTest"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MongoTest"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MongoTest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/MongoTest/secure": {
+      "get": {
+        "tags": [
+          "MongoTest"
+        ],
+        "summary": "Test frontend to database endpoint with authentication",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MongoTest"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MongoTest"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MongoTest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/PlaceLookup": {
+      "get": {
+        "tags": [
+          "PlaceLookup"
+        ],
+        "summary": "Lookup geographic place by name",
+        "operationId": "GetPlaceLookup",
+        "parameters": [
+          {
+            "name": "placeName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Geographic place found"
+          },
+          "400": {
+            "description": "Request has empty place name"
+          },
+          "500": {
+            "description": "Geographic place lookup failed"
+          }
+        }
+      }
+    },
+    "/api/Rider/about": {
+      "get": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Get the basic info of the current rider.",
+        "responses": {
+          "200": {
+            "description": "Got the rider's basic info."
+          },
+          "400": {
+            "description": "Invalid user/auth"
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      }
+    },
+    "/api/Rider/dashboard": {
+      "get": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Gets the necessary info for a rider dashboard. Shows confirmed trips, trips in bidding, and past trips.",
+        "responses": {
+          "200": {
+            "description": "Succesfully returned the dashboard.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiderDashboard"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiderDashboard"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiderDashboard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid User or Authentication"
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      }
+    },
+    "/api/Rider/modifyAcc": {
+      "post": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Modify account details, including password.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiderUpdate"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiderUpdate"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the account details."
+          },
+          "400": {
+            "description": "Invalid user/auth or error with updating password."
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      }
+    },
+    "/api/Rider/trip": {
+      "post": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Create a new trip.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrip"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrip"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created the trip."
+          },
+          "400": {
+            "description": "Invalid user/auth, invalid party size, or start time is in the past."
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Delete a trip.",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted the trip."
+          },
+          "400": {
+            "description": "Invalid user/auth, trip does not exist, trip has a driver, or trip has already started."
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      }
+    },
+    "/api/Rider/tripDriver": {
+      "post": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Confirm a driver for a trip.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTripDriver"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTripDriver"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTripDriver"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully confirmed the driver."
+          },
+          "400": {
+            "description": "Invalid user/auth, trip does not exist, trip has a driver, trip has already started, or bid does not exist."
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      }
+    },
+    "/api/Rider/rating": {
+      "post": {
+        "tags": [
+          "Rider"
+        ],
+        "summary": "Rate a driver.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveRating"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveRating"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveRating"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully rated the driver."
+          },
+          "400": {
+            "description": "Invalid user/auth, trip does not exist, trip has no driver, trip has not been taken yet, or driver has already been rated."
+          },
+          "401": {
+            "description": "The user is not a rider."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddTripDriver": {
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "description": "The trip ID to confirm the driver on",
+            "nullable": true
+          },
+          "bidId": {
+            "type": "string",
+            "description": "The bid ID to verify for the trip",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to confirm a driver for a trip"
+      },
+      "ArchivedRiderTrip": {
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "nullable": true
+          },
+          "tripName": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnail": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "geoJson": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "distance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "hasDriver": {
+            "type": "boolean"
+          },
+          "cost": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverRating": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "driverNumRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "pickupAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "destinationAddress": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BidUserView": {
+        "type": "object",
+        "properties": {
+          "bidId": {
+            "type": "string",
+            "nullable": true
+          },
+          "yourBid": {
+            "type": "boolean"
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverRating": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "driverNumRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "cost": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmedRiderTrip": {
+        "type": "object",
+        "properties": {
+          "tripID": {
+            "type": "string",
+            "nullable": true
+          },
+          "tripName": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnail": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "geoJson": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "distance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "cost": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverRating": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "driverNumRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "showRatingPrompt": {
+            "type": "boolean"
+          },
+          "driverEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "pickupAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "destinationAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverCarModel": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateOrUpdateBid": {
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "description": "The trip ID to bid on",
+            "nullable": true
+          },
+          "centsAmount": {
+            "type": "integer",
+            "description": "The amount of the bid in cents",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to create or update a bid"
+      },
+      "CreateTrip": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the trip",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "description": "Start time of the trip",
+            "format": "date-time"
+          },
+          "pickupLong": {
+            "type": "number",
+            "description": "Start longitude of the trip",
+            "format": "double"
+          },
+          "pickupLat": {
+            "type": "number",
+            "description": "Start latitude of the trip",
+            "format": "double"
+          },
+          "destinationLong": {
+            "type": "number",
+            "description": "End longitude of the trip",
+            "format": "double"
+          },
+          "destinationLat": {
+            "type": "number",
+            "description": "End latitude of the trip",
+            "format": "double"
+          },
+          "pickupAddress": {
+            "type": "string",
+            "description": "Address of the pickup location",
+            "nullable": true
+          },
+          "destinationAddress": {
+            "type": "string",
+            "description": "Address of the destination",
+            "nullable": true
+          },
+          "partySize": {
+            "type": "integer",
+            "description": "Size of the rider's party",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to create a new trip"
+      },
+      "DriverUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the driver",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number of the driver",
+            "nullable": true
+          },
+          "carDescription": {
+            "type": "string",
+            "description": "Description of the driver's car",
+            "nullable": true
+          },
+          "currentPassword": {
+            "type": "string",
+            "description": "Current password of the driver",
+            "nullable": true
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password of the driver",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to update a driver's information"
+      },
+      "GiveRating": {
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "description": "ID of the trip to rate a user on",
+            "nullable": true
+          },
+          "ratingGiven": {
+            "type": "integer",
+            "description": "Rating given from 1-5",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to give a rating to a trip"
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email of the user",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to login to the application"
+      },
+      "MongoTest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "test": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Register": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email of the user",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the user; either \"rider\" or \"driver\"",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to register a new user"
+      },
+      "RiderDashboard": {
+        "type": "object",
+        "properties": {
+          "confirmedTrips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfirmedRiderTrip"
+            },
+            "nullable": true
+          },
+          "tripsInBidding": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnconfirmedRiderTrip"
+            },
+            "nullable": true
+          },
+          "archivedTrips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArchivedRiderTrip"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiderUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the rider",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number of the rider",
+            "nullable": true
+          },
+          "currentPassword": {
+            "type": "string",
+            "description": "Current password of the rider",
+            "nullable": true
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password of the rider",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Form to update a rider's information"
+      },
+      "TripMarketOptions": {
+        "type": "object",
+        "properties": {
+          "currentLat": {
+            "type": "number",
+            "description": "Current latitude of the driver",
+            "format": "double",
+            "nullable": true
+          },
+          "currentLong": {
+            "type": "number",
+            "description": "Current longitude of the driver",
+            "format": "double",
+            "nullable": true
+          },
+          "targetLat": {
+            "type": "number",
+            "description": "Latitude driver wants to go to after the trip",
+            "format": "double",
+            "nullable": true
+          },
+          "targetLong": {
+            "type": "number",
+            "description": "Longitude driver wants to go to after the trip",
+            "format": "double",
+            "nullable": true
+          },
+          "maxCurrentToStartDistance": {
+            "type": "number",
+            "description": "Maximum straight-line distance from current coordinates to start coordinates to filter by",
+            "format": "double",
+            "nullable": true
+          },
+          "maxEndToTargetDistance": {
+            "type": "number",
+            "description": "Maximum straight-line distance from end coordinates to target coordinates to filter by",
+            "format": "double",
+            "nullable": true
+          },
+          "maxEuclideanDistance": {
+            "type": "number",
+            "description": "Maximum straight-line distance from start coordinates to end coordinates to filter by",
+            "format": "double",
+            "nullable": true
+          },
+          "maxRouteDistance": {
+            "type": "number",
+            "description": "Maximum route distance to filter by",
+            "format": "double",
+            "nullable": true
+          },
+          "minCurrentMinBid": {
+            "type": "number",
+            "description": "Minimum amount that the current minimum bid is at to filter by",
+            "format": "double",
+            "nullable": true
+          },
+          "sortMethods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of methods to sort by from highest to lowest priority; Can be \"euclideanDistance\", \"routeDistance\", \"routeDuration\", \"currentToStartDistance\", \"endToTargetDistance\", \"currentMinBid\", and \"startTime\"",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Options for filtering and sorting trips in the market"
+      },
+      "UnconfirmedRiderTrip": {
+        "type": "object",
+        "properties": {
+          "tripID": {
+            "type": "string",
+            "nullable": true
+          },
+          "tripName": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnail": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "geoJson": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "distance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "bids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BidUserView"
+            },
+            "nullable": true
+          },
+          "pickupAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "destinationAddress": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "JWT Authorization",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}
