@@ -23,7 +23,7 @@ namespace hagglehaul.Tests.ServiceTests
         }
 
         [Test]
-        public async Task CanCreateAndDeletedriverProfile()
+        public async Task CanCreateAndDeleteDriverProfile()
         {
             var driverProfileService = new DriverProfileService(_database);
             var driverProfile = HhTestUtilities.GetDriverProfileData(1).First();
@@ -31,6 +31,22 @@ namespace hagglehaul.Tests.ServiceTests
             Assert.DoesNotThrowAsync(async () => await driverProfileService.CreateAsync(driverProfile));
             var actual = await driverProfileService.GetAsync(driverProfile.Email);
             Assert.IsTrue(HhTestUtilities.CompareJson(HhTestUtilities.GetDriverProfileData(1).First(), actual));
+        }
+        
+        [Test]
+        public async Task CanCreateAndUpdateDriverProfile()
+        {
+            var driverProfileService = new DriverProfileService(_database);
+            var driverProfile = HhTestUtilities.GetDriverProfileData(1).First();
+
+            Assert.DoesNotThrowAsync(async () => await driverProfileService.CreateAsync(driverProfile));
+            var actual = await driverProfileService.GetAsync(driverProfile.Email);
+            Assert.IsTrue(HhTestUtilities.CompareJson(HhTestUtilities.GetDriverProfileData(1).First(), actual));
+
+            driverProfile.Rating = 1.1;
+            Assert.DoesNotThrowAsync(async () => await driverProfileService.UpdateAsync(driverProfile.Email, driverProfile));
+            actual = await driverProfileService.GetAsync(driverProfile.Email);
+            Assert.IsTrue(HhTestUtilities.CompareJson(driverProfile, actual));
         }
     }
 }

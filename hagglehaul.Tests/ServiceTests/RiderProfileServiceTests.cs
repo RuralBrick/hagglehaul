@@ -32,5 +32,22 @@ namespace hagglehaul.Tests.ServiceTests
             var actual = await riderProfileService.GetAsync(riderProfile.Email);
             Assert.IsTrue(HhTestUtilities.CompareJson(HhTestUtilities.GetRiderProfileData(1).First(), actual));
         }
+
+        [Test]
+        public async Task CanCreateAndUpdateRiderProfile()
+        {
+            var riderProfileService = new RiderProfileService(_database);
+            var riderProfile = HhTestUtilities.GetRiderProfileData(1).First();
+
+            Assert.DoesNotThrowAsync(async () => await riderProfileService.CreateAsync(riderProfile));
+            var actual = await riderProfileService.GetAsync(riderProfile.Email);
+            Assert.IsTrue(HhTestUtilities.CompareJson(HhTestUtilities.GetRiderProfileData(1).First(), actual));
+
+            riderProfile.Rating = 1.1;
+            Assert.DoesNotThrowAsync(
+                async () => await riderProfileService.UpdateAsync(riderProfile.Email, riderProfile));
+            actual = await riderProfileService.GetAsync(riderProfile.Email);
+            Assert.IsTrue(HhTestUtilities.CompareJson(riderProfile, actual));
+        }
     }
 }
