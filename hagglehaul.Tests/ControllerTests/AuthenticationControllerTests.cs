@@ -80,6 +80,53 @@ namespace hagglehaul.Tests.ControllerTests
         }
 
         [Test]
+        public async Task TestLoginWithEmptyFields()
+        {
+            var response = await _controller.Login(new Login
+            {
+                Email = "",
+                Password = "",
+            }) as BadRequestObjectResult;
+
+            Assert.That(response, Is.TypeOf<BadRequestObjectResult>());
+        }
+
+        [Test]
+        public async Task TestLoginWithNonexistantUser()
+        {
+            _mockUserCoreService.Setup(x => x.GetAsync(It.IsAny<string>()))!.ReturnsAsync((UserCore)null!);
+
+            var response = await _controller.Login(new Login
+            {
+                Email = "rider@example.com",
+                Password = "password",
+            });
+
+            Assert.That(response, Is.TypeOf<UnauthorizedResult>());
+        }
+
+        [Test]
+        public async Task TestLoginWithInvalidPassword()
+        {
+            _mockUserCoreService.Setup(x => x.GetAsync(It.IsAny<string>()))!.ReturnsAsync(new UserCore
+            {
+                Email = "rider@example.com",
+                PasswordHash = "passwordsalt",
+                Salt = "salt",
+            });
+
+            _mockUserCoreService.Setup(x => x.ComparePasswordToHash(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))!.Returns((string password, string hash, string salt) => hash == password + salt);
+
+            var response = await _controller.Login(new Login
+            {
+                Email = "rider@example.com",
+                Password = "passwrod",
+            });
+
+            Assert.That(response, Is.TypeOf<UnauthorizedResult>());
+        }
+
+        [Test]
         public async Task TestSuccessfulRegister()
         {
             _mockUserCoreService.SetupSequence(x => x.GetAsync(It.IsAny<string>()))
@@ -137,6 +184,53 @@ namespace hagglehaul.Tests.ControllerTests
 
             Assert.That(token, Is.Not.Null);
             Assert.That(expiration, Is.Not.Null);
+        }
+
+        [Test]
+        public async Task TestRegisterWithEmptyFields()
+        {
+            var response = await _controller.Register(new Register
+            {
+                Email = "",
+                Password = "",
+                Role = "",
+            }) as BadRequestObjectResult;
+
+            Assert.That(response, Is.TypeOf<BadRequestObjectResult>());
+        }
+
+        [Test]
+        public async Task TestRegisterWithExistingUser()
+        {
+            _mockUserCoreService.Setup(x => x.GetAsync(It.IsAny<string>()))!.ReturnsAsync(new UserCore
+            {
+                Email = "rider@example.com",
+                Role = "rider",
+            });
+
+            var response = await _controller.Register(new Register
+            {
+                Email = "rider@exammple.com",
+                Password = "password",
+                Role = "rider",
+            });
+
+            Assert.That(response, Is.TypeOf<BadRequestObjectResult>());
+        }
+
+        [Test]
+        public async Task TestRegisterWithInvalidRole()
+        {
+            _mockUserCoreService.Setup(x => x.GetAsync(It.IsAny<string>()))!.ReturnsAsync((UserCore)null!);
+
+            var response = await _controller.Register(new Register
+            {
+                Email = "anonymous@example.com",
+                Password = "password",
+                Role = "anonymous",
+            });
+
+            Assert.That(response, Is.TypeOf<BadRequestObjectResult>());
         }
     }
 }
