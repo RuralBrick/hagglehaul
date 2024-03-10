@@ -82,8 +82,15 @@ namespace hagglehaul.Tests.ControllerTests
         [Test]
         public async Task TestSuccessfulRegister()
         {
-            UserCore savedUser = null!;
-            _mockUserCoreService.Setup(x => x.GetAsync(It.IsAny<string>()))!.ReturnsAsync(savedUser);
+            _mockUserCoreService.SetupSequence(x => x.GetAsync(It.IsAny<string>()))
+                .ReturnsAsync((UserCore)null!)
+                .ReturnsAsync(new UserCore
+                {
+                    Email = "rider@example.com",
+                    PasswordHash = "passwordsalt",
+                    Salt = "salt",
+                    Role = "rider",
+                });
 
             _mockUserCoreService.Setup(x => x.CreatePasswordHash(It.IsAny<string>(), out It.Ref<string>.IsAny, out It.Ref<string>.IsAny))!.Callback((string password, out string hash, out string salt) =>
             {
@@ -91,12 +98,13 @@ namespace hagglehaul.Tests.ControllerTests
                 hash = password + salt;
             });
 
-            _mockUserCoreService.Setup(x => x.CreateAsync(It.IsAny<UserCore>()))!.ReturnsAsync((UserCore uc) =>
-                {
-                    savedUser = uc;
-                    return savedUser;
-                }
-             );
+            _mockUserCoreService.Setup(x => x.CreateAsync(It.IsAny<UserCore>()))!.Callback((UserCore savedUser) =>
+            {
+                Assert.That(savedUser.Email, Is.EqualTo("rider@example.com"));
+                Assert.That(savedUser.PasswordHash, Is.EqualTo("passwordsalt"));
+                Assert.That(savedUser.Salt, Is.EqualTo("salt"));
+                Assert.That(savedUser.Role, Is.EqualTo("rider"));
+            });
 
             _mockUserCoreService.Setup(x => x.ComparePasswordToHash(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))!.Returns((string password, string hash, string salt) => hash == password + salt);
 
@@ -111,9 +119,6 @@ namespace hagglehaul.Tests.ControllerTests
                 Role = "rider",
             });
 
-            Assert.That(savedUser.Email, Is.EqualTo("rider@example.com"));
-            Assert.That(savedUser.PasswordHash, Is.EqualTo("passwordsalt"));
-            Assert.That(savedUser.Salt, Is.EqualTo("salt"));
             Assert.That(actualResponse, Is.TypeOf<OkObjectResult>());
 
             var response = actualResponse as OkObjectResult;
