@@ -80,7 +80,7 @@ namespace hagglehaul.Server.Controllers
             List<UnconfirmedDriverTrip> unconfirmedTrips = new List<UnconfirmedDriverTrip>();
             List<ArchivedDriverTrip> archivedTrips = new List<ArchivedDriverTrip>();
             List<Bid> allBids = await _bidService.GetDriverBidsAsync(email);
-            foreach (Bid bid in allBids)
+            foreach (Bid bid in allBids ?? Enumerable.Empty<Bid>())
             {
                 //if trip date is in past, trip is archived
                 //if trip date is in future, email null, trip is in bidding
@@ -154,7 +154,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.RiderNumRating = rider.NumRatings;
                     List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
                     unconfirmedTrip.Bids = new List<BidUserView>();
-                    foreach (Bid tripBid in tripBids)
+                    foreach (Bid tripBid in tripBids ?? Enumerable.Empty<Bid>())
                     {
                         BidUserView bidUserView = new BidUserView();
                         UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
