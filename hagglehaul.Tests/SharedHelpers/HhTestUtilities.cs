@@ -101,4 +101,24 @@ public class HhTestUtilities
 
         return result;
     }
+
+    public static List<UserCore> GetUserCoreData(int count = 2, bool isDriver = false)
+    {
+        var result = new List<UserCore>(count);
+        for (var i = 1; i <= count; i++)
+        {
+            result.Add(new UserCore
+            {
+                Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
+                Email = $"user{i}@example.com",
+                PasswordHash = "hash",
+                Salt = "salt",
+                Name = $"User {i}",
+                Phone = "123 456 7890",
+                Role = isDriver ? "driver" : "rider"
+            });
+        }
+
+        return result;
+    }
 }

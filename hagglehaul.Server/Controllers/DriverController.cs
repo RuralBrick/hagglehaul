@@ -6,9 +6,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// <summary>
+    /// Controller for driver-related operations.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class DriverController : ControllerBase
@@ -40,10 +44,22 @@ namespace hagglehaul.Server.Controllers
             _emailNotificationService = emailNotificationService;
         }
 
+        /// <summary>
+        /// Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the dashboard is successfully returned,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpGet]
         [Route("dashboard")]
         [ProducesResponseType(typeof(DriverDashboard), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Succesfully returned the dashboard.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid User or Authentication")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> GetDashboard()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -64,7 +80,7 @@ namespace hagglehaul.Server.Controllers
             List<UnconfirmedDriverTrip> unconfirmedTrips = new List<UnconfirmedDriverTrip>();
             List<ArchivedDriverTrip> archivedTrips = new List<ArchivedDriverTrip>();
             List<Bid> allBids = await _bidService.GetDriverBidsAsync(email);
-            foreach (Bid bid in allBids)
+            foreach (Bid bid in allBids ?? Enumerable.Empty<Bid>())
             {
                 //if trip date is in past, trip is archived
                 //if trip date is in future, email null, trip is in bidding
@@ -138,7 +154,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.RiderNumRating = rider.NumRatings;
                     List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
                     unconfirmedTrip.Bids = new List<BidUserView>();
-                    foreach (Bid tripBid in tripBids)
+                    foreach (Bid tripBid in tripBids ?? Enumerable.Empty<Bid>())
                     {
                         BidUserView bidUserView = new BidUserView();
                         UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
@@ -170,16 +186,33 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverDashboard);
         }
 
+        /// <summary>
+        /// Get the basic info of the current driver.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the driver's basic info is successfully returned,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpGet]
         [Route("about")]
         [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get the basic info of the current driver.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Got the driver's basic info.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> Get()
         {
             ClaimsPrincipal currentUser = this.User;
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
             }
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
@@ -192,9 +225,22 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverBasicInfo);
         }
 
+        /// <summary>
+        /// Modify account details, including password.
+        /// </summary>
+        /// <param name="driverUpdate">The update form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the account details are successfully updated,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
+        [SwaggerOperation(Summary = "Modify account details, including password.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully updated the account details.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or error with updating password.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> ModifyAccountDetails([FromBody] DriverUpdate driverUpdate)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -202,6 +248,11 @@ namespace hagglehaul.Server.Controllers
             if (currentUser == null)
             {
                 return BadRequest(new { Error = "Invalid User/Auth" });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != "driver")
+            {
+                return Unauthorized();
             }
             bool changingPassword = !String.IsNullOrEmpty(driverUpdate.NewPassword);
             if (String.IsNullOrEmpty(driverUpdate.CurrentPassword) && changingPassword)
@@ -226,7 +277,6 @@ namespace hagglehaul.Server.Controllers
 
             if (changingPassword)
             {
-                Console.WriteLine("changing pass");
                 _userCoreService.CreatePasswordHash(driverUpdate.NewPassword, out var newHash, out var newSalt);
                 userCore.PasswordHash = newHash;
                 userCore.Salt = newSalt;
@@ -248,25 +298,23 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
-        [Authorize]
-        [HttpGet]
-        [Route("bid")]
-        public async Task<IActionResult> GetDriverBids()
-        {
-            ClaimsPrincipal currentUser = this.User;
-
-            if (currentUser == null) { return BadRequest(new { Error = "Invalid User/Auth" }); };
-
-            var email = currentUser.FindFirstValue(ClaimTypes.Name);
-
-            var bids = await _bidService.GetDriverBidsAsync(email);
-            return Ok(bids);
-        }
-
+        /// <summary>
+        /// Create or update a bid for a trip.
+        /// </summary>
+        /// <param name="request">The bidding form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the bid was successfully created or updated,
+        /// <see cref="BadRequestObjectResult"/> if the tripId is invalid or the trip is either confirmed or in the past,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [HttpPost]
         [HttpPatch]
         [Route("bid")]
         [Authorize]
+        [SwaggerOperation(Summary = "Create or update a bid for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "The bid was successfully created or updated.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The tripId is invalid or the trip is either confirmed or in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> CreateOrUpdateBid([FromBody] CreateOrUpdateBid request)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -334,9 +382,22 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Delete a bid for a trip.
+        /// </summary>
+        /// <param name="tripId">The ID of the trip to delete the user's bid from</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the bid was successfully deleted,
+        /// <see cref="BadRequestObjectResult"/> if the tripId is invalid or the trip is either confirmed or in the past,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [HttpDelete]
         [Route("bid")]
         [Authorize]
+        [SwaggerOperation(Summary = "Delete a bid for a trip.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "The bid was successfully deleted.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The tripId is invalid or the trip is either confirmed or in the past.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> DeleteBid([FromQuery] string tripId)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -498,9 +559,17 @@ namespace hagglehaul.Server.Controllers
             return searchedTrips;
         }
 
+        /// <summary>
+        /// Get all biddable trips.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the biddable trips are successfully returned
+        /// </returns>
         [HttpGet]
         [Route("allTrips")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get all biddable trips.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully returned all biddable trips.")]
         public async Task<IActionResult> GetAllAvailableTrips()
         {
             var availableTrips = await GetEligibleMarketTrips();
@@ -670,11 +739,21 @@ namespace hagglehaul.Server.Controllers
             return finalTrips;
         }
 
-
+        /// <summary>
+        /// Get biddable trips and filter and sort using options.
+        /// </summary>
+        /// <param name="options">The filtering and searching options form.</param>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> if the biddable trips are successfully returned,
+        /// <see cref="BadRequestObjectResult"/> if the options are invalid
+        /// </returns>
         [HttpGet]
         [HttpPost]
         [Route("tripMarket")]
         [ProducesResponseType(typeof(List<SearchedTrip>), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Get biddable trips and filter and sort using options.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully returned the biddable trips.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid options")]
         public async Task<IActionResult> GetAllAvailableTrips([FromBody] TripMarketOptions options)
         {
             List<Trip> trips;
@@ -690,9 +769,22 @@ namespace hagglehaul.Server.Controllers
             return Ok(searchedTrips);
         }
 
+        /// <summary>
+        /// Rate a rider.
+        /// </summary>
+        /// <param name="giveRating">The rating form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the rider was successfully rated,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or not authenticated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a driver
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("rating")]
+        [SwaggerOperation(Summary = "Rate a rider.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Successfully rated the rider.")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user/auth or trip.")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "The user is not a driver.")]
         public async Task<IActionResult> RateRider([FromBody] GiveRating giveRating)
         {
             ClaimsPrincipal currentUser = this.User;

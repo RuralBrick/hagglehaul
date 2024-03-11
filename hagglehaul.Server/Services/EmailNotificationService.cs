@@ -6,18 +6,50 @@ using Razor.Templating.Core;
 
 namespace hagglehaul.Server.Services;
 
+/// <summary>
+/// The type of email notification to send from the <see cref="EmailNotificationService"/>.
+/// </summary>
 public enum EmailNotificationType
 {
-    NewBid, // Notify rider when a new bid is placed
-    AcceptedBid, // Notify driver when their bid is accepted
-    Confirmation, // Notify rider with next steps after bid is accepted
+    /// <summary>
+    /// An email that notifies the rider when a new bid is placed.
+    /// </summary>
+    NewBid,
+    /// <summary>
+    /// An email that notifies the driver when their bid is accepted.
+    /// </summary>
+    AcceptedBid,
+    /// <summary>
+    /// An email that notifies the rider with next steps after bid is accepted.
+    /// </summary>
+    Confirmation,
 }
 
+/// <summary>
+/// Service to send email notifications through Azure Communication Service.
+/// </summary>
 public interface IEmailNotificationService
 {
+    /// <summary>
+    /// Sends an email notification of a particular email type to the recipient.
+    /// </summary>
+    /// <param name="type">The type of notification to send</param>
+    /// <param name="recipient">The valid email address of the recipient</param>
+    /// <param name="data">The data contained within the email, to be passed to the
+    /// email view. Note that the data must be of one of the following types: <br/>
+    /// <list type="bullet">
+    /// <item><description><see cref="NewBidEmail"/></description></item>
+    /// <item><description><see cref="ConfirmationEmail"/></description></item>
+    /// <item><description><see cref="AcceptedBidEmail"/></description></item>
+    /// </list>
+    /// </param>
+    /// <returns></returns>
     Task SendEmailNotification(EmailNotificationType type, string recipient, dynamic data);
 }
 
+/// <summary>
+/// See <see cref="IEmailNotificationService"/>.
+/// </summary>
 public class EmailNotificationService : IEmailNotificationService
 {
     private readonly EmailSettings _emailSettings;

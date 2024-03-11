@@ -3,6 +3,9 @@ using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services;
 
+/// <summary>
+/// A test class to ensure MongoDB is working properly.
+/// </summary>
 public interface IMongoTestService
 {
     Task<List<MongoTest>> GetAsync();
@@ -11,6 +14,9 @@ public interface IMongoTestService
     Task RemoveAsync(string id);
 }
 
+/// <summary>
+/// See <see cref="IMongoTestService"/>.
+/// </summary>
 public class MongoTestService : IMongoTestService
 {
     private readonly IMongoCollection<MongoTest> _mongoTestCollection;
