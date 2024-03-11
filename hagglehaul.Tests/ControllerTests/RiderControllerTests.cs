@@ -746,5 +746,67 @@ namespace hagglehaul.Tests.ControllerTests
             _mockDriverProfileService.Verify(x => x.GetAsync(It.IsAny<String>()), Times.Once());
             _mockDriverProfileService.Verify(x => x.UpdateAsync(It.IsAny<String>(), It.IsAny<DriverProfile>()), Times.Once());
         }
+
+        [Test]
+        public async Task RiderGetDashboardTest()
+        {
+            _mockTripService.Setup(
+                x => x.GetRiderTripsAsync(It.IsAny<string>())
+            )!.ReturnsAsync((string s) =>
+                HhTestUtilities.GetMulitpleTripData([1,1,1,], [true, false, false], [true, true, false], [30, 10, 30]));
+            _mockGeographicRouteService.Setup(
+                x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+            )!.ReturnsAsync((double s1, double s2, double s3, double s4) =>
+                new GeographicRoute
+                {
+                    Id = "someid",
+                    RouteDescriptor = "rider@example.com",
+                    Image = new byte[0],
+                    Distance = 1.0,
+                    Duration = 1.0,
+                    GeoJson = "somejson"
+                });
+            _mockUserCoreService.Setup(
+                x => x.GetAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) =>
+                    new UserCore
+                    {
+                        Email = "rider@example.com",
+                        Phone = "1-800-RIDENOW",
+                        Name = "Eebeedeebee",
+                    });
+
+            _mockDriverProfileService.Setup(
+                x => x.GetAsync(It.IsAny<string>())
+                            )!.ReturnsAsync(
+                (string s) => new DriverProfile
+                {
+                    Id = "someId",
+                    Email = "rider@example.com",
+                    Rating = 3.0,
+                    NumRatings = 400,
+                    CarDescription = "someId",
+                });
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, "rider@example.com"),
+                    new Claim(ClaimTypes.Role, "rider")
+                }))
+                }
+            };
+            var dashboardResult = await _controller.GetDashboard();
+            Assert.That(dashboardResult, Is.TypeOf<OkObjectResult>());
+            var dashboard = ((OkObjectResult)dashboardResult).Value as RiderDashboard;
+            _mockTripService.Verify(x => x.GetRiderTripsAsync(It.IsAny<String>()), Times.Once());
+            Assert.That(dashboard.TripsInBidding.Count, Is.EqualTo(1));
+            Assert.That(dashboard.ArchivedTrips.Count, Is.EqualTo(1));
+            Assert.That(dashboard.ConfirmedTrips.Count, Is.EqualTo(1));
+        }
     }
 }
