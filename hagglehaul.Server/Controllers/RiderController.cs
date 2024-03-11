@@ -124,7 +124,7 @@ namespace hagglehaul.Server.Controllers
                 if (trip.DriverEmail != null )
                 {
                     List<Bid> bids = await _bidService.GetDriverBidsAsync(trip.DriverEmail);
-                    foreach (Bid bid in bids)
+                    foreach (Bid bid in bids ?? Enumerable.Empty<Bid>())
                     {
                         if (bid.TripId == trip.Id)
                         {
@@ -194,7 +194,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.Duration = geographicRoute.Duration;
                     unconfirmedTrip.Bids = new List<BidUserView>();
                     List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
-                    foreach (Bid tripBid in tripBids)
+                    foreach (Bid tripBid in tripBids ?? Enumerable.Empty<Bid>())
                     {
                         BidUserView bidUserView = new BidUserView();
                         UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
