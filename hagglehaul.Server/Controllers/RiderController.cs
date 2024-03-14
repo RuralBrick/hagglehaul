@@ -9,6 +9,9 @@ using hagglehaul.Server.EmailViews;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// <summary>
+    /// Controller for rider-related operations.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class RiderController : ControllerBase
@@ -40,6 +43,14 @@ namespace hagglehaul.Server.Controllers
             _emailNotificationService = emailNotificationService;
         }
 
+        /// <summary>
+        /// Get the basic info of the current rider.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> with the rider's basic info,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpGet]
         [Route("about")]
@@ -64,6 +75,14 @@ namespace hagglehaul.Server.Controllers
             return Ok(riderBasicInfo);
         }
 
+        /// <summary>
+        /// Gets the necessary info for a rider dashboard. Shows confirmed trips, trips in bidding, and past trips.
+        /// </summary>
+        /// <returns>
+        /// <see cref="OkObjectResult"/> with the rider's dashboard,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpGet]
         [Route("dashboard")]
@@ -105,7 +124,7 @@ namespace hagglehaul.Server.Controllers
                 if (trip.DriverEmail != null )
                 {
                     List<Bid> bids = await _bidService.GetDriverBidsAsync(trip.DriverEmail);
-                    foreach (Bid bid in bids)
+                    foreach (Bid bid in bids ?? Enumerable.Empty<Bid>())
                     {
                         if (bid.TripId == trip.Id)
                         {
@@ -175,7 +194,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.Duration = geographicRoute.Duration;
                     unconfirmedTrip.Bids = new List<BidUserView>();
                     List<Bid> tripBids = await _bidService.GetTripBidsAsync(trip.Id);
-                    foreach (Bid tripBid in tripBids)
+                    foreach (Bid tripBid in tripBids ?? Enumerable.Empty<Bid>())
                     {
                         BidUserView bidUserView = new BidUserView();
                         UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
@@ -199,6 +218,15 @@ namespace hagglehaul.Server.Controllers
             return Ok(riderDashboard);
         }
 
+        /// <summary>
+        /// Modify account details, including password.
+        /// </summary>
+        /// <param name="riderUpdate">The update form.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the account details are successfully updated,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid or there is an error with updating the password,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("modifyAcc")]
@@ -257,6 +285,15 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Create a new trip.
+        /// </summary>
+        /// <param name="tripDetails">The form with the requested trip's details.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the trip is successfully created,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid, the party size is invalid, or the start time is in the past,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("trip")]
@@ -299,6 +336,15 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Delete a trip.
+        /// </summary>
+        /// <param name="tripId">The ID of the trip to delete. Rider must have create this trip.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the trip is successfully deleted,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid, the trip does not exist, the trip has a driver, or the trip has already started,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpDelete]
         [Route("trip")]
@@ -328,6 +374,15 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Confirm a driver for a trip.
+        /// </summary>
+        /// <param name="addTripDriver">The form to confirm a driver with.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the driver is successfully confirmed,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid, the trip does not exist, the trip has a driver, the trip has already started, or the bid does not exist,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("tripDriver")]
@@ -400,6 +455,15 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Rate a driver.
+        /// </summary>
+        /// <param name="giveRating">The form to rate a user.</param>
+        /// <returns>
+        /// <see cref="OkResult"/> if the driver is successfully rated,
+        /// <see cref="BadRequestObjectResult"/> if the user is invalid, the trip does not exist, the trip has no driver, the trip has not been taken yet, or the driver has already been rated,
+        /// <see cref="UnauthorizedResult"/> if the user is not a rider
+        /// </returns>
         [Authorize]
         [HttpPost]
         [Route("rating")]

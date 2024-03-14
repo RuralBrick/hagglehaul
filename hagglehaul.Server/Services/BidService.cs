@@ -3,16 +3,55 @@ using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services
 {
+    /// <summary>
+    /// Corresponds to Bid collection in the database
+    /// </summary>
     public interface IBidService
     {
+        /// <summary>
+        /// Get all bids for a driver
+        /// </summary>
+        /// <param name="email">The email (username) of the driver</param>
+        /// <returns>A <see cref="List{T}" /> of <see cref="Bid"/> objects</returns>
         Task<List<Bid>> GetDriverBidsAsync(string email);
+        /// <summary>
+        /// Get all bids for a trip
+        /// </summary>
+        /// <param name="tripId">The Trip ID of the trip</param>
+        /// <returns>A <see cref="List{T}" /> of <see cref="Bid"/> objects</returns>
         Task<List<Bid>> GetTripBidsAsync(string tripId);
+        /// <summary>
+        /// Create a new bid on a trip
+        /// </summary>
+        /// <param name="bid">A Bid object to be inserted. Note that we do
+        /// not check for correctness of the inserted object.</param>
+        /// <returns></returns>
         Task<Bid> CreateAsync(Bid bid);
+        /// <summary>
+        /// Update a bid
+        /// </summary>
+        /// <param name="id">The Bid ID of the bid</param>
+        /// <param name="bidIn">The new Bid object. Note that we do not
+        /// check for correctness of the inserted object.</param>
+        /// <returns></returns>
         Task UpdateAsync(string id, Bid bidIn);
+        /// <summary>
+        /// Delete a bid
+        /// </summary>
+        /// <param name="id">The Bid ID of the bid</param>
+        /// <returns></returns>
         Task DeleteAsync(string id);
+        /// <summary>
+        /// Delete all bids for a given trip. Useful when a trip is deleted.
+        /// </summary>
+        /// <param name="tripId">The Trip ID for which all bids will be deleted.</param>
+        /// <returns></returns>
         Task DeleteByTripIdAsync(string tripId);
     }
 
+    /// <summary>
+    /// See <see cref="IBidService"/>.
+    /// </summary>
     public class BidService : IBidService
     {
         public readonly IMongoCollection<Bid> _bidCollection;
