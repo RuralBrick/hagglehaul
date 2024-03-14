@@ -1,8 +1,5 @@
 # Hagglehaul README
 
-[![Build Status](https://app.travis-ci.com/melaasar/cs130-template.svg?branch=master)](https://app.travis-ci.com/github/melaasar/cs130-template)
-[![Release](https://img.shields.io/github/v/release/melaasar/cs130-template?label=release)](https://github.com/melaasar/cs130-template/releases/latest)
-
 ## Hagglehaul Live Version
 
 <https://hagglehaul.azurewebsites.net/>
@@ -40,13 +37,16 @@ You may also manually re-run a script invocation(s) for the most recent commit o
 ## How to Install/Deploy the Project
 
 Run these commands:
-`git clone https://github.com/RuralBrick/hagglehaul.git`
-`cd [into the Hagglehaul directory, wherever it is]`
-`cd hagglehaul.client`
-`npm install`
-`cd ..`
-`dotnet restore`
-`dotnet build`
-`dotnet run --no-build --launch-profile https`
+
+```
+git clone https://github.com/RuralBrick/hagglehaul.git
+cd hagglehaul
+cd hagglehaul.client
+npm install
+cd ..
+dotnet restore
+dotnet build
+dotnet run --no-build --launch-profile https
+```
 
 Then visit <https://localhost:5173/> to see your version of the web app.
