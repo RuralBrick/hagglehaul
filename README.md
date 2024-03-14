@@ -30,6 +30,13 @@ Whenever a developer **pushes a commit(s)**, the nunit-tests.yml script will be 
 
 Whenever a developer **pushes a branch to "main"**, the azure-webapp-publish.yml script will be invoked. This compiles, packages, and deploys the most current version of the app in "main" to Azure, adding the branch's features to Hagglehaul's live version.
 
+You may also manually re-run a script invocation(s) for the most recent commit or branch. To do so:
+
+1. Open the Hagglehaul GitHub page <https://github.com/RuralBrick/hagglehaul>
+2. Click on the "Actions" tab
+3. Select the most recent workflow run, located at the top of the presented list
+4. Click on the "Re-run all jobs" button in the upper right
+
 ## How to Install/Deploy the Project
 
 Run these commands:
