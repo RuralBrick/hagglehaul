@@ -131,6 +131,151 @@ public class DriverControllerTests
         Assert.That(savedUserCore.PasswordHash, Is.EqualTo("1234567"));
     }
 
+    // Test that a driver can get all market trips with no options
+    [Test]
+    public async Task DriverGetAllMarketTrips()
+    {
+        var trips = HhTestUtilities.GetTripData(start: 1, count: 2);
+        trips.AddRange(HhTestUtilities.GetTripData(start: 3, inPast: true));
+        trips.AddRange(HhTestUtilities.GetTripData(start: 5, hasDriver: true));
+        _mockTripService.Setup(
+                       x => x.GetAllTripsAsync()
+                              )!.ReturnsAsync(
+                       trips.ToList()
+                              );
+
+        _mockBidService.Setup(x => x.GetTripBidsAsync(It.IsAny<string>()))
+                       .ReturnsAsync(new List<Bid>(0));
+
+        _mockGeographicRouteService.Setup(
+                       x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+                              )!.ReturnsAsync(
+                       (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+                       {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+                              );
+
+        _mockDriverProfileService.Setup(
+                                  x => x.GetAsync(It.IsAny<string>())
+                                                               )!.ReturnsAsync(
+                                  (string s) => new DriverProfile
+                                  {
+                                      Email = ""
+                                  });
+
+        _mockUserCoreService.Setup(
+                                         x => x.GetAsync(It.IsAny<string>())
+                                                                                                   )!.ReturnsAsync(
+                                         (string s) => new UserCore
+                                         {
+                                  Email = ""
+                              });
+
+        var result = await _controller.GetAllAvailableTrips();
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+
+        var tripsResult = ((OkObjectResult) result).Value as List<SearchedTrip>;
+
+        Assert.That(tripsResult, Is.TypeOf<List<SearchedTrip>>());
+
+        Assert.That(tripsResult.Count, Is.EqualTo(2));
+        Assert.That(tripsResult[0].TripId, Is.EqualTo("111111111111111111111111"));
+        Assert.That(tripsResult[1].TripId, Is.EqualTo("222222222222222222222222"));
+    }
+
+    // Test that a driver can filter and sort market trips by current to start distance
+    [Test]
+    public async Task DriverFilterAndSortTripMarketByCurrentToStartDistance()
+    {
+        _mockTripService.Setup(
+                       x => x.GetAllTripsAsync()
+                              )!.ReturnsAsync(
+                       new List<Trip>
+                       {
+                new Trip
+                {
+                    Id = "1",
+                    PickupLat = 0,
+                    PickupLong = 2,
+                    DestinationLat = 2,
+                    DestinationLong = 0,
+                    StartTime = DateTime.Now.AddHours(36),
+                },
+                new Trip
+                {
+                    Id = "2",
+                    PickupLat = 0,
+                    PickupLong = 1,
+                    DestinationLat = 1,
+                    DestinationLong = 0,
+                    StartTime = DateTime.Now.AddHours(36),
+                },
+                new Trip
+                {
+                    Id = "3",
+                    PickupLat = 0,
+                    PickupLong = 3,
+                    DestinationLat = 3,
+                    DestinationLong = 0,
+                    StartTime = DateTime.Now.AddHours(36),
+                },
+            }
+                              );
+
+        _mockGeographicRouteService.Setup(
+                       x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+                                                    )!.ReturnsAsync(
+                                  (double sLong, double sLat, double eLong, double eLat) => new GeographicRoute
+                                  {
+                Distance = Math.Abs(eLong - sLong) + Math.Abs(eLat - sLat),
+            }
+                                                               );
+
+        _mockUserCoreService.Setup(
+                                                    x => x.GetAsync(It.IsAny<string>())
+                                                                                                                                                      )!.ReturnsAsync(
+                                                    (string s) => new UserCore
+                                                    {
+                                  Email = ""
+                              });
+
+        _mockDriverProfileService.Setup(
+                                                               x => x.GetAsync(It.IsAny<string>())
+                                                                                                                                                                                                    )!.ReturnsAsync(
+                                                               (string s) => new DriverProfile
+                                                               {
+                                  Email = ""
+                              });
+
+        _mockBidService.Setup(
+                                         x => x.GetTripBidsAsync(It.IsAny<string>())
+                                                                                                                                                                              )!.ReturnsAsync(
+                                         (string s) => new List<Bid>(0)
+                                                                  );
+
+        var tripsResult = await _controller.GetAllAvailableTrips(new TripMarketOptions
+        {
+            CurrentLat = 0.0,
+            CurrentLong = 0.0,
+            SortMethods = [
+                "currentToStartDistance"
+            ],
+MaxCurrentToStartDistance = 2.0
+        });
+
+        Assert.That(tripsResult, Is.TypeOf<OkObjectResult>());
+
+        var trips = ((OkObjectResult) tripsResult).Value as List<SearchedTrip>;
+
+        Assert.That(trips, Is.TypeOf<List<SearchedTrip>>());
+
+        Assert.That(trips.Count, Is.EqualTo(2));
+        Assert.That(trips[0].TripId, Is.EqualTo("2"));
+        Assert.That(trips[1].TripId, Is.EqualTo("1"));
+    }
+
     [Test]
     public async Task DriverFilterTripMarketByMaxEndToTargetDistance()
     {
@@ -1071,5 +1216,160 @@ public class DriverControllerTests
         Assert.That(saveProfile.NumRatings, Is.EqualTo(10));
 
         Assert.That(saveTrip.RiderHasBeenRated, Is.EqualTo(true));
+    }
+
+    // Test driver post rating for a trip that doesn't exist
+    [Test]
+    public async Task DriverPostRatingForNonexistantTrip()
+    {
+        _mockTripService.Setup(
+                       x => x.GetTripByIdAsync(It.IsAny<string>())
+                              )!.ReturnsAsync(
+                       (string s) => null
+                              );
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "driver@example.com"),
+                new Claim(ClaimTypes.Role, "driver")
+            }))
+            }
+        };
+
+        Assert.That(await _controller.RateRider(new GiveRating
+        {
+            TripId = "testTrip",
+            RatingGiven = 5,
+        }), Is.InstanceOf<BadRequestObjectResult>());
+    }
+
+    // Test driver post rating for rider without previous rating
+    [Test]
+    public async Task DriverGiveFirstRating()
+    {
+        _mockTripService.Setup(
+                       x => x.GetTripByIdAsync(It.IsAny<string>())
+                              )!.ReturnsAsync(
+                       (string s) => new Trip
+                       {
+                           Id = "testTrip",
+                           RiderEmail = "rider@example.com",
+                       });
+
+        _mockRiderProfileService.Setup(
+                       x => x.GetAsync(It.IsAny<string>())
+                              )!.ReturnsAsync(
+                       (string s) => new RiderProfile
+                       {
+                           Email = "rider@example.com",
+                       });
+
+        _mockRiderProfileService.Setup(
+            x => x.UpdateAsync(It.IsAny<string>(), It.IsAny<RiderProfile>()))!.Callback(
+            (string s, RiderProfile rp) =>
+            {
+                Assert.That(rp.Rating, Is.EqualTo(5));
+                Assert.That(rp.NumRatings, Is.EqualTo(1));
+            });
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                new Claim(ClaimTypes.Name, "driver@example.com"),
+                new Claim(ClaimTypes.Role, "driver")
+                }))
+            }
+        };
+
+        _ = await _controller.RateRider(new GiveRating
+        {
+            TripId = "testTrip",
+            RatingGiven = 5,
+        });
+    }
+
+    [Test]
+    public async Task DriverGetDashboardTest()
+    {
+        _mockTripService.Setup(
+            x => x.GetTripByIdAsync(It.IsAny<string>())
+        )!.ReturnsAsync((string s) =>
+            HhTestUtilities.GetTripData(1, true ? Int32.Parse(s) < 2 : false, true ? Int32.Parse(s) < 3 : false, 30, Int32.Parse(s)).First());
+        _mockBidService.Setup(
+            x => x.GetDriverBidsAsync(It.IsAny<string>())
+        )!.ReturnsAsync((string s) =>
+            HhTestUtilities.GetBidData(3, false, 1));
+        _mockGeographicRouteService.Setup(
+            x => x.GetGeographicRoute(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>())
+        )!.ReturnsAsync((double s1, double s2, double s3, double s4) =>
+            new GeographicRoute
+            {
+                Id = "someid",
+                RouteDescriptor = "rider@example.com",
+                Image = new byte[0],
+                Distance = 1.0,
+                Duration = 1.0,
+                GeoJson = "somejson"
+            });
+
+        _mockDriverProfileService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+                        )!.ReturnsAsync(
+            (string s) => new DriverProfile
+            {
+                Id = "someId",
+                Email = "driver@example.com",
+                Rating = 3.0,
+                NumRatings = 400,
+                CarDescription = "someId",
+            });
+
+        _mockUserCoreService.Setup(
+                x => x.GetAsync(It.IsAny<string>())
+            )!.ReturnsAsync(
+                (string s) =>
+                    new UserCore
+                    {
+                        Email = "driver@example.com",
+                        Phone = "1-800-RIDENOW",
+                        Name = "Eebeedeebee",
+                    });
+
+        _mockRiderProfileService.Setup(
+            x => x.GetAsync(It.IsAny<string>())
+                        )!.ReturnsAsync(
+            (string s) => new RiderProfile
+            {
+                Id = "someId",
+                Email = "rider@example.com",
+                Rating = 3.0,
+                NumRatings = 400
+            });
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                    new Claim(ClaimTypes.Name, "driver@example.com"),
+                    new Claim(ClaimTypes.Role, "driver")
+            }))
+            }
+        };
+        var dashboardResult = await _controller.GetDashboard();
+        Assert.That(dashboardResult, Is.TypeOf<OkObjectResult>());
+        var dashboard = ((OkObjectResult)dashboardResult).Value as DriverDashboard;
+        _mockTripService.Verify(x => x.GetTripByIdAsync(It.IsAny<String>()), Times.Exactly(3));
+        Assert.That(dashboard.TripsInBidding.Count, Is.EqualTo(1));
+        Assert.That(dashboard.ArchivedTrips.Count, Is.EqualTo(1));
+        Assert.That(dashboard.ConfirmedTrips.Count, Is.EqualTo(1));
     }
 }

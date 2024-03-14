@@ -58,10 +58,10 @@ public class HhTestUtilities
         return result;
     }
 
-    public static List<Trip> GetTripData(int count = 2, bool inPast = false, bool hasDriver = false, int timeDelta = 0)
+    public static List<Trip> GetTripData(int count = 2, bool inPast = false, bool hasDriver = false, int timeDelta = 0, int start = 1)
     {
         var result = new List<Trip>(count);
-        for (var i = 1; i <= count; i++)
+        for (var i = start; i < count + start; i++)
         {
             result.Add(new Trip
             {
@@ -69,7 +69,7 @@ public class HhTestUtilities
                 RiderEmail = "rider@example.com",
                 DriverEmail = hasDriver ? "driver@example.com" : null,
                 Name = $"MyTrip{i}",
-                StartTime = DateTime.Now.AddHours(inPast ? (-2 - i * timeDelta) : (36 + i * timeDelta)),
+                StartTime = DateTime.Now.AddHours(inPast ? (-2 - (i+1) * timeDelta) : (36 + i * timeDelta)),
                 PickupLong = 1.0 + (i * 0.1),
                 PickupLat = 1.0 + (i * 0.1),
                 DestinationLong = 2.0 + (i * 0.1),
@@ -85,7 +85,7 @@ public class HhTestUtilities
         return result;
     }
 
-    public static List<Bid> GetBidData(int count = 2, bool sameTrip = false)
+    public static List<Bid> GetBidData(int count = 2, bool sameTrip = false, int strlength = 24)
     {
         var result = new List<Bid>(count);
         for (var i = 1; i <= count; i++)
@@ -94,14 +94,27 @@ public class HhTestUtilities
             {
                 Id = new StringBuilder().Insert(0, i.ToString(), 24).ToString(),
                 DriverEmail = "driver@example.com",
-                TripId = new StringBuilder().Insert(0, (sameTrip? 1 : i).ToString(), 24).ToString(),
+                TripId = new StringBuilder().Insert(0, (sameTrip? 1 : i).ToString(), strlength).ToString(),
                 CentsAmount = 100
             });
         }
 
         return result;
     }
+    public static List<Trip> GetMulitpleTripData(int[] count, bool[] inPast, bool[] hasDriver, int[] timeDelta)
+    {
+        var result = new List<Trip>();
+        for (var i = 0; i < count.Length; i++)
+        {
+            if (i >= count.Length || i >= inPast.Length || i >= hasDriver.Length || i >= timeDelta.Length)
+            {
+                return result;
+            }
+            result.AddRange(GetTripData(count[i], inPast[i], hasDriver[i], timeDelta[i], i));
+        }
 
+        return result;
+    }
     public static List<UserCore> GetUserCoreData(int count = 2, bool isDriver = false)
     {
         var result = new List<UserCore>(count);
