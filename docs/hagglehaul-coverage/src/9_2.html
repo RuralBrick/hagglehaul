@@ -8,16 +8,31 @@
   </head>
   <body>
     <pre id="content" class="source-code">
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// Form to select a bid for a trip.
+/// &lt;/summary&gt;
+[SwaggerSchema(&quot;Form to confirm a driver for a trip&quot;)]
 public class AddTripDriver
 {
+    /// &lt;summary&gt;
+    /// The Trip ID of the trip to select a bid for.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;The trip ID to confirm the driver on&quot;)]
     public string TripId { get; set; }
+    
+    /// &lt;summary&gt;
+    /// The Bid ID of the bid to select.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;The bid ID to verify for the trip&quot;)]
     public string BidId { get; set; }
 }
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,28,5,32,1],[5,33,5,37,1],[6,27,6,31,1],[6,32,6,36,1]]);
+      highlightRanges([[15,28,15,32,1],[15,33,15,37,1],[21,27,21,31,1],[21,32,21,36,1]]);
     </script>
   </body>
 </html>

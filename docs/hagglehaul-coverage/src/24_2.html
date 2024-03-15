@@ -13,32 +13,55 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// The representation of a cached geographic route in the database.
+/// &lt;/summary&gt;
 [BsonIgnoreExtraElements]
 public class GeographicRoute
 {
+    /// &lt;summary&gt;
+    /// The unique identifier of the geographic route, not used in the application.
+    /// &lt;/summary&gt;
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    /// &lt;summary&gt;
+    /// The series of coordinates that was used to obtain the geographic route.
+    /// Must have 4 float strings, each with exactly 4 decimal places of WGS84.
+    /// Format: &quot;startLng,startLat;endLng,endLat&quot;.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;routeDescriptor&quot;)]
     public string RouteDescriptor { get; set; } = null!;
     
+    /// &lt;summary&gt;
+    /// The image of the geographic route, stored as a byte array.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;image&quot;)]
     public byte[] Image { get; set; } = null!;
     
+    /// &lt;summary&gt;
+    /// The distance of the route in meters.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;distance&quot;)]
     public double? Distance { get; set; } = null!;
     
+    /// &lt;summary&gt;
+    /// The duration of the route in seconds.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;duration&quot;)]
     public double? Duration { get; set; } = null!;
     
+    /// &lt;summary&gt;
+    /// GeoJSON representation of the route.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;geoJson&quot;)]
     public string GeoJson { get; set; } = null!;
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[11,25,11,29,0],[11,30,11,34,0],[14,37,14,41,0],[14,42,14,46,0],[14,51,14,56,1],[17,27,17,31,1],[17,32,17,36,0],[17,41,17,46,1],[20,31,20,35,1],[20,36,20,40,1],[20,45,20,50,1],[23,31,23,35,1],[23,36,23,40,0],[23,45,23,50,1],[26,29,26,33,1],[26,34,26,38,0],[26,43,26,48,1]]);
+      highlightRanges([[17,25,17,29,1],[17,30,17,34,1],[25,37,25,41,1],[25,42,25,46,1],[25,51,25,56,1],[31,27,31,31,1],[31,32,31,36,1],[31,41,31,46,1],[37,31,37,35,1],[37,36,37,40,1],[37,45,37,50,1],[43,31,43,35,1],[43,36,43,40,1],[43,45,43,50,1],[49,29,49,33,1],[49,34,49,38,1],[49,43,49,48,1]]);
     </script>
   </body>
 </html>

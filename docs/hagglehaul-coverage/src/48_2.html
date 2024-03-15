@@ -13,6 +13,9 @@ using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services;
 
+/// &lt;summary&gt;
+/// A test class to ensure MongoDB is working properly.
+/// &lt;/summary&gt;
 public interface IMongoTestService
 {
     Task&lt;List&lt;MongoTest&gt;&gt; GetAsync();
@@ -21,6 +24,9 @@ public interface IMongoTestService
     Task RemoveAsync(string id);
 }
 
+/// &lt;summary&gt;
+/// See &lt;see cref=&quot;IMongoTestService&quot;/&gt;.
+/// &lt;/summary&gt;
 public class MongoTestService : IMongoTestService
 {
     private readonly IMongoCollection&lt;MongoTest&gt; _mongoTestCollection;
@@ -48,7 +54,7 @@ public class MongoTestService : IMongoTestService
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[18,5,18,53,1],[19,5,19,6,1],[20,9,20,79,1],[21,5,21,6,1],[24,9,24,65,1],[27,9,27,95,0],[30,9,30,61,1],[33,9,33,97,0],[36,9,36,83,0]]);
+      highlightRanges([[24,5,24,53,1],[25,5,25,6,1],[26,9,26,79,1],[27,5,27,6,1],[30,9,30,65,1],[33,9,33,95,1],[36,9,36,61,1],[39,9,39,97,1],[42,9,42,83,1]]);
     </script>
   </body>
 </html>

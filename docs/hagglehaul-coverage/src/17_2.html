@@ -8,25 +8,75 @@
   </head>
   <body>
     <pre id="content" class="source-code">
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// The form to create a trip.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;Form to create a new trip&quot;)]
     public class CreateTrip
     {
+        /// &lt;summary&gt;
+        /// The name of the trip.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Name of the trip&quot;)]
         public string Name { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The start time of the trip.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Start time of the trip&quot;)]
         public DateTime StartTime { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The longitude of the pickup location, WGS84.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Start longitude of the trip&quot;)]
         public double PickupLong { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The latitude of the pickup location, WGS84.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Start latitude of the trip&quot;)]
         public double PickupLat { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The longitude of the destination location, WGS84.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;End longitude of the trip&quot;)]
         public double DestinationLong { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The latitude of the destination location, WGS84.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;End latitude of the trip&quot;)]
         public double DestinationLat { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The address of the pickup location.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Address of the pickup location&quot;)]
         public string PickupAddress { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The address of the destination.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Address of the destination&quot;)]
         public string DestinationAddress { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The number of riders in the trip.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Size of the rider&#39;s party&quot;)]
         public uint PartySize { get; set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,30,5,34,1],[5,35,5,39,1],[6,37,6,41,1],[6,42,6,46,1],[7,36,7,40,1],[7,41,7,45,1],[8,35,8,39,1],[8,40,8,44,1],[9,41,9,45,1],[9,46,9,50,1],[10,40,10,44,1],[10,45,10,49,1],[11,39,11,43,1],[11,44,11,48,1],[12,44,12,48,1],[12,49,12,53,1],[13,33,13,37,1],[13,38,13,42,1]]);
+      highlightRanges([[15,30,15,34,1],[15,35,15,39,1],[21,37,21,41,1],[21,42,21,46,1],[27,36,27,40,1],[27,41,27,45,1],[33,35,33,39,1],[33,40,33,44,1],[39,41,39,45,1],[39,46,39,50,1],[45,40,45,44,1],[45,45,45,49,1],[51,39,51,43,1],[51,44,51,48,1],[57,44,57,48,1],[57,49,57,53,1],[63,33,63,37,1],[63,38,63,42,1]]);
     </script>
   </body>
 </html>

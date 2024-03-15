@@ -8,17 +8,32 @@
   </head>
   <body>
     <pre id="content" class="source-code">
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// The form to create or update a bid.
+/// &lt;/summary&gt;
+[SwaggerSchema(&quot;Form to create or update a bid&quot;)]
 public class CreateOrUpdateBid
 {
+    /// &lt;summary&gt;
+    /// The Trip ID of the trip to create or update a bid for.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;The trip ID to bid on&quot;)]
     public string TripId { get; set; }
+    
+    /// &lt;summary&gt;
+    /// The cost, in cents, of the bid.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;The amount of the bid in cents&quot;)]
     public uint CentsAmount { get; set; }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,28,5,32,1],[5,33,5,37,1],[6,31,6,35,1],[6,36,6,40,1]]);
+      highlightRanges([[15,28,15,32,1],[15,33,15,37,1],[21,31,21,35,1],[21,36,21,40,1]]);
     </script>
   </body>
 </html>

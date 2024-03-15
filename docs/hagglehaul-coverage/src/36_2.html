@@ -10,18 +10,36 @@
     <pre id="content" class="source-code">
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// Data for displaying a bid in the search trips page.
+    /// &lt;/summary&gt;
     public class SearchedBid
     {
+        /// &lt;summary&gt;
+        /// The name of the driver.
+        /// &lt;/summary&gt;
         public string DriverName { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The rating of the driver, ranging from 1.0 to 5.0.
+        /// &lt;/summary&gt;
         public double? DriverRating { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The number of ratings the driver has received.
+        /// &lt;/summary&gt;
         public uint? DriverNumRatings { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The amount of the bid in cents.
+        /// &lt;/summary&gt;
         public uint CentsAmount { get; set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,36,5,40,0],[5,41,5,45,1],[6,39,6,43,0],[6,44,6,48,1],[7,41,7,45,0],[7,46,7,50,1],[8,35,8,39,0],[8,40,8,44,1]]);
+      highlightRanges([[11,36,11,40,0],[11,41,11,45,1],[16,39,16,43,0],[16,44,16,48,1],[21,41,21,45,0],[21,46,21,50,1],[26,35,26,39,0],[26,40,26,44,1]]);
     </script>
   </body>
 </html>

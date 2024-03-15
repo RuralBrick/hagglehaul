@@ -8,18 +8,33 @@
   </head>
   <body>
     <pre id="content" class="source-code">
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// Form to log in to the application.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;Form to login to the application&quot;)]
     public class Login
     {
+        /// &lt;summary&gt;
+        /// Email address of the user. User type is inferred from this.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Email of the user&quot;)]
         public string Email { get; set; }
+        
+        /// &lt;summary&gt;
+        /// Password of the user.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Password of the user&quot;)]
         public string Password { get; set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,31,5,35,0],[5,36,5,40,0],[6,34,6,38,0],[6,39,6,43,0]]);
+      highlightRanges([[15,31,15,35,1],[15,36,15,40,1],[21,34,21,38,1],[21,39,21,43,1]]);
     </script>
   </body>
 </html>

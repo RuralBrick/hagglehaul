@@ -8,20 +8,45 @@
   </head>
   <body>
     <pre id="content" class="source-code">
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// Form to update a rider&#39;s information.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;Form to update a rider&#39;s information&quot;)]
     public class RiderUpdate
     {
+        /// &lt;summary&gt;
+        /// The new name of the rider.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Name of the rider&quot;)]
         public string Name { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The new phone number of the rider.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Phone number of the rider&quot;)]
         public string Phone { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The current password of the rider.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Current password of the rider&quot;)]
         public string CurrentPassword { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The new password of the rider.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;New password of the rider&quot;)]
         public string NewPassword { get; set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,30,5,34,0],[5,35,5,39,0],[6,31,6,35,0],[6,36,6,40,0],[7,41,7,45,0],[7,46,7,50,0],[8,37,8,41,0],[8,42,8,46,0]]);
+      highlightRanges([[15,30,15,34,0],[15,35,15,39,0],[21,31,21,35,0],[21,36,21,40,0],[27,41,27,45,0],[27,46,27,50,0],[33,37,33,41,0],[33,42,33,46,0]]);
     </script>
   </body>
 </html>

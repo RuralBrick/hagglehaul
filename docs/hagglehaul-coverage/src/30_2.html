@@ -13,20 +13,29 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// Database model for testing MongoDB.
+/// &lt;/summary&gt;
 [BsonIgnoreExtraElements]
 public class MongoTest
 {
+    /// &lt;summary&gt;
+    /// The unique identifier of the document.
+    /// &lt;/summary&gt;
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    /// &lt;summary&gt;
+    /// The test string.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;test&quot;)]
     public string Test { get; set; } = null!;
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[11,25,11,29,1],[11,30,11,34,1],[14,26,14,30,1],[14,31,14,35,1],[14,40,14,45,1]]);
+      highlightRanges([[17,25,17,29,1],[17,30,17,34,1],[23,26,23,30,1],[23,31,23,35,1],[23,40,23,45,1]]);
     </script>
   </body>
 </html>

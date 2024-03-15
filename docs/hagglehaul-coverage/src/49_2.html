@@ -13,13 +13,37 @@ using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services
 {
+    /// &lt;summary&gt;
+    /// Corresponds to RiderProfile collection in the database.
+    /// &lt;/summary&gt;
     public interface IRiderProfileService
     {
+        /// &lt;summary&gt;
+        /// Gets a rider profile by the user&#39;s email
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email address of an existing rider&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;RiderProfile&gt; GetAsync(string email);
+        /// &lt;summary&gt;
+        /// Creates a new rider profile
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;riderProfile&quot;&gt;The &lt;see cref=&quot;RiderProfile&quot;/&gt; object. Note that
+        /// we do not check for correctness of the object.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;RiderProfile&gt; CreateAsync(RiderProfile riderProfile);
+        /// &lt;summary&gt;
+        /// Updates a rider profile
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email address of an existing rider&lt;/param&gt;
+        /// &lt;param name=&quot;riderProfileIn&quot;&gt;The &lt;see cref=&quot;RiderProfile&quot;/&gt; object. Note that
+        /// we do not check for the correctness of the object.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task UpdateAsync(string email, RiderProfile riderProfileIn);
     }
 
+    /// &lt;summary&gt;
+    /// See &lt;see cref=&quot;IRiderProfileService&quot;/&gt;.
+    /// &lt;/summary&gt;
     public class RiderProfileService : IRiderProfileService
     {
         private readonly IMongoCollection&lt;RiderProfile&gt; _riderProfileCollection;
@@ -48,7 +72,7 @@ namespace hagglehaul.Server.Services
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[17,9,17,60,1],[18,9,18,10,1],[19,13,19,92,1],[20,9,20,10,1],[23,9,23,10,1],[24,13,24,134,1],[25,13,25,33,1],[26,9,26,10,1],[29,9,29,10,1],[30,13,30,72,1],[31,13,31,33,1],[32,9,32,10,1],[35,13,35,119,0]]);
+      highlightRanges([[41,9,41,60,1],[42,9,42,10,1],[43,13,43,92,1],[44,9,44,10,1],[47,9,47,10,1],[48,13,48,134,1],[49,13,49,33,1],[50,9,50,10,1],[53,9,53,10,1],[54,13,54,72,1],[55,13,55,33,1],[56,9,56,10,1],[59,13,59,119,1]]);
     </script>
   </body>
 </html>

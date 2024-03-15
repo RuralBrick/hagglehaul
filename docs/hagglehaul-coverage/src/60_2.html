@@ -10,32 +10,84 @@
     <pre id="content" class="source-code">
 @model hagglehaul.Server.EmailViews.AcceptedBidEmail
 
-@{
-    Layout = null;
-}
-
 &lt;!DOCTYPE html&gt;
-
 &lt;html lang=&quot;en&quot;&gt;
+
 &lt;head&gt;
-    &lt;title&gt;Hagglehaul Driver Management: Your bid has been accepted&lt;/title&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Hagglehaul Driver Notification: Bid Bought&lt;/title&gt;
     &lt;style&gt;
-        .blue-accent {
-            color: #126391;
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(90deg, #f4f4f4 0%, #ffcc00 100%);
+            background-size: 200% 200%;
+            animation: gradientBackground 5s ease 1;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .confirmed-text {
+            font-size: 50px;
+            margin-bottom: 30px;
+            animation: pulse 1.5s infinite alternate;
         }
     &lt;/style&gt;
 &lt;/head&gt;
+
 &lt;body&gt;
-&lt;div&gt;
-    &lt;h1&gt;Accepted bid email template&lt;/h1&gt;
-    &lt;p class=&quot;blue-accent&quot;&gt;@Model.ExampleProperty&lt;/p&gt;
-&lt;/div&gt;
+    &lt;div class=&quot;container&quot;&gt;
+        &lt;h1&gt;Hagglehaul Driver Notification&lt;/h1&gt;
+        &lt;div class=&quot;confirmed-text&quot;&gt;Your Bid Won!&lt;/div&gt;
+
+        &lt;p&gt;Dear &lt;strong&gt;@Model.DriverName&lt;/strong&gt;,&lt;/p&gt;
+        &lt;p&gt;Your bid on &lt;strong&gt;@Model.TripName&lt;/strong&gt; has been bought for &lt;strong&gt;@Model.Price.ToString(&quot;C&quot;)&lt;/strong&gt;.&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Rider Name:&lt;/strong&gt; @Model.RiderName&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Rider Phone:&lt;/strong&gt; @Model.RiderPhone&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Rider Email:&lt;/strong&gt; @Model.RiderEmail&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Pickup Time:&lt;/strong&gt; @Model.StartTime.ToLocalTime().ToString(&quot;MM/dd/yyyy&quot;) at @Model.StartTime.ToLocalTime().ToString(&quot;h:mm tt&quot;)&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Pickup Location:&lt;/strong&gt; @Model.PickupAddress&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Destination:&lt;/strong&gt; @Model.DestinationAddress&lt;/p&gt;
+
+        &lt;a href=&quot;https://hagglehaul.azurewebsites.net&quot; target=&quot;_blank&quot;&gt;Click here to review trip details&lt;/a&gt;
+
+        &lt;div class=&quot;footer&quot;&gt;
+            &lt;p&gt;This email was sent to: &lt;strong&gt;@Model.DriverEmail&lt;/strong&gt;.&lt;/p&gt;
+            &lt;p&gt;This is an automated email, please do not reply.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
 &lt;/body&gt;
+
 &lt;/html&gt;
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[4,5,4,19,0],[21,29,21,51,0]]);
+      highlightRanges([[58,26,58,43,1],[59,33,59,48,1],[59,86,59,112,1],[60,42,60,58,1],[61,43,61,60,1],[62,43,62,60,1],[63,43,63,96,1],[63,100,63,150,1],[64,47,64,67,1],[65,43,65,68,1],[70,49,70,67,1]]);
     </script>
   </body>
 </html>

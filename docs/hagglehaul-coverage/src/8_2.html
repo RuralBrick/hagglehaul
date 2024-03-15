@@ -8,18 +8,67 @@
   </head>
   <body>
     <pre id="content" class="source-code">
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 
-namespace hagglehaul.Server.EmailViews;
-
-public class NewBidEmail : PageModel
+namespace hagglehaul.Server.EmailViews
 {
-    public string ExampleProperty { get; set; }
+    /// &lt;summary&gt;
+    /// The view for an email that notifies the rider when a new bid is placed.
+    /// &lt;/summary&gt;
+    public class NewBidEmail
+    {
+        /// &lt;summary&gt;
+        /// The name of the rider (to which the email is sent).
+        /// &lt;/summary&gt;
+        public string RiderName { get; set; }
+
+        /// &lt;summary&gt;
+        /// The name of the trip.
+        /// &lt;/summary&gt;
+        public string TripName { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The name of the driver who placed the bid.
+        /// &lt;/summary&gt;
+        public string DriverName { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The rating of the driver, ranging from 1.0 to 5.0.
+        /// &lt;/summary&gt;
+        [DisplayFormat(DataFormatString = &quot;{0:0.##} ⭐&quot;, NullDisplayText = &quot;unrated&quot;)]
+        public double? DriverRating { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The cost of the trip, in dollars.
+        /// &lt;/summary&gt;
+        [DisplayFormat(DataFormatString = &quot;{0:C}&quot;)]
+        public decimal Price { get; set; }
+
+        /// &lt;summary&gt;
+        /// The start time of the trip.
+        /// &lt;/summary&gt;
+        public DateTime StartTime { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The pickup address of the trip.
+        /// &lt;/summary&gt;
+        public string PickupAddress { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The destination address of the trip.
+        /// &lt;/summary&gt;
+        public string DestinationAddress { get; set; }
+
+        /// &lt;summary&gt;
+        /// The email address of the rider (to which the email is sent).
+        /// &lt;/summary&gt;
+        public string RiderEmail { get; set; }
+    }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[7,37,7,41,0],[7,42,7,46,0]]);
+      highlightRanges([[13,35,13,39,1],[13,40,13,44,1],[18,34,18,38,1],[18,39,18,43,1],[23,36,23,40,1],[23,41,23,45,1],[29,39,29,43,1],[29,44,29,48,1],[35,32,35,36,1],[35,37,35,41,1],[40,37,40,41,1],[40,42,40,46,1],[45,39,45,43,1],[45,44,45,48,1],[50,44,50,48,1],[50,49,50,53,1],[55,36,55,40,1],[55,41,55,45,1]]);
     </script>
   </body>
 </html>

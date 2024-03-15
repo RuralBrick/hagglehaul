@@ -16,18 +16,50 @@ using Razor.Templating.Core;
 
 namespace hagglehaul.Server.Services;
 
+/// &lt;summary&gt;
+/// The type of email notification to send from the &lt;see cref=&quot;EmailNotificationService&quot;/&gt;.
+/// &lt;/summary&gt;
 public enum EmailNotificationType
 {
-    NewBid, // Notify rider when a new bid is placed
-    AcceptedBid, // Notify driver when their bid is accepted
-    Confirmation, // Notify rider with next steps after bid is accepted
+    /// &lt;summary&gt;
+    /// An email that notifies the rider when a new bid is placed.
+    /// &lt;/summary&gt;
+    NewBid,
+    /// &lt;summary&gt;
+    /// An email that notifies the driver when their bid is accepted.
+    /// &lt;/summary&gt;
+    AcceptedBid,
+    /// &lt;summary&gt;
+    /// An email that notifies the rider with next steps after bid is accepted.
+    /// &lt;/summary&gt;
+    Confirmation,
 }
 
+/// &lt;summary&gt;
+/// Service to send email notifications through Azure Communication Service.
+/// &lt;/summary&gt;
 public interface IEmailNotificationService
 {
+    /// &lt;summary&gt;
+    /// Sends an email notification of a particular email type to the recipient.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;type&quot;&gt;The type of notification to send&lt;/param&gt;
+    /// &lt;param name=&quot;recipient&quot;&gt;The valid email address of the recipient&lt;/param&gt;
+    /// &lt;param name=&quot;data&quot;&gt;The data contained within the email, to be passed to the
+    /// email view. Note that the data must be of one of the following types: &lt;br/&gt;
+    /// &lt;list type=&quot;bullet&quot;&gt;
+    /// &lt;item&gt;&lt;description&gt;&lt;see cref=&quot;NewBidEmail&quot;/&gt;&lt;/description&gt;&lt;/item&gt;
+    /// &lt;item&gt;&lt;description&gt;&lt;see cref=&quot;ConfirmationEmail&quot;/&gt;&lt;/description&gt;&lt;/item&gt;
+    /// &lt;item&gt;&lt;description&gt;&lt;see cref=&quot;AcceptedBidEmail&quot;/&gt;&lt;/description&gt;&lt;/item&gt;
+    /// &lt;/list&gt;
+    /// &lt;/param&gt;
+    /// &lt;returns&gt;&lt;/returns&gt;
     Task SendEmailNotification(EmailNotificationType type, string recipient, dynamic data);
 }
 
+/// &lt;summary&gt;
+/// See &lt;see cref=&quot;IEmailNotificationService&quot;/&gt;.
+/// &lt;/summary&gt;
 public class EmailNotificationService : IEmailNotificationService
 {
     private readonly EmailSettings _emailSettings;
@@ -68,7 +100,7 @@ public class EmailNotificationService : IEmailNotificationService
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,5,25,75,0],[26,5,26,6,0],[27,9,27,46,0],[28,9,28,73,0],[29,5,29,6,0],[31,5,36,7,0],[38,5,43,7,0],[46,5,46,6,0],[47,9,47,94,0],[48,9,54,11,0],[55,9,55,59,0],[56,5,56,6,0]]);
+      highlightRanges([[57,5,57,75,1],[58,5,58,6,1],[59,9,59,46,1],[60,9,60,73,1],[61,5,61,6,1],[63,5,68,7,1],[70,5,75,7,1],[78,5,78,6,1],[79,9,79,94,1],[80,9,86,11,1],[87,9,87,59,0],[88,5,88,6,0]]);
     </script>
   </body>
 </html>

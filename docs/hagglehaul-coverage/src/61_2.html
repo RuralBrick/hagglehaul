@@ -10,32 +10,85 @@
     <pre id="content" class="source-code">
 @model hagglehaul.Server.EmailViews.ConfirmationEmail
 
-@{
-    Layout = null;
-}
-
 &lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
 
-&lt;html&gt;
 &lt;head&gt;
-    &lt;title&gt;Hagglehaul Trip: Ride Confirmation&lt;/title&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Hagglehaul Rider Notification: Trip Confirmed&lt;/title&gt;
     &lt;style&gt;
-        .blue-accent {
-            color: #126391;
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(90deg, #f4f4f4 0%, #ffcc00 100%);
+            background-size: 200% 200%;
+            animation: gradientBackground 5s ease 1;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .confirmed-text {
+            font-size: 50px;
+            margin-bottom: 30px;
+            animation: pulse 1.5s infinite alternate;
         }
     &lt;/style&gt;
 &lt;/head&gt;
+
 &lt;body&gt;
-&lt;div&gt;
-    &lt;h1&gt;Confirmation for riders email template&lt;/h1&gt;
-    &lt;p class=&quot;blue-accent&quot;&gt;@Model.ExampleProperty&lt;/p&gt;
-&lt;/div&gt;
+    &lt;div class=&quot;container&quot;&gt;
+        &lt;h1&gt;Hagglehaul Rider Notification&lt;/h1&gt;
+        &lt;div class=&quot;confirmed-text&quot;&gt;Ready to Roll!&lt;/div&gt;
+
+        &lt;p&gt;Dear &lt;strong&gt;@Model.RiderName&lt;/strong&gt;,&lt;/p&gt;
+        &lt;p&gt;Your trip &lt;strong&gt;@Model.TripName&lt;/strong&gt; has been confirmed.&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Driver:&lt;/strong&gt; @Model.DriverName (@(Model.DriverRating != null ? $&quot;{Model.DriverRating:0.##} ⭐&quot; : &quot;unrated&quot;))&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Price:&lt;/strong&gt; @Model.Price.ToString(&quot;C&quot;)&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Driver Phone:&lt;/strong&gt; @Model.DriverPhone&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Driver Email:&lt;/strong&gt; @Model.DriverEmail&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Pickup Time:&lt;/strong&gt; @Model.StartTime.ToLocalTime().ToString(&quot;MM/dd/yyyy&quot;) at @Model.StartTime.ToLocalTime().ToString(&quot;h:mm tt&quot;)&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Pickup Location:&lt;/strong&gt; @Model.PickupAddress&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Destination:&lt;/strong&gt; @Model.DestinationAddress&lt;/p&gt;
+
+        &lt;a href=&quot;https://hagglehaul.azurewebsites.net&quot; target=&quot;_blank&quot;&gt;Click here to review trip details&lt;/a&gt;
+
+        &lt;div class=&quot;footer&quot;&gt;
+            &lt;p&gt;This email was sent to: &lt;strong&gt;@Model.RiderEmail&lt;/strong&gt;.&lt;/p&gt;
+            &lt;p&gt;This is an automated email, please do not reply.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
 &lt;/body&gt;
+
 &lt;/html&gt;
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[4,5,4,19,0],[21,29,21,51,0]]);
+      highlightRanges([[58,26,58,42,1],[59,31,59,46,1],[60,38,60,55,1],[60,58,60,130,1],[61,37,61,63,1],[62,44,62,62,1],[63,44,63,62,1],[64,43,64,96,1],[64,100,64,150,1],[65,47,65,67,1],[66,43,66,68,1],[71,49,71,66,1]]);
     </script>
   </body>
 </html>

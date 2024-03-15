@@ -8,21 +8,51 @@
   </head>
   <body>
     <pre id="content" class="source-code">
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// The form to update a driver&#39;s information.
+    /// &lt;/summary&gt;
+    [SwaggerSchema(&quot;Form to update a driver&#39;s information&quot;)]
     public class DriverUpdate
     {
+        /// &lt;summary&gt;
+        /// The new name of the driver.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Name of the driver&quot;)]
         public string Name { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The new phone number of the driver.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Phone number of the driver&quot;)]
         public string Phone { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The new make, model, year, and license plate of the driver&#39;s car.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Description of the driver&#39;s car&quot;)]
         public string CarDescription { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The current password of the driver.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;Current password of the driver&quot;)]
         public string CurrentPassword { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The new password of the driver.
+        /// &lt;/summary&gt;
+        [SwaggerSchema(&quot;New password of the driver&quot;)]
         public string NewPassword { get; set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,30,5,34,1],[5,35,5,39,1],[6,31,6,35,1],[6,36,6,40,1],[7,40,7,44,1],[7,45,7,49,1],[8,41,8,45,1],[8,46,8,50,1],[9,37,9,41,1],[9,42,9,46,1]]);
+      highlightRanges([[15,30,15,34,1],[15,35,15,39,1],[21,31,21,35,1],[21,36,21,40,1],[27,40,27,44,1],[27,45,27,49,1],[33,41,33,45,1],[33,46,33,50,1],[39,37,39,41,1],[39,42,39,46,1]]);
     </script>
   </body>
 </html>
