@@ -10,15 +10,25 @@
     <pre id="content" class="source-code">
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// Settings for the Hagglehaul database.
+/// &lt;/summary&gt;
 public class HagglehaulDatabaseSettings
 {
+    /// &lt;summary&gt;
+    /// The connection string to the Hagglehaul database.
+    /// &lt;/summary&gt;
     public string ConnectionString { get; set; } = null!;
+    
+    /// &lt;summary&gt;
+    /// The name of the Hagglehaul database. Must match the name of the database within MongoDB.
+    /// &lt;/summary&gt;
     public string DatabaseName { get; set; } = null!;   
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,38,5,42,0],[5,43,5,47,0],[5,52,5,57,0],[6,34,6,38,0],[6,39,6,43,0],[6,48,6,53,0]]);
+      highlightRanges([[11,38,11,42,0],[11,43,11,47,0],[11,52,11,57,0],[16,34,16,38,0],[16,39,16,43,0],[16,48,16,53,0]]);
     </script>
   </body>
 </html>

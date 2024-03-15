@@ -11,9 +11,13 @@
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers;
 
+/// &lt;summary&gt;
+/// Controller for geographic place lookup.
+/// &lt;/summary&gt;
 [ApiController]
 [Route(&quot;api/[controller]&quot;)]
 public class PlaceLookupController : ControllerBase
@@ -25,8 +29,21 @@ public class PlaceLookupController : ControllerBase
         _geographicRouteService = geographicRouteService;
     }
     
+    /// &lt;summary&gt;
+    /// Lookup geographic place by name.
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;placeName&quot;&gt;The search string (as put in a search bar)&lt;/param&gt;
+    /// &lt;returns&gt;
+    /// &lt;see cref=&quot;ContentResult&quot;/&gt; with the geographic place found,
+    /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the request has an empty place name,
+    /// &lt;see cref=&quot;StatusCodeResult&quot;/&gt; with status code 500 if the geographic place lookup failed
+    /// &lt;/returns&gt;
     [Authorize]
     [HttpGet(Name = &quot;GetPlaceLookup&quot;)]
+    [SwaggerOperation(Summary = &quot;Lookup geographic place by name&quot;)]
+    [SwaggerResponse(StatusCodes.Status200OK, &quot;Geographic place found&quot;)]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;Request has empty place name&quot;)]
+    [SwaggerResponse(StatusCodes.Status500InternalServerError, &quot;Geographic place lookup failed&quot;)]
     public async Task&lt;IActionResult&gt; Get([FromQuery] string placeName)
     {
         if (String.IsNullOrEmpty(placeName))
@@ -42,7 +59,7 @@ public class PlaceLookupController : ControllerBase
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[13,5,13,81,0],[14,5,14,6,0],[15,9,15,58,0],[16,5,16,6,0],[21,5,21,6,0],[22,9,22,45,0],[23,13,23,63,0],[25,9,25,81,0],[26,9,26,44,0],[27,13,27,36,0],[29,9,29,59,0],[30,5,30,6,0]]);
+      highlightRanges([[17,5,17,81,0],[18,5,18,6,0],[19,9,19,58,0],[20,5,20,6,0],[38,5,38,6,0],[39,9,39,45,0],[40,13,40,63,0],[42,9,42,81,0],[43,9,43,44,0],[44,13,44,36,0],[46,9,46,59,0],[47,5,47,6,0]]);
     </script>
   </body>
 </html>

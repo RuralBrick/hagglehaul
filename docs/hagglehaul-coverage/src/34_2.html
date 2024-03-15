@@ -13,19 +13,34 @@ using MongoDB.Bson;
 
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// The database model for a rider&#39;s profile.
+    /// &lt;/summary&gt;
     [BsonIgnoreExtraElements]
     public class RiderProfile
     {
+        /// &lt;summary&gt;
+        /// The unique identifier of the rider, not used in the application.
+        /// &lt;/summary&gt;
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
+        /// &lt;summary&gt;
+        /// The email address of the rider.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;email&quot;)]
         public string Email { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The rating of the rider, ranging from 1.0 to 5.0.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;rating&quot;)]
         public double? Rating { get; set; } = null!;
         
+        /// &lt;summary&gt;
+        /// The number of ratings the rider has received.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;numRatings&quot;)]
         public uint? NumRatings { get; set; } = null!;
     }
@@ -33,7 +48,7 @@ namespace hagglehaul.Server.Models
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[11,29,11,33,1],[11,34,11,38,1],[14,31,14,35,1],[14,36,14,40,1],[14,45,14,50,1],[17,33,17,37,1],[17,38,17,42,1],[17,47,17,52,1],[20,35,20,39,1],[20,40,20,44,1],[20,49,20,54,1]]);
+      highlightRanges([[17,29,17,33,1],[17,34,17,38,1],[23,31,23,35,1],[23,36,23,40,1],[23,45,23,50,1],[29,33,29,37,1],[29,38,29,42,1],[29,47,29,52,1],[35,35,35,39,1],[35,40,35,44,1],[35,49,35,54,1]]);
     </script>
   </body>
 </html>

@@ -13,28 +13,52 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// The representation of a user in the database.
+    /// &lt;/summary&gt;
     [BsonIgnoreExtraElements]
     public class UserCore
     {
+        /// &lt;summary&gt;
+        /// The unique identifier of the user, not used in the application.
+        /// &lt;/summary&gt;
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
+        /// &lt;summary&gt;
+        /// The email address of the user.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;email&quot;)]
         public string Email { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The phone number of the user.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;phone&quot;)]
         public string Phone { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The name of the user.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;name&quot;)]
         public string Name { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The salt used to hash the password, as a base64 string.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;salt&quot;)]
         public string Salt { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The hash of the password, as a base64 string.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;passwordHash&quot;)]
         public string PasswordHash { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The role of the user, must be either &quot;rider&quot; or &quot;driver&quot;.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;role&quot;)]
         public string Role { get; set; } = null!;
     }
@@ -42,7 +66,7 @@ namespace hagglehaul.Server.Models
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[11,29,11,33,0],[11,34,11,38,0],[14,31,14,35,0],[14,36,14,40,1],[14,45,14,50,1],[17,31,17,35,0],[17,36,17,40,0],[17,45,17,50,1],[20,30,20,34,1],[20,35,20,39,0],[20,44,20,49,1],[23,30,23,34,1],[23,35,23,39,1],[23,44,23,49,1],[26,38,26,42,1],[26,43,26,47,1],[26,52,26,57,1],[29,30,29,34,0],[29,35,29,39,0],[29,44,29,49,1]]);
+      highlightRanges([[17,29,17,33,1],[17,34,17,38,1],[23,31,23,35,1],[23,36,23,40,1],[23,45,23,50,1],[29,31,29,35,1],[29,36,29,40,1],[29,45,29,50,1],[35,30,35,34,1],[35,35,35,39,1],[35,44,35,49,1],[41,30,41,34,1],[41,35,41,39,1],[41,44,41,49,1],[47,38,47,42,1],[47,43,47,47,1],[47,52,47,57,1],[53,30,53,34,1],[53,35,53,39,1],[53,44,53,49,1]]);
     </script>
   </body>
 </html>

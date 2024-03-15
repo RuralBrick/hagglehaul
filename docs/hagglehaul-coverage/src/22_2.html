@@ -10,15 +10,25 @@
     <pre id="content" class="source-code">
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// Settings for Azure Communication Services.
+/// &lt;/summary&gt;
 public class EmailSettings
 {
+    /// &lt;summary&gt;
+    /// The connection string for Azure Communication Services.
+    /// &lt;/summary&gt;
     public string ConnectionString { get; set; } = null!;
+    
+    /// &lt;summary&gt;
+    /// The sender address for emails within the ACS system.
+    /// &lt;/summary&gt;
     public string SenderAddress { get; set; } = null!;
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,38,5,42,0],[5,43,5,47,0],[5,52,5,57,0],[6,35,6,39,0],[6,40,6,44,0],[6,49,6,54,0]]);
+      highlightRanges([[11,38,11,42,1],[11,43,11,47,1],[11,52,11,57,1],[16,35,16,39,1],[16,40,16,44,1],[16,49,16,54,1]]);
     </script>
   </body>
 </html>

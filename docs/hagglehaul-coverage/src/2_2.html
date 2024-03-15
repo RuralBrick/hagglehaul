@@ -9,15 +9,20 @@
   <body>
     <pre id="content" class="source-code">
 using System.Security.Claims;
+using hagglehaul.Server.EmailViews;
 using hagglehaul.Server.Models;
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// &lt;summary&gt;
+    /// Controller for driver-related operations.
+    /// &lt;/summary&gt;
     [Route(&quot;api/[controller]&quot;)]
     [ApiController]
     public class DriverController : ControllerBase
@@ -28,8 +33,17 @@ namespace hagglehaul.Server.Controllers
         private readonly ITripService _tripService;
         private readonly IBidService _bidService;
         private readonly IGeographicRouteService _geographicRouteService;
+        private readonly IEmailNotificationService _emailNotificationService;
 
-        public DriverController(IDriverProfileService driverProfileService, IRiderProfileService riderProfileService, IUserCoreService userCoreService, ITripService tripService, IBidService bidService, IGeographicRouteService geographicRouteService)
+        public DriverController(
+            IDriverProfileService driverProfileService,
+            IRiderProfileService riderProfileService,
+            IUserCoreService userCoreService,
+            ITripService tripService,
+            IBidService bidService,
+            IGeographicRouteService geographicRouteService,
+            IEmailNotificationService emailNotificationService
+        )
         {
             _driverProfileService = driverProfileService;
             _riderProfileService = riderProfileService;
@@ -37,12 +51,25 @@ namespace hagglehaul.Server.Controllers
             _tripService = tripService;
             _bidService = bidService;
             _geographicRouteService = geographicRouteService;
+            _emailNotificationService = emailNotificationService;
         }
 
+        /// &lt;summary&gt;
+        /// Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkObjectResult&quot;/&gt; if the dashboard is successfully returned,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the user is invalid or not authenticated,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if the user is not a driver
+        /// &lt;/returns&gt;
         [Authorize]
         [HttpGet]
         [Route(&quot;dashboard&quot;)]
         [ProducesResponseType(typeof(DriverDashboard), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = &quot;Gets the necessary info for a driver dashboard. Shows confirmed trips, trips in bidding, and past trips.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Succesfully returned the dashboard.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;Invalid User or Authentication&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;The user is not a driver.&quot;)]
         public async Task&lt;IActionResult&gt; GetDashboard()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -63,7 +90,7 @@ namespace hagglehaul.Server.Controllers
             List&lt;UnconfirmedDriverTrip&gt; unconfirmedTrips = new List&lt;UnconfirmedDriverTrip&gt;();
             List&lt;ArchivedDriverTrip&gt; archivedTrips = new List&lt;ArchivedDriverTrip&gt;();
             List&lt;Bid&gt; allBids = await _bidService.GetDriverBidsAsync(email);
-            foreach (Bid bid in allBids)
+            foreach (Bid bid in allBids ?? Enumerable.Empty&lt;Bid&gt;())
             {
                 //if trip date is in past, trip is archived
                 //if trip date is in future, email null, trip is in bidding
@@ -137,7 +164,7 @@ namespace hagglehaul.Server.Controllers
                     unconfirmedTrip.RiderNumRating = rider.NumRatings;
                     List&lt;Bid&gt; tripBids = await _bidService.GetTripBidsAsync(trip.Id);
                     unconfirmedTrip.Bids = new List&lt;BidUserView&gt;();
-                    foreach (Bid tripBid in tripBids)
+                    foreach (Bid tripBid in tripBids ?? Enumerable.Empty&lt;Bid&gt;())
                     {
                         BidUserView bidUserView = new BidUserView();
                         UserCore driverCore = await _userCoreService.GetAsync(tripBid.DriverEmail);
@@ -169,16 +196,33 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverDashboard);
         }
 
+        /// &lt;summary&gt;
+        /// Get the basic info of the current driver.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkObjectResult&quot;/&gt; if the driver&#39;s basic info is successfully returned,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the user is invalid or not authenticated,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if the user is not a driver
+        /// &lt;/returns&gt;
         [Authorize]
         [HttpGet]
         [Route(&quot;about&quot;)]
         [ProducesResponseType(typeof(DriverBasicInfo), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = &quot;Get the basic info of the current driver.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Got the driver&#39;s basic info.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;Invalid user/auth&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;The user is not a driver.&quot;)]
         public async Task&lt;IActionResult&gt; Get()
         {
             ClaimsPrincipal currentUser = this.User;
             if (currentUser == null)
             {
                 return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != &quot;driver&quot;)
+            {
+                return Unauthorized();
             }
             var email = currentUser.FindFirstValue(ClaimTypes.Name); //name is the email
             UserCore userCore = await _userCoreService.GetAsync(email);
@@ -191,9 +235,22 @@ namespace hagglehaul.Server.Controllers
             return Ok(driverBasicInfo);
         }
 
+        /// &lt;summary&gt;
+        /// Modify account details, including password.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;driverUpdate&quot;&gt;The update form.&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkResult&quot;/&gt; if the account details are successfully updated,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the user is invalid or not authenticated,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if the user is not a driver
+        /// &lt;/returns&gt;
         [Authorize]
         [HttpPost]
         [Route(&quot;modifyAcc&quot;)]
+        [SwaggerOperation(Summary = &quot;Modify account details, including password.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Successfully updated the account details.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;Invalid user/auth or error with updating password.&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;The user is not a driver.&quot;)]
         public async Task&lt;IActionResult&gt; ModifyAccountDetails([FromBody] DriverUpdate driverUpdate)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -201,6 +258,11 @@ namespace hagglehaul.Server.Controllers
             if (currentUser == null)
             {
                 return BadRequest(new { Error = &quot;Invalid User/Auth&quot; });
+            }
+            var role = currentUser.FindFirstValue(ClaimTypes.Role);
+            if (role != &quot;driver&quot;)
+            {
+                return Unauthorized();
             }
             bool changingPassword = !String.IsNullOrEmpty(driverUpdate.NewPassword);
             if (String.IsNullOrEmpty(driverUpdate.CurrentPassword) &amp;&amp; changingPassword)
@@ -225,7 +287,6 @@ namespace hagglehaul.Server.Controllers
 
             if (changingPassword)
             {
-                Console.WriteLine(&quot;changing pass&quot;);
                 _userCoreService.CreatePasswordHash(driverUpdate.NewPassword, out var newHash, out var newSalt);
                 userCore.PasswordHash = newHash;
                 userCore.Salt = newSalt;
@@ -247,25 +308,23 @@ namespace hagglehaul.Server.Controllers
             return Ok();
         }
 
-        [Authorize]
-        [HttpGet]
-        [Route(&quot;bid&quot;)]
-        public async Task&lt;IActionResult&gt; GetDriverBids()
-        {
-            ClaimsPrincipal currentUser = this.User;
-
-            if (currentUser == null) { return BadRequest(new { Error = &quot;Invalid User/Auth&quot; }); };
-
-            var email = currentUser.FindFirstValue(ClaimTypes.Name);
-
-            var bids = await _bidService.GetDriverBidsAsync(email);
-            return Ok(bids);
-        }
-
+        /// &lt;summary&gt;
+        /// Create or update a bid for a trip.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;request&quot;&gt;The bidding form.&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkResult&quot;/&gt; if the bid was successfully created or updated,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the tripId is invalid or the trip is either confirmed or in the past,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if the user is not a driver
+        /// &lt;/returns&gt;
         [HttpPost]
         [HttpPatch]
         [Route(&quot;bid&quot;)]
         [Authorize]
+        [SwaggerOperation(Summary = &quot;Create or update a bid for a trip.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;The bid was successfully created or updated.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;The tripId is invalid or the trip is either confirmed or in the past.&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;The user is not a driver.&quot;)]
         public async Task&lt;IActionResult&gt; CreateOrUpdateBid([FromBody] CreateOrUpdateBid request)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -310,12 +369,45 @@ namespace hagglehaul.Server.Controllers
                 });
             }
 
+            UserCore riderUser = await _userCoreService.GetAsync(trip.RiderEmail);
+            UserCore driverUser = await _userCoreService.GetAsync(username);
+            DriverProfile driverProfile = await _driverProfileService.GetAsync(username);
+            _ = _emailNotificationService.SendEmailNotification(
+                EmailNotificationType.NewBid,
+                trip.RiderEmail,
+                new NewBidEmail
+                {
+                    RiderName = riderUser.Name,
+                    TripName = trip.Name,
+                    DriverName = driverUser.Name,
+                    DriverRating = driverProfile.Rating,
+                    Price = (decimal)(request.CentsAmount / 100.0),
+                    StartTime = trip.StartTime,
+                    PickupAddress = trip.PickupAddress,
+                    DestinationAddress = trip.DestinationAddress,
+                    RiderEmail = trip.RiderEmail,
+                }
+            );
+
             return Ok();
         }
 
+        /// &lt;summary&gt;
+        /// Delete a bid for a trip.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;tripId&quot;&gt;The ID of the trip to delete the user&#39;s bid from&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkResult&quot;/&gt; if the bid was successfully deleted,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the tripId is invalid or the trip is either confirmed or in the past,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if the user is not a driver
+        /// &lt;/returns&gt;
         [HttpDelete]
         [Route(&quot;bid&quot;)]
         [Authorize]
+        [SwaggerOperation(Summary = &quot;Delete a bid for a trip.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;The bid was successfully deleted.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;The tripId is invalid or the trip is either confirmed or in the past.&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;The user is not a driver.&quot;)]
         public async Task&lt;IActionResult&gt; DeleteBid([FromQuery] string tripId)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -477,13 +569,20 @@ namespace hagglehaul.Server.Controllers
             return searchedTrips;
         }
 
+        /// &lt;summary&gt;
+        /// Get all biddable trips.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkObjectResult&quot;/&gt; if the biddable trips are successfully returned
+        /// &lt;/returns&gt;
         [HttpGet]
         [Route(&quot;allTrips&quot;)]
         [ProducesResponseType(typeof(List&lt;SearchedTrip&gt;), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = &quot;Get all biddable trips.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Successfully returned all biddable trips.&quot;)]
         public async Task&lt;IActionResult&gt; GetAllAvailableTrips()
         {
-            var allTrips = await _tripService.GetAllTripsAsync();
-            var availableTrips = allTrips.Where(trip =&gt; trip.DriverEmail == null).ToList();
+            var availableTrips = await GetEligibleMarketTrips();
             var searchedTrips = await TripsToSearchedTrips(availableTrips);
             return Ok(searchedTrips);
         }
@@ -610,8 +709,6 @@ namespace hagglehaul.Server.Controllers
                     case &quot;currentToStartDistance&quot;:
                         if (options.CurrentLat == null || options.CurrentLong == null)
                             throw new ArgumentException(&quot;Must include current coordinates&quot;);
-                        if (options.TargetLat == null || options.TargetLong == null)
-                            throw new ArgumentException(&quot;Must include target coordinates&quot;);
                         if (sortedTrips == null)
                             sortedTrips = filteredTrips.OrderBy(trip =&gt; TripCurrentToStartDistance(trip, options));
                         else
@@ -652,11 +749,21 @@ namespace hagglehaul.Server.Controllers
             return finalTrips;
         }
 
-
+        /// &lt;summary&gt;
+        /// Get biddable trips and filter and sort using options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;The filtering and searching options form.&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkObjectResult&quot;/&gt; if the biddable trips are successfully returned,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the options are invalid
+        /// &lt;/returns&gt;
         [HttpGet]
         [HttpPost]
         [Route(&quot;tripMarket&quot;)]
         [ProducesResponseType(typeof(List&lt;SearchedTrip&gt;), StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = &quot;Get biddable trips and filter and sort using options.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Successfully returned the biddable trips.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;Invalid options&quot;)]
         public async Task&lt;IActionResult&gt; GetAllAvailableTrips([FromBody] TripMarketOptions options)
         {
             List&lt;Trip&gt; trips;
@@ -672,9 +779,22 @@ namespace hagglehaul.Server.Controllers
             return Ok(searchedTrips);
         }
 
+        /// &lt;summary&gt;
+        /// Rate a rider.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;giveRating&quot;&gt;The rating form.&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkResult&quot;/&gt; if the rider was successfully rated,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if the user is invalid or not authenticated,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if the user is not a driver
+        /// &lt;/returns&gt;
         [Authorize]
         [HttpPost]
         [Route(&quot;rating&quot;)]
+        [SwaggerOperation(Summary = &quot;Rate a rider.&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Successfully rated the rider.&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;Invalid user/auth or trip.&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;The user is not a driver.&quot;)]
         public async Task&lt;IActionResult&gt; RateRider([FromBody] GiveRating giveRating)
         {
             ClaimsPrincipal currentUser = this.User;
@@ -724,7 +844,7 @@ namespace hagglehaul.Server.Controllers
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,9,22,250,1],[23,9,23,10,1],[24,13,24,58,1],[25,13,25,56,1],[26,13,26,48,1],[27,13,27,40,1],[28,13,28,38,1],[29,13,29,62,1],[30,9,30,10,1],[37,9,37,10,0],[38,13,38,53,0],[39,13,39,37,0],[40,13,40,14,0],[41,17,41,72,0],[43,13,43,68,0],[44,13,44,34,0],[45,13,45,14,0],[46,17,46,39,0],[49,13,49,69,0],[50,13,50,72,0],[51,13,51,69,0],[52,13,52,88,0],[53,13,53,94,0],[54,13,54,85,0],[55,13,55,77,0],[56,13,56,20,0],[56,22,56,29,0],[56,30,56,32,0],[56,33,56,40,0],[57,13,57,14,0],[61,17,61,77,0],[62,17,62,55,0],[63,17,63,78,0],[65,17,65,176,0],[66,17,66,45,0],[67,17,67,74,0],[68,17,68,92,0],[69,17,69,18,0],[70,21,70,75,0],[71,21,71,46,0],[72,21,72,50,0],[73,21,73,56,0],[74,21,74,63,0],[75,21,75,63,0],[76,21,76,65,0],[77,21,77,65,0],[78,21,78,41,0],[79,21,79,95,0],[80,21,80,91,0],[81,21,81,56,0],[82,21,82,63,0],[83,21,83,56,0],[84,21,84,64,0],[85,21,85,74,0],[86,21,86,48,0],[87,17,87,18,0],[88,22,88,65,0],[89,17,89,18,0],[91,21,91,83,0],[92,21,92,95,0],[93,21,93,91,0],[94,21,94,52,0],[95,21,95,56,0],[96,21,96,69,0],[97,21,97,69,0],[98,21,98,62,0],[99,21,99,71,0],[100,21,100,71,0],[101,21,101,47,0],[102,21,102,62,0],[103,21,103,62,0],[104,21,104,69,0],[105,21,105,156,0],[106,21,106,64,0],[107,21,107,64,0],[108,21,108,70,0],[109,21,109,80,0],[110,21,110,55,0],[111,17,111,18,0],[113,17,113,18,0],[115,21,115,89,0],[116,21,116,91,0],[117,21,117,95,0],[118,21,118,54,0],[119,21,119,58,0],[120,21,120,71,0],[121,21,121,71,0],[122,21,122,64,0],[123,21,123,73,0],[124,21,124,73,0],[125,21,125,64,0],[126,21,126,64,0],[127,21,127,71,0],[128,21,128,86,0],[129,21,129,68,0],[130,21,130,28,0],[130,30,130,41,0],[130,42,130,44,0],[130,45,130,53,0],[131,21,131,22,0],[132,25,132,69,0],[133,25,133,100,0],[134,25,134,106,0],[135,25,135,56,0],[136,25,136,66,0],[137,25,137,66,0],[138,25,138,73,0],[139,25,139,64,0],[140,25,140,58,0],[141,25,141,26,0],[142,29,142,56,0],[143,29,143,73,0],[144,25,144,26,0],[146,25,146,26,0],[147,29,147,57,0],[148,29,148,67,0],[149,25,149,26,0],[150,21,150,22,0],[151,21,151,72,0],[152,21,152,82,0],[153,21,153,59,0],[154,17,154,18,0],[155,13,155,14,0],[156,13,156,61,0],[157,13,157,63,0],[158,13,158,59,0],[159,13,159,40,0],[160,9,160,10,0],[167,9,167,10,0],[168,13,168,53,0],[169,13,169,37,0],[170,13,170,14,0],[171,17,171,72,0],[173,13,173,69,0],[174,13,174,72,0],[175,13,175,87,0],[176,13,176,69,0],[177,13,177,50,0],[178,13,178,43,0],[179,13,179,52,0],[180,13,180,75,0],[181,13,181,40,0],[182,9,182,10,0],[188,9,188,10,1],[189,13,189,53,1],[191,13,191,37,1],[192,13,192,14,0],[193,17,193,72,0],[195,13,195,85,1],[196,13,196,88,1],[197,13,197,14,0],[198,17,198,80,0],[202,13,202,69,1],[204,13,204,72,1],[205,13,205,87,1],[206,13,206,34,1],[207,13,207,14,1],[209,17,209,129,1],[210,17,210,18,0],[211,21,211,86,0],[214,13,214,14,1],[216,13,216,34,1],[217,13,217,14,1],[218,17,218,52,1],[219,17,219,113,1],[220,17,220,49,1],[221,17,221,41,1],[222,13,222,14,1],[223,13,223,58,1],[224,13,224,14,0],[225,17,225,51,0],[226,13,226,14,0],[227,13,227,59,1],[228,13,228,14,0],[229,17,229,53,0],[230,13,230,14,0],[231,13,231,68,1],[232,13,232,14,0],[233,17,233,76,0],[234,13,234,14,0],[235,13,235,65,1],[236,13,236,75,1],[237,13,237,25,1],[238,9,238,10,1],[244,9,244,10,1],[245,13,245,53,1],[247,13,247,37,1],[247,38,247,39,0],[247,40,247,95,0],[247,97,247,98,1],[249,13,249,69,1],[251,13,251,68,1],[252,13,252,29,1],[253,9,253,10,1],[260,9,260,10,1],[261,13,261,53,1],[262,13,262,72,1],[263,13,263,68,1],[264,13,264,34,1],[265,13,265,14,1],[266,17,266,39,1],[269,13,269,77,1],[270,13,270,70,1],[271,13,271,14,1],[272,17,272,69,1],[275,13,275,104,1],[276,13,276,14,1],[277,17,277,98,1],[280,13,280,42,1],[281,13,281,14,1],[282,17,282,83,1],[285,13,285,102,1],[285,102,285,130,1],[285,130,285,132,1],[286,13,286,37,1],[287,13,287,14,1],[289,17,289,63,1],[290,17,290,76,1],[291,13,291,14,1],[293,13,293,14,1],[295,17,300,20,1],[301,13,301,14,1],[303,13,303,25,1],[304,9,304,10,1],[310,9,310,10,1],[311,13,311,53,1],[312,13,312,72,1],[313,13,313,68,1],[314,13,314,34,1],[315,13,315,14,0],[316,17,316,39,0],[319,13,319,69,1],[320,13,320,62,1],[321,13,321,14,0],[322,17,322,69,0],[325,13,325,104,1],[326,13,326,14,1],[327,17,327,98,1],[330,13,330,102,1],[330,102,330,122,1],[330,122,330,124,1],[331,13,331,37,1],[332,13,332,14,1],[333,17,333,63,1],[334,13,334,14,1],[336,13,336,14,1],[337,17,337,81,1],[340,13,340,25,1],[341,9,341,10,1],[347,9,347,10,1],[348,13,348,31,1],[349,17,349,30,0],[350,13,350,72,1],[351,13,352,13,1],[352,13,352,14,1],[352,14,353,17,1],[353,17,358,19,1],[358,19,359,17,1],[359,17,359,48,1],[359,48,360,13,1],[360,13,360,14,1],[360,14,360,17,1],[361,13,361,31,1],[362,9,362,10,1],[368,9,368,10,1],[369,13,369,31,1],[370,17,370,30,1],[371,13,371,64,1],[372,13,373,13,1],[373,13,373,14,1],[373,14,374,17,1],[374,17,374,72,1],[374,72,375,17,1],[375,17,375,45,1],[375,45,376,13,1],[376,13,376,14,1],[376,14,376,17,1],[377,13,377,29,1],[378,9,378,10,1],[385,9,385,10,1],[386,13,386,31,1],[387,17,387,30,1],[388,13,388,65,1],[389,13,389,69,1],[390,13,390,20,1],[390,22,390,30,1],[390,31,390,33,1],[390,34,390,39,1],[391,13,391,14,1],[392,17,394,53,1],[394,53,394,68,1],[394,68,395,19,1],[396,13,396,14,1],[397,13,397,38,1],[398,9,398,10,1],[404,9,404,10,1],[405,13,405,31,1],[406,17,406,30,0],[407,13,407,70,1],[408,13,409,13,1],[409,13,409,14,1],[409,14,410,17,1],[410,17,410,53,1],[410,53,411,17,1],[411,17,411,18,1],[411,18,412,21,1],[412,21,412,88,1],[412,88,413,21,1],[413,21,413,52,1],[413,52,414,17,1],[414,17,414,18,1],[414,18,415,13,1],[415,13,415,14,1],[415,14,415,17,1],[416,13,416,31,1],[417,9,417,10,1],[423,9,423,10,1],[424,13,424,31,1],[425,17,425,30,0],[426,13,426,63,1],[427,13,428,13,1],[428,13,428,14,1],[428,14,429,17,1],[429,17,429,51,1],[429,51,430,17,1],[430,17,430,18,1],[430,18,431,21,1],[431,21,431,81,1],[431,81,432,21,1],[432,21,432,48,1],[432,48,433,17,1],[433,17,433,18,1],[433,18,434,13,1],[434,13,434,14,1],[434,14,434,17,1],[435,13,435,29,1],[436,9,436,10,1],[439,9,439,10,1],[440,13,440,69,1],[441,13,441,65,1],[442,13,442,87,1],[443,13,443,88,1],[443,88,443,89,1],[443,89,443,98,1],[444,13,444,84,1],[444,84,444,85,1],[444,85,444,94,1],[446,13,446,54,1],[446,54,458,60,1],[458,60,464,18,1],[464,18,465,14,1],[465,14,465,25,1],[467,13,467,34,1],[468,9,468,10,1],[474,9,474,10,0],[475,13,475,66,0],[476,13,476,57,0],[476,57,476,81,0],[476,81,476,92,0],[477,13,477,76,0],[478,13,478,38,0],[479,9,479,10,0],[482,9,482,10,1],[483,13,483,39,1],[484,13,484,42,1],[485,13,485,59,1],[486,9,486,10,1],[489,9,489,10,1],[490,13,495,15,1],[496,9,496,10,1],[499,9,499,10,0],[500,13,505,15,0],[506,9,506,10,0],[509,9,509,10,1],[510,13,515,15,1],[516,9,516,10,1],[519,9,519,10,0],[520,13,520,99,0],[521,9,521,10,0],[524,9,524,10,1],[525,13,525,93,1],[526,9,526,10,1],[529,9,529,10,1],[530,13,530,66,1],[531,13,531,43,1],[531,43,531,128,1],[531,128,531,139,1],[532,9,532,10,1],[535,9,535,10,1],[536,13,536,59,1],[537,13,537,68,1],[538,13,538,65,1],[540,13,540,52,1],[542,13,542,59,1],[543,13,543,14,0],[544,17,544,79,0],[545,21,545,85,0],[546,17,546,53,0],[546,53,546,103,0],[546,103,546,105,0],[547,13,547,14,0],[549,13,549,56,1],[550,13,550,14,1],[551,17,551,77,1],[552,21,552,84,0],[553,17,553,53,1],[553,53,553,100,1],[553,100,553,102,1],[554,13,554,14,1],[556,13,556,54,1],[557,13,557,14,1],[558,17,558,53,1],[558,53,558,112,1],[558,112,558,114,1],[559,13,559,14,1],[561,13,561,50,1],[562,13,562,14,0],[563,17,563,78,0],[564,17,564,53,0],[564,53,564,109,0],[564,109,564,111,0],[565,13,565,14,0],[567,13,567,50,1],[568,13,568,14,1],[569,17,569,105,1],[570,17,570,53,1],[570,53,570,107,1],[570,107,570,109,1],[571,13,571,14,1],[573,13,573,52,1],[575,13,575,58,1],[576,13,576,20,1],[576,22,576,36,1],[576,37,576,39,1],[576,40,576,59,1],[577,13,577,14,1],[578,17,578,36,1],[581,25,581,49,0],[582,29,582,88,0],[584,29,584,85,0],[585,25,585,31,0],[587,25,587,91,1],[588,25,588,49,1],[589,29,589,73,1],[589,73,589,101,1],[589,101,589,103,1],[591,29,591,70,0],[591,70,591,98,0],[591,98,591,100,0],[592,25,592,31,1],[594,25,594,91,0],[595,25,595,49,0],[596,29,596,73,0],[596,73,596,101,0],[596,101,596,103,0],[598,29,598,70,0],[598,70,598,98,0],[598,98,598,100,0],[599,25,599,31,0],[601,25,601,87,0],[602,29,602,93,0],[603,25,603,85,0],[604,29,604,92,0],[605,25,605,49,0],[606,29,606,73,0],[606,73,606,114,0],[606,114,606,116,0],[608,29,608,70,0],[608,70,608,111,0],[608,111,608,113,0],[609,25,609,31,0],[611,25,611,85,1],[612,29,612,92,0],[613,25,613,49,1],[614,29,614,73,0],[614,73,614,111,0],[614,111,614,113,0],[616,29,616,70,1],[616,70,616,108,0],[616,108,616,110,1],[617,25,617,31,1],[619,25,619,118,1],[620,25,620,49,1],[621,29,621,73,1],[621,73,621,99,1],[621,99,621,101,1],[623,29,623,70,0],[623,70,623,96,0],[623,96,623,98,0],[624,25,624,31,1],[626,25,626,49,0],[627,29,627,73,0],[627,73,627,87,0],[627,87,627,89,0],[629,29,629,70,0],[629,70,629,84,0],[629,84,629,86,0],[630,25,630,31,0],[632,25,632,76,0],[634,13,634,14,1],[637,13,637,37,1],[638,17,638,51,1],[640,17,640,44,1],[642,13,642,31,1],[643,9,643,10,1],[651,9,651,10,1],[654,13,654,14,1],[655,17,655,66,1],[656,13,656,14,1],[657,13,657,41,0],[658,13,658,14,0],[659,17,659,63,0],[661,13,661,67,1],[662,13,662,38,1],[663,9,663,10,1],[669,9,669,10,1],[670,13,670,53,1],[672,13,672,37,1],[672,38,672,39,0],[672,40,672,95,0],[672,97,672,98,1],[674,13,674,68,1],[676,13,676,34,1],[676,35,676,36,0],[676,37,676,59,0],[678,13,678,79,1],[679,13,679,30,1],[679,31,679,32,0],[679,33,679,90,0],[681,13,681,75,1],[682,13,682,49,1],[682,50,682,51,0],[682,52,682,74,0],[684,13,684,46,1],[685,13,685,50,1],[685,51,685,52,0],[685,53,685,127,0],[687,13,687,62,1],[687,63,687,64,0],[687,65,687,130,0],[689,13,689,40,1],[689,41,689,42,0],[689,43,689,123,0],[691,13,691,73,1],[692,13,692,31,1],[692,32,692,33,0],[692,34,692,92,0],[694,13,694,38,1],[695,17,695,34,0],[696,13,696,42,1],[697,17,697,38,0],[699,13,699,72,1],[701,13,701,32,1],[703,13,703,103,1],[705,13,705,72,1],[707,13,707,43,1],[709,13,709,69,1],[710,13,710,25,1],[711,9,711,10,1]]);
+      highlightRanges([[28,9,36,10,1],[37,9,37,10,1],[38,13,38,58,1],[39,13,39,56,1],[40,13,40,48,1],[41,13,41,40,1],[42,13,42,38,1],[43,13,43,62,1],[44,13,44,66,1],[45,9,45,10,1],[64,9,64,10,1],[65,13,65,53,1],[66,13,66,37,1],[67,13,67,14,0],[68,17,68,72,0],[70,13,70,68,1],[71,13,71,34,1],[72,13,72,14,0],[73,17,73,39,0],[76,13,76,69,1],[77,13,77,72,1],[78,13,78,69,1],[79,13,79,88,1],[80,13,80,94,1],[81,13,81,85,1],[82,13,82,77,1],[83,13,83,20,1],[83,22,83,29,1],[83,30,83,32,1],[83,33,83,67,1],[84,13,84,14,1],[88,17,88,77,1],[89,17,89,55,1],[90,17,90,78,1],[92,17,92,176,1],[93,17,93,45,1],[94,17,94,74,1],[95,17,95,92,1],[96,17,96,18,1],[97,21,97,75,1],[98,21,98,46,1],[99,21,99,50,1],[100,21,100,56,1],[101,21,101,63,1],[102,21,102,63,1],[103,21,103,65,1],[104,21,104,65,1],[105,21,105,41,1],[106,21,106,95,1],[107,21,107,91,1],[108,21,108,56,1],[109,21,109,63,1],[110,21,110,56,1],[111,21,111,64,1],[112,21,112,74,1],[113,21,113,48,1],[114,17,114,18,1],[115,22,115,65,1],[116,17,116,18,1],[118,21,118,83,1],[119,21,119,95,1],[120,21,120,91,1],[121,21,121,52,1],[122,21,122,56,1],[123,21,123,69,1],[124,21,124,69,1],[125,21,125,62,1],[126,21,126,71,1],[127,21,127,71,1],[128,21,128,47,1],[129,21,129,62,1],[130,21,130,62,1],[131,21,131,69,1],[132,21,132,156,1],[133,21,133,64,1],[134,21,134,64,1],[135,21,135,70,1],[136,21,136,80,1],[137,21,137,55,1],[138,17,138,18,1],[140,17,140,18,1],[142,21,142,89,1],[143,21,143,91,1],[144,21,144,95,1],[145,21,145,54,1],[146,21,146,58,1],[147,21,147,71,1],[148,21,148,71,1],[149,21,149,64,1],[150,21,150,73,1],[151,21,151,73,1],[152,21,152,64,1],[153,21,153,64,1],[154,21,154,71,1],[155,21,155,86,1],[156,21,156,68,1],[157,21,157,28,1],[157,30,157,41,0],[157,42,157,44,1],[157,45,157,80,1],[158,21,158,22,0],[159,25,159,69,0],[160,25,160,100,0],[161,25,161,106,0],[162,25,162,56,0],[163,25,163,66,0],[164,25,164,66,0],[165,25,165,73,0],[166,25,166,64,0],[167,25,167,58,0],[168,25,168,26,0],[169,29,169,56,0],[170,29,170,73,0],[171,25,171,26,0],[173,25,173,26,0],[174,29,174,57,0],[175,29,175,67,0],[176,25,176,26,0],[177,21,177,22,0],[178,21,178,72,1],[179,21,179,82,1],[180,21,180,59,1],[181,17,181,18,1],[182,13,182,14,1],[183,13,183,61,1],[184,13,184,63,1],[185,13,185,59,1],[186,13,186,40,1],[187,9,187,10,1],[206,9,206,10,0],[207,13,207,53,0],[208,13,208,37,0],[209,13,209,14,0],[210,17,210,72,0],[212,13,212,68,0],[213,13,213,34,0],[214,13,214,14,0],[215,17,215,39,0],[217,13,217,69,0],[218,13,218,72,0],[219,13,219,87,0],[220,13,220,69,0],[221,13,221,50,0],[222,13,222,43,0],[223,13,223,52,0],[224,13,224,75,0],[225,13,225,40,0],[226,9,226,10,0],[245,9,245,10,1],[246,13,246,53,1],[248,13,248,37,1],[249,13,249,14,0],[250,17,250,72,0],[252,13,252,68,1],[253,13,253,34,1],[254,13,254,14,0],[255,17,255,39,0],[257,13,257,85,1],[258,13,258,88,1],[259,13,259,14,0],[260,17,260,80,0],[264,13,264,69,1],[266,13,266,72,1],[267,13,267,87,1],[268,13,268,34,1],[269,13,269,14,1],[271,17,271,129,1],[272,17,272,18,0],[273,21,273,86,0],[276,13,276,14,1],[278,13,278,34,1],[279,13,279,14,1],[280,17,280,113,1],[281,17,281,49,1],[282,17,282,41,1],[283,13,283,14,1],[284,13,284,58,1],[285,13,285,14,0],[286,17,286,51,0],[287,13,287,14,0],[288,13,288,59,1],[289,13,289,14,0],[290,17,290,53,0],[291,13,291,14,0],[292,13,292,68,1],[293,13,293,14,0],[294,17,294,76,0],[295,13,295,14,0],[296,13,296,65,1],[297,13,297,75,1],[298,13,298,25,1],[299,9,299,10,1],[319,9,319,10,1],[320,13,320,53,1],[321,13,321,72,1],[322,13,322,68,1],[323,13,323,34,1],[324,13,324,14,1],[325,17,325,39,1],[328,13,328,77,1],[329,13,329,70,1],[330,13,330,14,1],[331,17,331,69,1],[334,13,334,104,1],[335,13,335,14,1],[336,17,336,98,1],[339,13,339,42,1],[340,13,340,14,1],[341,17,341,83,1],[344,13,344,102,1],[344,102,344,130,1],[344,130,344,132,1],[345,13,345,37,1],[346,13,346,14,1],[348,17,348,63,1],[349,17,349,76,1],[350,13,350,14,1],[352,13,352,14,1],[354,17,359,20,1],[360,13,360,14,1],[362,13,362,83,1],[363,13,363,77,1],[364,13,364,90,1],[365,13,380,15,1],[382,13,382,25,1],[383,9,383,10,1],[402,9,402,10,1],[403,13,403,53,1],[404,13,404,72,1],[405,13,405,68,1],[406,13,406,34,1],[407,13,407,14,0],[408,17,408,39,0],[411,13,411,69,1],[412,13,412,62,1],[413,13,413,14,0],[414,17,414,69,0],[417,13,417,104,1],[418,13,418,14,1],[419,17,419,98,1],[422,13,422,102,1],[422,102,422,122,1],[422,122,422,124,1],[423,13,423,37,1],[424,13,424,14,1],[425,17,425,63,1],[426,13,426,14,1],[428,13,428,14,1],[429,17,429,81,1],[432,13,432,25,1],[433,9,433,10,1],[439,9,439,10,1],[440,13,440,31,1],[441,17,441,30,0],[442,13,442,72,1],[443,13,444,13,1],[444,13,444,14,1],[444,14,445,17,1],[445,17,450,19,1],[450,19,451,17,1],[451,17,451,48,1],[451,48,452,13,1],[452,13,452,14,1],[452,14,452,17,1],[453,13,453,31,1],[454,9,454,10,1],[460,9,460,10,1],[461,13,461,31,1],[462,17,462,30,1],[463,13,463,64,1],[464,13,465,13,1],[465,13,465,14,1],[465,14,466,17,1],[466,17,466,72,1],[466,72,467,17,1],[467,17,467,45,1],[467,45,468,13,1],[468,13,468,14,1],[468,14,468,17,1],[469,13,469,29,1],[470,9,470,10,1],[477,9,477,10,1],[478,13,478,31,1],[479,17,479,30,1],[480,13,480,65,1],[481,13,481,69,1],[482,13,482,20,1],[482,22,482,30,1],[482,31,482,33,1],[482,34,482,39,1],[483,13,483,14,1],[484,17,486,53,1],[486,53,486,68,1],[486,68,487,19,1],[488,13,488,14,1],[489,13,489,38,1],[490,9,490,10,1],[496,9,496,10,1],[497,13,497,31,1],[498,17,498,30,0],[499,13,499,70,1],[500,13,501,13,1],[501,13,501,14,1],[501,14,502,17,1],[502,17,502,53,1],[502,53,503,17,1],[503,17,503,18,1],[503,18,504,21,1],[504,21,504,88,1],[504,88,505,21,1],[505,21,505,52,1],[505,52,506,17,1],[506,17,506,18,1],[506,18,507,13,1],[507,13,507,14,1],[507,14,507,17,1],[508,13,508,31,1],[509,9,509,10,1],[515,9,515,10,1],[516,13,516,31,1],[517,17,517,30,0],[518,13,518,63,1],[519,13,520,13,1],[520,13,520,14,1],[520,14,521,17,1],[521,17,521,51,1],[521,51,522,17,1],[522,17,522,18,1],[522,18,523,21,1],[523,21,523,81,1],[523,81,524,21,1],[524,21,524,48,1],[524,48,525,17,1],[525,17,525,18,1],[525,18,526,13,1],[526,13,526,14,1],[526,14,526,17,1],[527,13,527,29,1],[528,9,528,10,1],[531,9,531,10,1],[532,13,532,69,1],[533,13,533,65,1],[534,13,534,87,1],[535,13,535,88,1],[535,88,535,89,1],[535,89,535,98,1],[536,13,536,84,1],[536,84,536,85,1],[536,85,536,94,1],[538,13,538,54,1],[538,54,550,60,1],[550,60,556,18,1],[556,18,557,14,1],[557,14,557,25,1],[559,13,559,34,1],[560,9,560,10,1],[574,9,574,10,1],[575,13,575,65,1],[576,13,576,76,1],[577,13,577,38,1],[578,9,578,10,1],[581,9,581,10,1],[582,13,582,39,1],[583,13,583,42,1],[584,13,584,59,1],[585,9,585,10,1],[588,9,588,10,1],[589,13,594,15,1],[595,9,595,10,1],[598,9,598,10,1],[599,13,604,15,1],[605,9,605,10,1],[608,9,608,10,1],[609,13,614,15,1],[615,9,615,10,1],[618,9,618,10,1],[619,13,619,99,1],[620,9,620,10,1],[623,9,623,10,1],[624,13,624,93,1],[625,9,625,10,1],[628,9,628,10,1],[629,13,629,66,1],[630,13,630,43,1],[630,43,630,128,1],[630,128,630,139,1],[631,9,631,10,1],[634,9,634,10,1],[635,13,635,59,1],[636,13,636,68,1],[637,13,637,65,1],[639,13,639,52,1],[641,13,641,59,1],[642,13,642,14,1],[643,17,643,79,1],[644,21,644,85,0],[645,17,645,53,1],[645,53,645,103,1],[645,103,645,105,1],[646,13,646,14,1],[648,13,648,56,1],[649,13,649,14,1],[650,17,650,77,1],[651,21,651,84,0],[652,17,652,53,1],[652,53,652,100,1],[652,100,652,102,1],[653,13,653,14,1],[655,13,655,54,1],[656,13,656,14,1],[657,17,657,53,1],[657,53,657,112,1],[657,112,657,114,1],[658,13,658,14,1],[660,13,660,50,1],[661,13,661,14,0],[662,17,662,78,0],[663,17,663,53,0],[663,53,663,109,0],[663,109,663,111,0],[664,13,664,14,0],[666,13,666,50,1],[667,13,667,14,1],[668,17,668,105,1],[669,17,669,53,1],[669,53,669,107,1],[669,107,669,109,1],[670,13,670,14,1],[672,13,672,52,1],[674,13,674,58,1],[675,13,675,20,1],[675,22,675,36,1],[675,37,675,39,1],[675,40,675,59,1],[676,13,676,14,1],[677,17,677,36,1],[680,25,680,49,0],[681,29,681,88,0],[683,29,683,85,0],[684,25,684,31,0],[686,25,686,91,1],[687,25,687,49,1],[688,29,688,73,1],[688,73,688,101,1],[688,101,688,103,1],[690,29,690,70,0],[690,70,690,98,0],[690,98,690,100,0],[691,25,691,31,1],[693,25,693,91,0],[694,25,694,49,0],[695,29,695,73,0],[695,73,695,101,0],[695,101,695,103,0],[697,29,697,70,0],[697,70,697,98,0],[697,98,697,100,0],[698,25,698,31,0],[700,25,700,87,1],[701,29,701,93,0],[702,25,702,49,1],[703,29,703,73,1],[703,73,703,114,1],[703,114,703,116,1],[705,29,705,70,0],[705,70,705,111,0],[705,111,705,113,0],[706,25,706,31,1],[708,25,708,85,1],[709,29,709,92,0],[710,25,710,49,1],[711,29,711,73,0],[711,73,711,111,0],[711,111,711,113,0],[713,29,713,70,1],[713,70,713,108,0],[713,108,713,110,1],[714,25,714,31,1],[716,25,716,118,1],[717,25,717,49,1],[718,29,718,73,1],[718,73,718,99,1],[718,99,718,101,1],[720,29,720,70,0],[720,70,720,96,0],[720,96,720,98,0],[721,25,721,31,1],[723,25,723,49,0],[724,29,724,73,0],[724,73,724,87,0],[724,87,724,89,0],[726,29,726,70,0],[726,70,726,84,0],[726,84,726,86,0],[727,25,727,31,0],[729,25,729,76,0],[731,13,731,14,1],[734,13,734,37,1],[735,17,735,51,1],[737,17,737,44,1],[739,13,739,31,1],[740,9,740,10,1],[758,9,758,10,1],[761,13,761,14,1],[762,17,762,66,1],[763,13,763,14,1],[764,13,764,41,0],[765,13,765,14,0],[766,17,766,63,0],[768,13,768,67,1],[769,13,769,38,1],[770,9,770,10,1],[789,9,789,10,1],[790,13,790,53,1],[792,13,792,37,1],[792,38,792,39,0],[792,40,792,95,0],[792,97,792,98,1],[794,13,794,68,1],[796,13,796,34,1],[796,35,796,36,0],[796,37,796,59,0],[798,13,798,79,1],[799,13,799,30,1],[799,31,799,32,1],[799,33,799,90,1],[801,13,801,75,1],[802,13,802,49,1],[802,50,802,51,1],[802,52,802,74,1],[804,13,804,46,1],[805,13,805,50,1],[805,51,805,52,0],[805,53,805,127,0],[807,13,807,62,1],[807,63,807,64,0],[807,65,807,130,0],[809,13,809,40,1],[809,41,809,42,0],[809,43,809,123,0],[811,13,811,73,1],[812,13,812,31,1],[812,32,812,33,0],[812,34,812,92,0],[814,13,814,38,1],[815,17,815,34,0],[816,13,816,42,1],[817,17,817,38,0],[819,13,819,72,1],[821,13,821,32,1],[823,13,823,103,1],[825,13,825,72,1],[827,13,827,43,1],[829,13,829,69,1],[830,13,830,25,1],[831,9,831,10,1]]);
     </script>
   </body>
 </html>

@@ -20,9 +20,13 @@ using Microsoft.IdentityModel.Tokens;
 using hagglehaul.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace hagglehaul.Server.Controllers
 {
+    /// &lt;summary&gt;
+    /// Controller for authentication, registration, and role management.
+    /// &lt;/summary&gt;
     [ApiController]
     [Route(&quot;api/[controller]&quot;)]
     public class AuthenticationController : ControllerBase
@@ -45,8 +49,19 @@ namespace hagglehaul.Server.Controllers
             _driverProfileService = driverProfileService;
         }
 
+        /// &lt;summary&gt;
+        /// Creates a new user and stores their information in the database.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;model&quot;&gt;The registration form&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkObjectResult&quot;/&gt; if the user is registered successfully,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if one or more fields are empty, the user already exists, or invalid role
+        /// &lt;/returns&gt;
         [HttpPost]
         [Route(&quot;register&quot;)]
+        [SwaggerOperation(Summary = &quot;Register a new user&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;User registered successfully&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;One or more fields are empty, the user already exists, or invalid role&quot;)]
         public async Task&lt;IActionResult&gt; Register([FromBody] Register model)
         {
             if (string.IsNullOrEmpty(model.Email) ||
@@ -94,8 +109,21 @@ namespace hagglehaul.Server.Controllers
             return await Login(new Login { Email = model.Email, Password = model.Password });
         }
 
+        /// &lt;summary&gt;
+        /// Logs in as an existing user.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;model&quot;&gt;The login form&lt;/param&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;OkObjectResult&quot;/&gt; if the user is logged in successfully,
+        /// &lt;see cref=&quot;BadRequestObjectResult&quot;/&gt; if one or more fields are empty,
+        /// &lt;see cref=&quot;UnauthorizedResult&quot;/&gt; if invalid email or password
+        /// &lt;/returns&gt;
         [HttpPost]
         [Route(&quot;login&quot;)]
+        [SwaggerOperation(Summary = &quot;Login as an existing user&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;User logged in successfully&quot;)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, &quot;One or more fields are empty&quot;)]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, &quot;Invalid email or password&quot;)]
         public async Task&lt;IActionResult&gt; Login([FromBody] Login model)
         {
             if (string.IsNullOrEmpty(model.Email) ||
@@ -135,9 +163,17 @@ namespace hagglehaul.Server.Controllers
             return Unauthorized();
         }
         
+        /// &lt;summary&gt;
+        /// Get the role of the current user.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;
+        /// &lt;see cref=&quot;String&quot;/&gt; representing the role of the current user, either &quot;driver&quot; or &quot;rider&quot;.
+        /// &lt;/returns&gt;
         [HttpGet]
         [Route(&quot;role&quot;)]
         [Authorize]
+        [SwaggerOperation(Summary = &quot;Get the role of the current user&quot;)]
+        [SwaggerResponse(StatusCodes.Status200OK, &quot;Role retrieved successfully&quot;)]
         public async Task&lt;String&gt; Role()
         {
             ClaimsPrincipal currentUser = this.User;
@@ -148,7 +184,7 @@ namespace hagglehaul.Server.Controllers
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,9,30,10,0],[31,9,31,10,0],[32,13,32,34,0],[33,13,33,48,0],[34,13,34,56,0],[35,13,35,58,0],[36,9,36,10,0],[41,9,41,10,0],[42,13,44,50,0],[45,17,45,83,0],[47,13,47,77,0],[48,13,48,42,0],[49,17,49,74,0],[51,13,51,65,0],[52,17,52,98,0],[54,13,54,93,0],[55,13,61,15,0],[63,13,63,58,0],[65,13,65,39,0],[66,13,66,14,0],[67,17,71,19,0],[72,17,72,70,0],[73,13,73,14,0],[75,13,75,14,0],[76,17,80,19,0],[81,17,81,72,0],[82,13,82,14,0],[84,13,84,94,0],[85,9,85,10,0],[90,9,90,10,0],[91,13,92,54,0],[93,17,93,83,0],[95,13,95,73,0],[97,13,99,18,0],[100,13,100,14,0],[101,17,105,19,0],[107,17,107,75,0],[109,17,109,111,0],[111,17,117,23,0],[119,17,123,20,0],[125,13,125,35,0],[126,9,126,10,0],[132,9,132,10,0],[133,13,133,53,0],[134,13,134,64,0],[135,9,135,10,0]]);
+      highlightRanges([[29,9,34,10,1],[35,9,35,10,1],[36,13,36,34,1],[37,13,37,48,1],[38,13,38,56,1],[39,13,39,58,1],[40,9,40,10,1],[56,9,56,10,1],[57,13,59,50,1],[60,17,60,83,1],[62,13,62,77,1],[63,13,63,42,1],[64,17,64,74,1],[66,13,66,65,1],[67,17,67,98,1],[69,13,69,93,1],[70,13,76,15,1],[78,13,78,58,1],[80,13,80,39,1],[81,13,81,14,1],[82,17,86,19,1],[87,17,87,70,1],[88,13,88,14,1],[90,13,90,14,0],[91,17,95,19,0],[96,17,96,72,0],[97,13,97,14,0],[99,13,99,94,1],[100,9,100,10,1],[118,9,118,10,1],[119,13,120,54,1],[121,17,121,83,1],[123,13,123,73,1],[125,13,127,18,1],[128,13,128,14,1],[129,17,133,19,1],[135,17,135,75,1],[137,17,137,111,1],[139,17,145,23,1],[147,17,151,20,1],[153,13,153,35,1],[154,9,154,10,1],[168,9,168,10,0],[169,13,169,53,0],[170,13,170,64,0],[171,9,171,10,0]]);
     </script>
   </body>
 </html>

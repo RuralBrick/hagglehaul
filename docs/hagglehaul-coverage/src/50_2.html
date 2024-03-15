@@ -13,17 +13,60 @@ using MongoDB.Driver;
 
 namespace hagglehaul.Server.Services
 {
+    /// &lt;summary&gt;
+    /// Corresponds to Trip collection in the database.
+    /// &lt;/summary&gt;
     public interface ITripService
     {
+        /// &lt;summary&gt;
+        /// Gets all trips in the database. Useful for trip discovery.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;List&lt;Trip&gt;&gt; GetAllTripsAsync();
+        /// &lt;summary&gt;
+        /// Gets all trips which the rider has created. Found through the riderEmail field of the trip.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email address of the rider.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;List&lt;Trip&gt;&gt; GetRiderTripsAsync(string email);
+        /// &lt;summary&gt;
+        /// Gets all trips which the driver has created. Found through the driverEmail field of the trip.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email address of the driver.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;List&lt;Trip&gt;&gt; GetDriverTripsAsync(string email);
+        /// &lt;summary&gt;
+        /// Gets a trip by its ID.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The Trip ID of the desired trip.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;Trip&gt; GetTripByIdAsync(string id);
+        /// &lt;summary&gt;
+        /// Creates a new trip.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;trip&quot;&gt;The &lt;see cref=&quot;Trip&quot;/&gt; object to insert. Note that we do not
+        /// check the object for correctness.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;Trip&gt; CreateAsync(Trip trip);
+        /// &lt;summary&gt;
+        /// Deletes a trip by its ID.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The Trip ID to delete.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task DeleteAsync(string id);
+        /// &lt;summary&gt;
+        /// Updates a Trip object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The Trip ID to update.&lt;/param&gt;
+        /// &lt;param name=&quot;tripIn&quot;&gt;The &lt;see cref=&quot;Trip&quot;/&gt; object to update. Note that we do not
+        /// check the object for correctness.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task UpdateAsync(string id, Trip tripIn);
     }
 
+    /// &lt;summary&gt;
+    /// See &lt;see cref=&quot;ITripService&quot;/&gt;.
+    /// &lt;/summary&gt;
     public class TripService : ITripService
     {
         public readonly IMongoCollection&lt;Trip&gt; _tripCollection;
@@ -77,7 +120,7 @@ namespace hagglehaul.Server.Services
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,9,21,52,0],[22,9,22,10,0],[23,13,23,68,0],[24,9,24,10,0],[27,9,27,10,0],[28,13,28,80,0],[29,13,29,29,0],[30,9,30,10,0],[33,9,33,10,0],[34,13,34,105,0],[35,13,35,31,0],[36,9,36,10,0],[39,9,39,10,0],[40,13,40,106,0],[41,13,41,31,0],[42,9,42,10,0],[45,9,45,10,0],[46,13,46,96,0],[47,13,47,25,0],[48,9,48,10,0],[51,9,51,10,0],[52,13,52,56,0],[53,13,53,25,0],[54,9,54,10,0],[57,9,57,10,0],[58,13,58,73,0],[59,9,59,10,0],[62,9,62,10,0],[63,13,63,82,0],[64,9,64,10,0]]);
+      highlightRanges([[64,9,64,52,1],[65,9,65,10,1],[66,13,66,68,1],[67,9,67,10,1],[70,9,70,10,1],[71,13,71,80,1],[72,13,72,29,1],[73,9,73,10,1],[76,9,76,10,1],[77,13,77,105,1],[78,13,78,31,1],[79,9,79,10,1],[82,9,82,10,1],[83,13,83,106,1],[84,13,84,31,1],[85,9,85,10,1],[88,9,88,10,1],[89,13,89,96,1],[90,13,90,25,1],[91,9,91,10,1],[94,9,94,10,1],[95,13,95,56,1],[96,13,96,25,1],[97,9,97,10,1],[100,9,100,10,1],[101,13,101,73,1],[102,9,102,10,1],[105,9,105,10,1],[106,13,106,82,1],[107,9,107,10,1]]);
     </script>
   </body>
 </html>

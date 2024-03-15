@@ -13,23 +13,35 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models;
 
+/// &lt;summary&gt;
+/// The representation of a cached geocoding result in the database.
+/// &lt;/summary&gt;
 [BsonIgnoreExtraElements]
 public class GeocodingResult
 {
+    /// &lt;summary&gt;
+    /// The unique identifier of the geocoding result, not used in the application.
+    /// &lt;/summary&gt;
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
     
+    /// &lt;summary&gt;
+    /// The search string that was used to obtain the geocoding result.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;query&quot;)]
     public string Query { get; set; } = null!;
     
+    /// &lt;summary&gt;
+    /// The JSON object, stored as a string, that represents the geocoding result.
+    /// &lt;/summary&gt;
     [BsonElement(&quot;features&quot;)]
     public string Features { get; set; } = null!;
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[11,25,11,29,0],[11,30,11,34,0],[14,27,14,31,0],[14,32,14,36,0],[14,41,14,46,0],[17,30,17,34,0],[17,35,17,39,0],[17,44,17,49,0]]);
+      highlightRanges([[17,25,17,29,1],[17,30,17,34,1],[23,27,23,31,1],[23,32,23,36,1],[23,41,23,46,1],[29,30,29,34,1],[29,35,29,39,1],[29,44,29,49,1]]);
     </script>
   </body>
 </html>

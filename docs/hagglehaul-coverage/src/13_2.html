@@ -10,20 +10,46 @@
     <pre id="content" class="source-code">
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// Data for displaying a bid in a trip.
+    /// &lt;/summary&gt;
     public class BidUserView
     {
+        /// &lt;summary&gt;
+        /// The ID of the bid.
+        /// &lt;/summary&gt;
         public string? BidId { get; set; }
+        
+        /// &lt;summary&gt;
+        /// Whether the bid is the requesting user&#39;s bid, only applicable if the user is a driver.
+        /// &lt;/summary&gt;
         public bool YourBid { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The name of the driver.
+        /// &lt;/summary&gt;
         public string DriverName { get; set; } = null!;
+        
+        /// &lt;summary&gt;
+        /// The rating of the driver, from 1.0 to 5.0.
+        /// &lt;/summary&gt;
         public double? DriverRating { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The number of ratings the driver has received.
+        /// &lt;/summary&gt;
         public uint? DriverNumRating { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The cost, in cents, of the bid.
+        /// &lt;/summary&gt;
         public uint Cost { get; set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,32,5,36,0],[5,37,5,41,0],[6,31,6,35,0],[6,36,6,40,0],[7,36,7,40,0],[7,41,7,45,0],[7,50,7,55,0],[8,39,8,43,0],[8,44,8,48,0],[9,40,9,44,0],[9,45,9,49,0],[10,28,10,32,0],[10,33,10,37,0]]);
+      highlightRanges([[11,32,11,36,0],[11,37,11,41,0],[16,31,16,35,0],[16,36,16,40,0],[21,36,21,40,0],[21,41,21,45,0],[21,50,21,55,0],[26,39,26,43,0],[26,44,26,48,0],[31,40,31,44,0],[31,45,31,49,0],[36,28,36,32,0],[36,33,36,37,0]]);
     </script>
   </body>
 </html>

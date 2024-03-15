@@ -15,17 +15,67 @@ using System.Security.Cryptography;
 
 namespace hagglehaul.Server.Services
 {
+    /// &lt;summary&gt;
+    /// Corresponds to UserCore collection in the database, along with some utilities.
+    /// &lt;/summary&gt;
     public interface IUserCoreService
     {
+        /// &lt;summary&gt;
+        /// Gets a list of all UserCore objects in the database.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;List{T}&quot;/&gt; of &lt;see cref=&quot;UserCore&quot;/&gt; objects.&lt;/returns&gt;
         Task&lt;List&lt;UserCore&gt;&gt; GetAsync();
+        /// &lt;summary&gt;
+        /// Gets a UserCore object by the user&#39;s email.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email of the user. Each email should correspond
+        /// with only one UserCore object.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;UserCore&gt; GetAsync(string email);
+        /// &lt;summary&gt;
+        /// Creates a UserCore object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;userCore&quot;&gt;The &lt;see cref=&quot;UserCore&quot;/&gt; object to insert. We do not
+        /// check the object for correctness.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task&lt;UserCore&gt; CreateAsync(UserCore userCore);
+        /// &lt;summary&gt;
+        /// Updates a UserCore object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email of the user.&lt;/param&gt;
+        /// &lt;param name=&quot;userCoreIn&quot;&gt;The &lt;see cref=&quot;UserCore&quot;/&gt; object to insert. We do not
+        /// check the object for correctness.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task UpdateAsync(string email, UserCore userCoreIn);
+        /// &lt;summary&gt;
+        /// Removes a UserCore object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;email&quot;&gt;The valid email of the user.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
         Task RemoveAsync(string email);
+        /// &lt;summary&gt;
+        /// Creates a random salt and a hash from a password. Should use an algorithm similar to
+        /// or stronger than &lt;see cref=&quot;KeyDerivation.Pbkdf2&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;password&quot;&gt;The non-encoded password.&lt;/param&gt;
+        /// &lt;param name=&quot;hash&quot;&gt;The hash, encoded as a base 64 string.&lt;/param&gt;
+        /// &lt;param name=&quot;salt&quot;&gt;The salt, encoded as a base 64 string.&lt;/param&gt;
         void CreatePasswordHash(string password, out string hash, out string salt);
+        /// &lt;summary&gt;
+        /// Verifies a password against a hash and a salt. Should use an algorithm similar to
+        /// or stronger than &lt;see cref=&quot;KeyDerivation.Pbkdf2&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;password&quot;&gt;The non-encoded password.&lt;/param&gt;
+        /// &lt;param name=&quot;hash&quot;&gt;The hash, encoded as a base 64 string.&lt;/param&gt;
+        /// &lt;param name=&quot;salt&quot;&gt;The salt, encoded as a base 64 string.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the password matches the hash and salt, or
+        /// &lt;c&gt;false&lt;/c&gt; otherwise.&lt;/returns&gt;
         bool ComparePasswordToHash(string password, string hash, string salt);
     }
     
+    /// &lt;summary&gt;
+    /// See &lt;see cref=&quot;IUserCoreService&quot;/&gt;.
+    /// &lt;/summary&gt;
     public class UserCoreService : IUserCoreService
     {
         private readonly IMongoCollection&lt;UserCore&gt; _userCoreCollection;
@@ -79,7 +129,7 @@ namespace hagglehaul.Server.Services
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,9,23,10,0],[24,13,24,72,0],[25,13,25,54,0],[26,13,31,46,0],[32,9,32,10,0],[35,9,35,10,0],[36,13,41,46,0],[42,13,42,36,0],[43,9,43,10,0],[45,9,45,56,0],[46,9,46,10,0],[47,13,47,80,0],[48,9,48,10,0],[51,13,51,68,0],[54,13,54,102,0],[57,9,57,10,0],[58,13,58,64,0],[59,13,59,29,0],[60,9,60,10,0],[63,13,63,103,0],[66,13,66,90,0]]);
+      highlightRanges([[73,9,73,10,1],[74,13,74,72,1],[75,13,75,54,1],[76,13,81,46,1],[82,9,82,10,1],[85,9,85,10,1],[86,13,91,46,1],[92,13,92,36,1],[93,9,93,10,1],[95,9,95,56,1],[96,9,96,10,1],[97,13,97,80,1],[98,9,98,10,1],[101,13,101,68,1],[104,13,104,102,1],[107,9,107,10,1],[108,13,108,64,1],[109,13,109,29,1],[110,9,110,10,1],[113,13,113,103,1],[116,13,116,90,1]]);
     </script>
   </body>
 </html>

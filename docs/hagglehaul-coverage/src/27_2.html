@@ -10,17 +10,31 @@
     <pre id="content" class="source-code">
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// JWT settings for the application, used for client authentication.
+    /// &lt;/summary&gt;
     public class JwtSettings
     {
+        /// &lt;summary&gt;
+        /// Valid audience for the JWT.
+        /// &lt;/summary&gt;
         public string ValidAudience { get; set; } = null!;
+        
+        /// &lt;summary&gt;
+        /// Valid issuer for the JWT.
+        /// &lt;/summary&gt;
         public string ValidIssuer { get; set; } = null!;
+        
+        /// &lt;summary&gt;
+        /// Secret key for the JWT, encoded as a string.
+        /// &lt;/summary&gt;
         public string Secret { get; set; } = null!;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[5,39,5,43,0],[5,44,5,48,0],[5,53,5,58,0],[6,37,6,41,0],[6,42,6,46,0],[6,51,6,56,0],[7,32,7,36,0],[7,37,7,41,0],[7,46,7,51,0]]);
+      highlightRanges([[11,39,11,43,1],[11,44,11,48,1],[11,53,11,58,1],[16,37,16,41,1],[16,42,16,46,1],[16,51,16,56,1],[21,32,21,36,1],[21,37,21,41,1],[21,46,21,51,1]]);
     </script>
   </body>
 </html>

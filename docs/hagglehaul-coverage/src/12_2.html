@@ -13,20 +13,35 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace hagglehaul.Server.Models
 {
+    /// &lt;summary&gt;
+    /// The representation of a bid in the database.
+    /// &lt;/summary&gt;
     [BsonIgnoreExtraElements]
     public class Bid
     {
+        /// &lt;summary&gt;
+        /// The ID of the bid.
+        /// &lt;/summary&gt;
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
+        /// &lt;summary&gt;
+        /// The email of the driver who created the bid.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;driverEmail&quot;)]
         public string DriverEmail { get; set; } = null!;
-
+        
+        /// &lt;summary&gt;
+        /// The Trip ID of the trip the bid is for.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;tripId&quot;)]
         [BsonRepresentation(BsonType.ObjectId)]
         public string TripId { get; set; } = null!;
 
+        /// &lt;summary&gt;
+        /// The cost, in cents, of the bid.
+        /// &lt;/summary&gt;
         [BsonElement(&quot;centsAmount&quot;)]
         public uint CentsAmount { get; set; }
     }
@@ -34,7 +49,7 @@ namespace hagglehaul.Server.Models
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[11,29,11,33,1],[11,34,11,38,1],[14,37,14,41,1],[14,42,14,46,1],[14,51,14,56,1],[18,32,18,36,1],[18,37,18,41,1],[18,46,18,51,1],[21,35,21,39,1],[21,40,21,44,1]]);
+      highlightRanges([[17,29,17,33,1],[17,34,17,38,1],[23,37,23,41,1],[23,42,23,46,1],[23,51,23,56,1],[30,32,30,36,1],[30,37,30,41,1],[30,46,30,51,1],[36,35,36,39,1],[36,40,36,44,1]]);
     </script>
   </body>
 </html>

@@ -9,17 +9,71 @@
   <body>
     <pre id="content" class="source-code">
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 
-namespace hagglehaul.Server.EmailViews;
-
-public class AcceptedBidEmail : PageModel
+namespace hagglehaul.Server.EmailViews
 {
-    public string ExampleProperty { get; set; }
+    /// &lt;summary&gt;
+    /// View for an email that notifies the driver when their bid is accepted.
+    /// &lt;/summary&gt;
+    public class AcceptedBidEmail
+    {
+        /// &lt;summary&gt;
+        /// Name of the driver.
+        /// &lt;/summary&gt;
+        public string DriverName { get; set; }
+
+        /// &lt;summary&gt;
+        /// Name of the trip.
+        /// &lt;/summary&gt;
+        public string TripName { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The cost of the trip, in dollars.
+        /// &lt;/summary&gt;
+        [DisplayFormat(DataFormatString = &quot;{0:C}&quot;)]
+        public decimal Price { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The name of the rider.
+        /// &lt;/summary&gt;
+        public string RiderName { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The phone number of the rider.
+        /// &lt;/summary&gt;
+        public string RiderPhone { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The email address of the rider.
+        /// &lt;/summary&gt;
+        public string RiderEmail { get; set; }
+
+        /// &lt;summary&gt;
+        /// The start time of the trip.
+        /// &lt;/summary&gt;
+        public DateTime StartTime { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The pickup address of the trip.
+        /// &lt;/summary&gt;
+        public string PickupAddress { get; set; }
+        
+        /// &lt;summary&gt;
+        /// The destination address of the trip.
+        /// &lt;/summary&gt;
+        public string DestinationAddress { get; set; }
+
+        /// &lt;summary&gt;
+        /// The email address of the driver (to which the email is sent).
+        /// &lt;/summary&gt;
+        public string DriverEmail { get; set; }
+    }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[7,37,7,41,0],[7,42,7,46,0]]);
+      highlightRanges([[14,36,14,40,1],[14,41,14,45,1],[19,34,19,38,1],[19,39,19,43,1],[25,32,25,36,1],[25,37,25,41,1],[30,35,30,39,1],[30,40,30,44,1],[35,36,35,40,1],[35,41,35,45,1],[40,36,40,40,1],[40,41,40,45,1],[45,37,45,41,1],[45,42,45,46,1],[50,39,50,43,1],[50,44,50,48,1],[55,44,55,48,1],[55,49,55,53,1],[60,37,60,41,1],[60,42,60,46,1]]);
     </script>
   </body>
 </html>
